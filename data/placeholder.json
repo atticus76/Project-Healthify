@@ -1,0 +1,5 @@
+{
+  "_comment": "This file will function as placeholder data for our wearable device telemetry in whatever format we would usually expect from our wearable provider.",
+  "api_url": "Decide the device to use",
+  "timeout_seconds": 30
+}

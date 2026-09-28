@@ -1,0 +1,22 @@
+#we may end up using yaml for some of our api's or all of them if possible,
+#as it provides the same structured data in a more pythonic readable format
+
+#food look-up api (if we we want to add a food logger functionality down the road)
+usda-api:
+  food_list_api_url: "https://api.nal.usda.gov/fdc/v1/foods/list?api_key=DEMO_KEY"
+
+#bmi calculator to be integrated
+myplate_api:
+  bmi_api_url: "https://myplate.food/api/v1/calculate/bmi?height_cm=180&weight_kg=80"
+
+wearable-api:
+  #tbd
+
+#ensure the format matches the yaml/json format we would receive from a typical
+#request sent to the wearable provider
+placeholder-data:
+  heart-rate: [60, 60, 60, 60, 60, 60, 60, 60, 60, 60]
+  heart-rate-variability: [53.1, 53.1, 53.1, 53.1, 53.1, 53.1, 53.1]
+  steps: [1100, 1100, 1100, 1100, 1100, 1100, 1100, 1100]
+  calories: #etc
+  sleep: #etc
