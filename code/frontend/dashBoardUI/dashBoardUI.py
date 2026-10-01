@@ -1,0 +1,215 @@
+import reflex as rx
+
+
+FEATURES = [
+    ("Alerts & Notifications", "/alerts"),
+    ("Health Profile", "/profile"),
+    ("Account", "/account"),
+    ("Cloud Data", "/cloud-data"),
+    ("Reports & Analytics", "/reports"),
+    ("Telemetry Emulator", "/emulator"),
+    ("Health Goals", "/goals"),
+    ("Legal Disclaimer", "/disclaimer"),
+]
+SORTED_FEATURES = sorted(FEATURES, key=lambda feature: feature[0].lower())
+
+
+class DashboardState(rx.State):
+    sort_a_to_z: bool = False
+
+    def toggle_sort(self):
+        self.sort_a_to_z = not self.sort_a_to_z
+
+
+def page_header() -> rx.Component:
+    return rx.hstack(
+        rx.heading("Healthify", size="7"),
+        rx.text("Welcome USER", size="4"),
+        rx.spacer(),
+        rx.color_mode.button(),
+        width="100%",
+        padding="1em 2em",
+        background_color=rx.color_mode_cond("#2f855a", "#22543d"),
+        color="white",
+        border_bottom=rx.color_mode_cond(
+            "4px solid #276749", "4px solid #1c4532"
+        ),
+        align="center",
+    )
+
+
+def feature_button(label: str, route: str) -> rx.Component:
+    return rx.button(
+        label,
+        on_click=rx.redirect(route),
+        width="100%",
+        height="4em",
+        background_color=rx.color_mode_cond("#2f855a", "#276749"),
+        color="white",
+        _hover={
+            "background_color": rx.color_mode_cond("#276749", "#1c4532"),
+        },
+    )
+
+
+def feature_grid(features: list[tuple[str, str]]) -> rx.Component:
+    return rx.grid(
+        *[feature_button(label, route) for label, route in features],
+        columns="repeat(3, 1fr)",
+        gap="1em",
+        width="100%",
+    )
+
+
+def device_card() -> rx.Component:
+    return rx.box(
+        rx.vstack(
+            rx.heading("Device Telemetry", size="6"),
+            rx.text("Connect a device to display telemetry here."),
+            rx.button(
+                "Connect a Device",
+                on_click=rx.redirect("/device"),
+                size="4",
+                width="240px",
+                background_color=rx.color_mode_cond("#2f855a", "#276749"),
+                color="white",
+                _hover={
+                    "background_color": rx.color_mode_cond(
+                        "#276749", "#1c4532"
+                    ),
+                },
+            ),
+            align="center",
+            justify="center",
+            spacing="3",
+            width="100%",
+            min_height="300px",
+        ),
+        width="100%",
+        min_height="360px",
+        padding="2em",
+        border_radius="12px",
+        background_color=rx.color_mode_cond("#f7fafc", "#2d3748"),
+        border=rx.color_mode_cond("1px solid #e2e8f0", "1px solid #4a5568"),
+        box_shadow=rx.color_mode_cond(
+            "0 8px 24px rgba(0, 0, 0, 0.15)",
+            "0 8px 24px rgba(0, 0, 0, 0.45)",
+        ),
+    )
+
+
+@rx.page(route="/")
+def dashboard() -> rx.Component:
+    return rx.vstack(
+        page_header(),
+        rx.vstack(
+            rx.heading("Dashboard", size="8"),
+            rx.text("Choose a feature to get started."),
+            device_card(),
+            rx.hstack(
+                rx.text("Feature buttons:"),
+                rx.button(
+                    rx.cond(
+                        DashboardState.sort_a_to_z,
+                        "A-Z Order: On",
+                        "A-Z Order: Off",
+                    ),
+                    on_click=DashboardState.toggle_sort,
+                ),
+                align="center",
+                spacing="3",
+            ),
+            rx.cond(
+                DashboardState.sort_a_to_z,
+                feature_grid(SORTED_FEATURES),
+                feature_grid(FEATURES),
+            ),
+            width="100%",
+            max_width="900px",
+            padding="1.5em 2em 3em",
+            align="stretch",
+        ),
+        width="100%",
+        min_height="100vh",
+        align="center",
+        background_color=rx.color_mode_cond("white", "#1a202c"),
+        color=rx.color_mode_cond("#1a202c", "white"),
+    )
+
+
+def empty_feature_page(title: str) -> rx.Component:
+    return rx.vstack(
+        page_header(),
+        rx.center(
+            rx.vstack(
+                rx.heading(title, size="7"),
+                rx.button(
+                    "Back to Dashboard",
+                    on_click=rx.redirect("/"),
+                    background_color=rx.color_mode_cond("#2f855a", "#276749"),
+                    color="white",
+                    _hover={
+                        "background_color": rx.color_mode_cond(
+                            "#276749", "#1c4532"
+                        ),
+                    },
+                ),
+                align="center",
+                spacing="4",
+            ),
+            flex="1",
+            width="100%",
+        ),
+        min_height="100vh",
+        width="100%",
+        background_color=rx.color_mode_cond("white", "#1a202c"),
+        color=rx.color_mode_cond("#1a202c", "white"),
+    )
+
+
+@rx.page(route="/device")
+def device_page() -> rx.Component:
+    return empty_feature_page("Connect a Device")
+
+
+@rx.page(route="/alerts")
+def alerts_page() -> rx.Component:
+    return empty_feature_page("Alerts & Notifications")
+
+
+@rx.page(route="/profile")
+def profile_page() -> rx.Component:
+    return empty_feature_page("Health Profile")
+
+
+@rx.page(route="/account")
+def account_page() -> rx.Component:
+    return empty_feature_page("Account")
+
+
+@rx.page(route="/cloud-data")
+def cloud_data_page() -> rx.Component:
+    return empty_feature_page("Cloud Data")
+
+
+@rx.page(route="/reports")
+def reports_page() -> rx.Component:
+    return empty_feature_page("Reports & Analytics")
+
+
+@rx.page(route="/emulator")
+def emulator_page() -> rx.Component:
+    return empty_feature_page("Telemetry Emulator")
+
+
+@rx.page(route="/goals")
+def goals_page() -> rx.Component:
+    return empty_feature_page("Health Goals")
+
+
+@rx.page(route="/disclaimer")
+def disclaimer_page() -> rx.Component:
+    return empty_feature_page("Legal Disclaimer")
+
+
+app = rx.App()
