@@ -1,6 +1,14 @@
+import json
+
 import reflex as rx
 
 from backend.profile_controller import save_profile, validate_profile
+from backend.telemetry_emulator import (
+    DATA_TYPES,
+    PROFILES,
+    generate_fitbit_data,
+    summarize_fitbit_data,
+)
 
 
 FEATURES = [
@@ -68,6 +76,44 @@ class ProfileState(rx.State):
         self.save_message = "Profile saved and baseline metrics updated."
 
 
+class TelemetryState(rx.State):
+    level: str = "Medium"
+    enabled: bool = False
+    show_payload: bool = False
+    summaries: list[str] = []
+    payload_json: str = ""
+
+    def set_level(self, value: str):
+        if value not in PROFILES:
+            raise ValueError(f"Unknown simulation level: {value}")
+        self.level = value
+        if self.enabled:
+            self._generate_data()
+
+    def enable(self):
+        self._generate_data()
+        self.enabled = True
+
+    def refresh(self):
+        if not self.enabled:
+            raise RuntimeError("Enable the telemetry emulator before refreshing.")
+        self._generate_data()
+
+    def disable(self):
+        self.enabled = False
+        self.show_payload = False
+        self.summaries = []
+        self.payload_json = ""
+
+    def toggle_payload(self):
+        self.show_payload = not self.show_payload
+
+    def _generate_data(self):
+        data = generate_fitbit_data(self.level)
+        self.summaries = summarize_fitbit_data(data)
+        self.payload_json = json.dumps(data, indent=2)
+
+
 def page_header() -> rx.Component:
     return rx.hstack(
         rx.heading("Healthify", size="7"),
@@ -112,19 +158,50 @@ def device_card() -> rx.Component:
     return rx.box(
         rx.vstack(
             rx.heading("Device Telemetry", size="6"),
-            rx.text("Connect a device to display telemetry here."),
-            rx.button(
-                "Connect a Device",
-                on_click=rx.redirect("/device"),
-                size="4",
-                width="240px",
-                background_color=rx.color_mode_cond("#2f855a", "#276749"),
-                color="white",
-                _hover={
-                    "background_color": rx.color_mode_cond(
-                        "#276749", "#1c4532"
+            rx.cond(
+                TelemetryState.enabled,
+                rx.vstack(
+                    rx.badge("SIMULATED FITBIT DATA", color_scheme="green"),
+                    rx.text(
+                        "Profile: ",
+                        TelemetryState.level,
+                        " | ",
+                        str(len(DATA_TYPES)),
+                        " data types active",
                     ),
-                },
+                    rx.button(
+                        "View Telemetry",
+                        on_click=rx.redirect("/emulator"),
+                        size="4",
+                        width="240px",
+                        background_color=rx.color_mode_cond(
+                            "#2f855a", "#276749"
+                        ),
+                        color="white",
+                    ),
+                    align="center",
+                    spacing="3",
+                ),
+                rx.vstack(
+                    rx.text("Connect a device or enable simulated Fitbit telemetry."),
+                    rx.button(
+                        "Connect a Device",
+                        on_click=rx.redirect("/device"),
+                        size="4",
+                        width="240px",
+                        background_color=rx.color_mode_cond(
+                            "#2f855a", "#276749"
+                        ),
+                        color="white",
+                        _hover={
+                            "background_color": rx.color_mode_cond(
+                                "#276749", "#1c4532"
+                            ),
+                        },
+                    ),
+                    align="center",
+                    spacing="3",
+                ),
             ),
             align="center",
             justify="center",
@@ -332,7 +409,103 @@ def reports_page() -> rx.Component:
 
 @rx.page(route="/emulator")
 def emulator_page() -> rx.Component:
-    return empty_feature_page("Telemetry Emulator")
+    return rx.vstack(
+        page_header(),
+        rx.vstack(
+            rx.heading("Fitbit Telemetry Emulator", size="8"),
+            rx.text(
+                "Generate synthetic Fitbit-style records for all supported data types. "
+                "This data is simulated and is not a health measurement."
+            ),
+            rx.text("Simulation activity level", weight="bold"),
+            rx.select(
+                ["Low", "Medium", "High"],
+                value=TelemetryState.level,
+                on_change=TelemetryState.set_level,
+                width="100%",
+            ),
+            rx.cond(
+                TelemetryState.enabled,
+                rx.hstack(
+                    rx.button(
+                        "Refresh Data",
+                        on_click=TelemetryState.refresh,
+                        background_color=rx.color_mode_cond("#2f855a", "#276749"),
+                        color="white",
+                    ),
+                    rx.button(
+                        "Disable Emulator",
+                        on_click=TelemetryState.disable,
+                        variant="outline",
+                    ),
+                    align="center",
+                    spacing="3",
+                ),
+                rx.button(
+                    "Enable Emulator",
+                    on_click=TelemetryState.enable,
+                    background_color=rx.color_mode_cond("#2f855a", "#276749"),
+                    color="white",
+                ),
+            ),
+            rx.cond(
+                TelemetryState.enabled,
+                rx.vstack(
+                    rx.heading("Generated data points", size="5"),
+                    rx.foreach(
+                        TelemetryState.summaries,
+                        lambda summary: rx.text(summary),
+                    ),
+                    rx.button(
+                        rx.cond(
+                            TelemetryState.show_payload,
+                            "Hide Fitbit payload",
+                            "View Fitbit payload",
+                        ),
+                        on_click=TelemetryState.toggle_payload,
+                        variant="outline",
+                    ),
+                    rx.cond(
+                        TelemetryState.show_payload,
+                        rx.box(
+                            rx.text(
+                                TelemetryState.payload_json,
+                                white_space="pre-wrap",
+                                font_family="monospace",
+                                font_size="0.8em",
+                            ),
+                            width="100%",
+                            max_height="500px",
+                            overflow_y="auto",
+                            padding="1em",
+                            border_radius="8px",
+                            background_color=rx.color_mode_cond(
+                                "#f7fafc", "#2d3748"
+                            ),
+                        ),
+                    ),
+                    align="stretch",
+                    spacing="3",
+                    width="100%",
+                ),
+            ),
+            rx.button(
+                "Back to Dashboard",
+                on_click=rx.redirect("/"),
+                variant="outline",
+            ),
+            width="100%",
+            max_width="800px",
+            padding="2em",
+            align="stretch",
+            spacing="4",
+        ),
+        width="100%",
+        min_height="100vh",
+        align="center",
+        background_color=rx.color_mode_cond("white", "#1a202c"),
+        color=rx.color_mode_cond("#1a202c", "white"),
+    )
 
 
 @rx.page(route="/goals")
