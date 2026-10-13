@@ -1,0 +1,1551 @@
+{
+  "dataPoints": [
+    {
+      "dataSource": {
+        "recordingMethod": "DERIVED",
+        "device": {
+          "displayName": "Charge 6"
+        },
+        "platform": "FITBIT"
+      },
+      "heartRateVariability": {
+        "sampleTime": {
+          "physicalTime": "2026-10-12T15:45:00Z",
+          "utcOffset": "-25200s",
+          "civilTime": {
+            "date": {
+              "year": 2026,
+              "month": 10,
+              "day": 12
+            },
+            "time": {
+              "hours": 8,
+              "minutes": 45
+            }
+          }
+        },
+        "rootMeanSquareOfSuccessiveDifferencesMilliseconds": 17.1,
+        "metadata": {
+          "highFrequencyPower": 69.3,
+          "lowFrequencyPower": 823.7
+        }
+      }
+    },
+    {
+      "dataSource": {
+        "recordingMethod": "DERIVED",
+        "device": {
+          "displayName": "Charge 6"
+        },
+        "platform": "FITBIT"
+      },
+      "heartRateVariability": {
+        "sampleTime": {
+          "physicalTime": "2026-10-12T15:40:00Z",
+          "utcOffset": "-25200s",
+          "civilTime": {
+            "date": {
+              "year": 2026,
+              "month": 10,
+              "day": 12
+            },
+            "time": {
+              "hours": 8,
+              "minutes": 40
+            }
+          }
+        },
+        "rootMeanSquareOfSuccessiveDifferencesMilliseconds": 28.2,
+        "metadata": {
+          "highFrequencyPower": 166.9,
+          "lowFrequencyPower": 871.6
+        }
+      }
+    },
+    {
+      "dataSource": {
+        "recordingMethod": "DERIVED",
+        "device": {
+          "displayName": "Charge 6"
+        },
+        "platform": "FITBIT"
+      },
+      "heartRateVariability": {
+        "sampleTime": {
+          "physicalTime": "2026-10-12T15:35:00Z",
+          "utcOffset": "-25200s",
+          "civilTime": {
+            "date": {
+              "year": 2026,
+              "month": 10,
+              "day": 12
+            },
+            "time": {
+              "hours": 8,
+              "minutes": 35
+            }
+          }
+        },
+        "rootMeanSquareOfSuccessiveDifferencesMilliseconds": 56.5,
+        "metadata": {
+          "highFrequencyPower": 574.1,
+          "lowFrequencyPower": 2566.3
+        }
+      }
+    },
+    {
+      "dataSource": {
+        "recordingMethod": "DERIVED",
+        "device": {
+          "displayName": "Charge 6"
+        },
+        "platform": "FITBIT"
+      },
+      "heartRateVariability": {
+        "sampleTime": {
+          "physicalTime": "2026-10-12T15:30:00Z",
+          "utcOffset": "-25200s",
+          "civilTime": {
+            "date": {
+              "year": 2026,
+              "month": 10,
+              "day": 12
+            },
+            "time": {
+              "hours": 8,
+              "minutes": 30
+            }
+          }
+        },
+        "rootMeanSquareOfSuccessiveDifferencesMilliseconds": 74.6,
+        "metadata": {
+          "highFrequencyPower": 1096.5,
+          "lowFrequencyPower": 4333
+        }
+      }
+    },
+    {
+      "dataSource": {
+        "recordingMethod": "DERIVED",
+        "device": {
+          "displayName": "Charge 6"
+        },
+        "platform": "FITBIT"
+      },
+      "heartRateVariability": {
+        "sampleTime": {
+          "physicalTime": "2026-10-12T15:10:00Z",
+          "utcOffset": "-25200s",
+          "civilTime": {
+            "date": {
+              "year": 2026,
+              "month": 10,
+              "day": 12
+            },
+            "time": {
+              "hours": 8,
+              "minutes": 10
+            }
+          }
+        },
+        "rootMeanSquareOfSuccessiveDifferencesMilliseconds": 49.8,
+        "metadata": {
+          "highFrequencyPower": 510.9,
+          "lowFrequencyPower": 783.5
+        }
+      }
+    },
+    {
+      "dataSource": {
+        "recordingMethod": "DERIVED",
+        "device": {
+          "displayName": "Charge 6"
+        },
+        "platform": "FITBIT"
+      },
+      "heartRateVariability": {
+        "sampleTime": {
+          "physicalTime": "2026-10-12T15:05:00Z",
+          "utcOffset": "-25200s",
+          "civilTime": {
+            "date": {
+              "year": 2026,
+              "month": 10,
+              "day": 12
+            },
+            "time": {
+              "hours": 8,
+              "minutes": 5
+            }
+          }
+        },
+        "rootMeanSquareOfSuccessiveDifferencesMilliseconds": 54.8,
+        "metadata": {
+          "highFrequencyPower": 817.8,
+          "lowFrequencyPower": 1265.5
+        }
+      }
+    },
+    {
+      "dataSource": {
+        "recordingMethod": "DERIVED",
+        "device": {
+          "displayName": "Charge 6"
+        },
+        "platform": "FITBIT"
+      },
+      "heartRateVariability": {
+        "sampleTime": {
+          "physicalTime": "2026-10-12T15:00:00Z",
+          "utcOffset": "-25200s",
+          "civilTime": {
+            "date": {
+              "year": 2026,
+              "month": 10,
+              "day": 12
+            },
+            "time": {
+              "hours": 8
+            }
+          }
+        },
+        "rootMeanSquareOfSuccessiveDifferencesMilliseconds": 54.7,
+        "metadata": {
+          "highFrequencyPower": 942.3,
+          "lowFrequencyPower": 1253.7
+        }
+      }
+    },
+    {
+      "dataSource": {
+        "recordingMethod": "DERIVED",
+        "device": {
+          "displayName": "Charge 6"
+        },
+        "platform": "FITBIT"
+      },
+      "heartRateVariability": {
+        "sampleTime": {
+          "physicalTime": "2026-10-12T14:55:00Z",
+          "utcOffset": "-25200s",
+          "civilTime": {
+            "date": {
+              "year": 2026,
+              "month": 10,
+              "day": 12
+            },
+            "time": {
+              "hours": 7,
+              "minutes": 55
+            }
+          }
+        },
+        "rootMeanSquareOfSuccessiveDifferencesMilliseconds": 53.6,
+        "metadata": {
+          "highFrequencyPower": 593.5,
+          "lowFrequencyPower": 1317.8
+        }
+      }
+    },
+    {
+      "dataSource": {
+        "recordingMethod": "DERIVED",
+        "device": {
+          "displayName": "Charge 6"
+        },
+        "platform": "FITBIT"
+      },
+      "heartRateVariability": {
+        "sampleTime": {
+          "physicalTime": "2026-10-12T14:50:00Z",
+          "utcOffset": "-25200s",
+          "civilTime": {
+            "date": {
+              "year": 2026,
+              "month": 10,
+              "day": 12
+            },
+            "time": {
+              "hours": 7,
+              "minutes": 50
+            }
+          }
+        },
+        "rootMeanSquareOfSuccessiveDifferencesMilliseconds": 68.8,
+        "metadata": {
+          "highFrequencyPower": 861.3,
+          "lowFrequencyPower": 4125.3
+        }
+      }
+    },
+    {
+      "dataSource": {
+        "recordingMethod": "DERIVED",
+        "device": {
+          "displayName": "Charge 6"
+        },
+        "platform": "FITBIT"
+      },
+      "heartRateVariability": {
+        "sampleTime": {
+          "physicalTime": "2026-10-12T14:45:00Z",
+          "utcOffset": "-25200s",
+          "civilTime": {
+            "date": {
+              "year": 2026,
+              "month": 10,
+              "day": 12
+            },
+            "time": {
+              "hours": 7,
+              "minutes": 45
+            }
+          }
+        },
+        "rootMeanSquareOfSuccessiveDifferencesMilliseconds": 92.9,
+        "metadata": {
+          "highFrequencyPower": 1644.7,
+          "lowFrequencyPower": 3683.9
+        }
+      }
+    },
+    {
+      "dataSource": {
+        "recordingMethod": "DERIVED",
+        "device": {
+          "displayName": "Charge 6"
+        },
+        "platform": "FITBIT"
+      },
+      "heartRateVariability": {
+        "sampleTime": {
+          "physicalTime": "2026-10-12T14:30:00Z",
+          "utcOffset": "-25200s",
+          "civilTime": {
+            "date": {
+              "year": 2026,
+              "month": 10,
+              "day": 12
+            },
+            "time": {
+              "hours": 7,
+              "minutes": 30
+            }
+          }
+        },
+        "rootMeanSquareOfSuccessiveDifferencesMilliseconds": 42.5,
+        "metadata": {
+          "highFrequencyPower": 415.5,
+          "lowFrequencyPower": 1058.9
+        }
+      }
+    },
+    {
+      "dataSource": {
+        "recordingMethod": "DERIVED",
+        "device": {
+          "displayName": "Charge 6"
+        },
+        "platform": "FITBIT"
+      },
+      "heartRateVariability": {
+        "sampleTime": {
+          "physicalTime": "2026-10-12T14:25:00Z",
+          "utcOffset": "-25200s",
+          "civilTime": {
+            "date": {
+              "year": 2026,
+              "month": 10,
+              "day": 12
+            },
+            "time": {
+              "hours": 7,
+              "minutes": 25
+            }
+          }
+        },
+        "rootMeanSquareOfSuccessiveDifferencesMilliseconds": 54.8,
+        "metadata": {
+          "highFrequencyPower": 856.1,
+          "lowFrequencyPower": 2796.1
+        }
+      }
+    },
+    {
+      "dataSource": {
+        "recordingMethod": "DERIVED",
+        "device": {
+          "displayName": "Charge 6"
+        },
+        "platform": "FITBIT"
+      },
+      "heartRateVariability": {
+        "sampleTime": {
+          "physicalTime": "2026-10-12T14:20:00Z",
+          "utcOffset": "-25200s",
+          "civilTime": {
+            "date": {
+              "year": 2026,
+              "month": 10,
+              "day": 12
+            },
+            "time": {
+              "hours": 7,
+              "minutes": 20
+            }
+          }
+        },
+        "rootMeanSquareOfSuccessiveDifferencesMilliseconds": 39.2,
+        "metadata": {
+          "highFrequencyPower": 952,
+          "lowFrequencyPower": 2727
+        }
+      }
+    },
+    {
+      "dataSource": {
+        "recordingMethod": "DERIVED",
+        "device": {
+          "displayName": "Charge 6"
+        },
+        "platform": "FITBIT"
+      },
+      "heartRateVariability": {
+        "sampleTime": {
+          "physicalTime": "2026-10-12T14:15:00Z",
+          "utcOffset": "-25200s",
+          "civilTime": {
+            "date": {
+              "year": 2026,
+              "month": 10,
+              "day": 12
+            },
+            "time": {
+              "hours": 7,
+              "minutes": 15
+            }
+          }
+        },
+        "rootMeanSquareOfSuccessiveDifferencesMilliseconds": 56,
+        "metadata": {
+          "highFrequencyPower": 398.1,
+          "lowFrequencyPower": 1554.1
+        }
+      }
+    },
+    {
+      "dataSource": {
+        "recordingMethod": "DERIVED",
+        "device": {
+          "displayName": "Charge 6"
+        },
+        "platform": "FITBIT"
+      },
+      "heartRateVariability": {
+        "sampleTime": {
+          "physicalTime": "2026-10-12T14:10:00Z",
+          "utcOffset": "-25200s",
+          "civilTime": {
+            "date": {
+              "year": 2026,
+              "month": 10,
+              "day": 12
+            },
+            "time": {
+              "hours": 7,
+              "minutes": 10
+            }
+          }
+        },
+        "rootMeanSquareOfSuccessiveDifferencesMilliseconds": 96.1,
+        "metadata": {
+          "highFrequencyPower": 2529.4,
+          "lowFrequencyPower": 6684.8
+        }
+      }
+    },
+    {
+      "dataSource": {
+        "recordingMethod": "DERIVED",
+        "device": {
+          "displayName": "Charge 6"
+        },
+        "platform": "FITBIT"
+      },
+      "heartRateVariability": {
+        "sampleTime": {
+          "physicalTime": "2026-10-12T14:05:00Z",
+          "utcOffset": "-25200s",
+          "civilTime": {
+            "date": {
+              "year": 2026,
+              "month": 10,
+              "day": 12
+            },
+            "time": {
+              "hours": 7,
+              "minutes": 5
+            }
+          }
+        },
+        "rootMeanSquareOfSuccessiveDifferencesMilliseconds": 40.7,
+        "metadata": {
+          "highFrequencyPower": 217.9,
+          "lowFrequencyPower": 489
+        }
+      }
+    },
+    {
+      "dataSource": {
+        "recordingMethod": "DERIVED",
+        "device": {
+          "displayName": "Charge 6"
+        },
+        "platform": "FITBIT"
+      },
+      "heartRateVariability": {
+        "sampleTime": {
+          "physicalTime": "2026-10-12T14:00:00Z",
+          "utcOffset": "-25200s",
+          "civilTime": {
+            "date": {
+              "year": 2026,
+              "month": 10,
+              "day": 12
+            },
+            "time": {
+              "hours": 7
+            }
+          }
+        },
+        "rootMeanSquareOfSuccessiveDifferencesMilliseconds": 33.6,
+        "metadata": {
+          "highFrequencyPower": 466.3,
+          "lowFrequencyPower": 1759.4
+        }
+      }
+    },
+    {
+      "dataSource": {
+        "recordingMethod": "DERIVED",
+        "device": {
+          "displayName": "Charge 6"
+        },
+        "platform": "FITBIT"
+      },
+      "heartRateVariability": {
+        "sampleTime": {
+          "physicalTime": "2026-10-12T13:55:00Z",
+          "utcOffset": "-25200s",
+          "civilTime": {
+            "date": {
+              "year": 2026,
+              "month": 10,
+              "day": 12
+            },
+            "time": {
+              "hours": 6,
+              "minutes": 55
+            }
+          }
+        },
+        "rootMeanSquareOfSuccessiveDifferencesMilliseconds": 24.4,
+        "metadata": {
+          "highFrequencyPower": 165,
+          "lowFrequencyPower": 568.9
+        }
+      }
+    },
+    {
+      "dataSource": {
+        "recordingMethod": "DERIVED",
+        "device": {
+          "displayName": "Charge 6"
+        },
+        "platform": "FITBIT"
+      },
+      "heartRateVariability": {
+        "sampleTime": {
+          "physicalTime": "2026-10-12T13:50:00Z",
+          "utcOffset": "-25200s",
+          "civilTime": {
+            "date": {
+              "year": 2026,
+              "month": 10,
+              "day": 12
+            },
+            "time": {
+              "hours": 6,
+              "minutes": 50
+            }
+          }
+        },
+        "rootMeanSquareOfSuccessiveDifferencesMilliseconds": 25.3,
+        "metadata": {
+          "highFrequencyPower": 292.6,
+          "lowFrequencyPower": 901.6
+        }
+      }
+    },
+    {
+      "dataSource": {
+        "recordingMethod": "DERIVED",
+        "device": {
+          "displayName": "Charge 6"
+        },
+        "platform": "FITBIT"
+      },
+      "heartRateVariability": {
+        "sampleTime": {
+          "physicalTime": "2026-10-12T13:45:00Z",
+          "utcOffset": "-25200s",
+          "civilTime": {
+            "date": {
+              "year": 2026,
+              "month": 10,
+              "day": 12
+            },
+            "time": {
+              "hours": 6,
+              "minutes": 45
+            }
+          }
+        },
+        "rootMeanSquareOfSuccessiveDifferencesMilliseconds": 29.2,
+        "metadata": {
+          "highFrequencyPower": 286.3,
+          "lowFrequencyPower": 1129.7
+        }
+      }
+    },
+    {
+      "dataSource": {
+        "recordingMethod": "DERIVED",
+        "device": {
+          "displayName": "Charge 6"
+        },
+        "platform": "FITBIT"
+      },
+      "heartRateVariability": {
+        "sampleTime": {
+          "physicalTime": "2026-10-12T13:40:00Z",
+          "utcOffset": "-25200s",
+          "civilTime": {
+            "date": {
+              "year": 2026,
+              "month": 10,
+              "day": 12
+            },
+            "time": {
+              "hours": 6,
+              "minutes": 40
+            }
+          }
+        },
+        "rootMeanSquareOfSuccessiveDifferencesMilliseconds": 26.6,
+        "metadata": {
+          "highFrequencyPower": 306.9,
+          "lowFrequencyPower": 1550.8
+        }
+      }
+    },
+    {
+      "dataSource": {
+        "recordingMethod": "DERIVED",
+        "device": {
+          "displayName": "Charge 6"
+        },
+        "platform": "FITBIT"
+      },
+      "heartRateVariability": {
+        "sampleTime": {
+          "physicalTime": "2026-10-12T13:35:00Z",
+          "utcOffset": "-25200s",
+          "civilTime": {
+            "date": {
+              "year": 2026,
+              "month": 10,
+              "day": 12
+            },
+            "time": {
+              "hours": 6,
+              "minutes": 35
+            }
+          }
+        },
+        "rootMeanSquareOfSuccessiveDifferencesMilliseconds": 24.4,
+        "metadata": {
+          "highFrequencyPower": 132.6,
+          "lowFrequencyPower": 608.2
+        }
+      }
+    },
+    {
+      "dataSource": {
+        "recordingMethod": "DERIVED",
+        "device": {
+          "displayName": "Charge 6"
+        },
+        "platform": "FITBIT"
+      },
+      "heartRateVariability": {
+        "sampleTime": {
+          "physicalTime": "2026-10-12T13:30:00Z",
+          "utcOffset": "-25200s",
+          "civilTime": {
+            "date": {
+              "year": 2026,
+              "month": 10,
+              "day": 12
+            },
+            "time": {
+              "hours": 6,
+              "minutes": 30
+            }
+          }
+        },
+        "rootMeanSquareOfSuccessiveDifferencesMilliseconds": 40.2,
+        "metadata": {
+          "highFrequencyPower": 523.3,
+          "lowFrequencyPower": 3874
+        }
+      }
+    },
+    {
+      "dataSource": {
+        "recordingMethod": "DERIVED",
+        "device": {
+          "displayName": "Charge 6"
+        },
+        "platform": "FITBIT"
+      },
+      "heartRateVariability": {
+        "sampleTime": {
+          "physicalTime": "2026-10-12T13:25:00Z",
+          "utcOffset": "-25200s",
+          "civilTime": {
+            "date": {
+              "year": 2026,
+              "month": 10,
+              "day": 12
+            },
+            "time": {
+              "hours": 6,
+              "minutes": 25
+            }
+          }
+        },
+        "rootMeanSquareOfSuccessiveDifferencesMilliseconds": 23.1,
+        "metadata": {
+          "highFrequencyPower": 155.4,
+          "lowFrequencyPower": 1178.8
+        }
+      }
+    },
+    {
+      "dataSource": {
+        "recordingMethod": "DERIVED",
+        "device": {
+          "displayName": "Charge 6"
+        },
+        "platform": "FITBIT"
+      },
+      "heartRateVariability": {
+        "sampleTime": {
+          "physicalTime": "2026-10-12T13:20:00Z",
+          "utcOffset": "-25200s",
+          "civilTime": {
+            "date": {
+              "year": 2026,
+              "month": 10,
+              "day": 12
+            },
+            "time": {
+              "hours": 6,
+              "minutes": 20
+            }
+          }
+        },
+        "rootMeanSquareOfSuccessiveDifferencesMilliseconds": 23.8,
+        "metadata": {
+          "highFrequencyPower": 121.6,
+          "lowFrequencyPower": 934.3
+        }
+      }
+    },
+    {
+      "dataSource": {
+        "recordingMethod": "DERIVED",
+        "device": {
+          "displayName": "Charge 6"
+        },
+        "platform": "FITBIT"
+      },
+      "heartRateVariability": {
+        "sampleTime": {
+          "physicalTime": "2026-10-12T13:15:00Z",
+          "utcOffset": "-25200s",
+          "civilTime": {
+            "date": {
+              "year": 2026,
+              "month": 10,
+              "day": 12
+            },
+            "time": {
+              "hours": 6,
+              "minutes": 15
+            }
+          }
+        },
+        "rootMeanSquareOfSuccessiveDifferencesMilliseconds": 61.7,
+        "metadata": {
+          "highFrequencyPower": 2980.3,
+          "lowFrequencyPower": 4998.6
+        }
+      }
+    },
+    {
+      "dataSource": {
+        "recordingMethod": "DERIVED",
+        "device": {
+          "displayName": "Charge 6"
+        },
+        "platform": "FITBIT"
+      },
+      "heartRateVariability": {
+        "sampleTime": {
+          "physicalTime": "2026-10-12T13:10:00Z",
+          "utcOffset": "-25200s",
+          "civilTime": {
+            "date": {
+              "year": 2026,
+              "month": 10,
+              "day": 12
+            },
+            "time": {
+              "hours": 6,
+              "minutes": 10
+            }
+          }
+        },
+        "rootMeanSquareOfSuccessiveDifferencesMilliseconds": 73.6,
+        "metadata": {
+          "highFrequencyPower": 1135.2,
+          "lowFrequencyPower": 5748.5
+        }
+      }
+    },
+    {
+      "dataSource": {
+        "recordingMethod": "DERIVED",
+        "device": {
+          "displayName": "Charge 6"
+        },
+        "platform": "FITBIT"
+      },
+      "heartRateVariability": {
+        "sampleTime": {
+          "physicalTime": "2026-10-12T13:05:00Z",
+          "utcOffset": "-25200s",
+          "civilTime": {
+            "date": {
+              "year": 2026,
+              "month": 10,
+              "day": 12
+            },
+            "time": {
+              "hours": 6,
+              "minutes": 5
+            }
+          }
+        },
+        "rootMeanSquareOfSuccessiveDifferencesMilliseconds": 44.8,
+        "metadata": {
+          "highFrequencyPower": 556.6,
+          "lowFrequencyPower": 690.2
+        }
+      }
+    },
+    {
+      "dataSource": {
+        "recordingMethod": "DERIVED",
+        "device": {
+          "displayName": "Charge 6"
+        },
+        "platform": "FITBIT"
+      },
+      "heartRateVariability": {
+        "sampleTime": {
+          "physicalTime": "2026-10-12T13:00:00Z",
+          "utcOffset": "-25200s",
+          "civilTime": {
+            "date": {
+              "year": 2026,
+              "month": 10,
+              "day": 12
+            },
+            "time": {
+              "hours": 6
+            }
+          }
+        },
+        "rootMeanSquareOfSuccessiveDifferencesMilliseconds": 60.6,
+        "metadata": {
+          "highFrequencyPower": 877.5,
+          "lowFrequencyPower": 3330
+        }
+      }
+    },
+    {
+      "dataSource": {
+        "recordingMethod": "DERIVED",
+        "device": {
+          "displayName": "Charge 6"
+        },
+        "platform": "FITBIT"
+      },
+      "heartRateVariability": {
+        "sampleTime": {
+          "physicalTime": "2026-10-12T12:55:00Z",
+          "utcOffset": "-25200s",
+          "civilTime": {
+            "date": {
+              "year": 2026,
+              "month": 10,
+              "day": 12
+            },
+            "time": {
+              "hours": 5,
+              "minutes": 55
+            }
+          }
+        },
+        "rootMeanSquareOfSuccessiveDifferencesMilliseconds": 84.7,
+        "metadata": {
+          "highFrequencyPower": 978.6,
+          "lowFrequencyPower": 2802.6
+        }
+      }
+    },
+    {
+      "dataSource": {
+        "recordingMethod": "DERIVED",
+        "device": {
+          "displayName": "Charge 6"
+        },
+        "platform": "FITBIT"
+      },
+      "heartRateVariability": {
+        "sampleTime": {
+          "physicalTime": "2026-10-12T12:50:00Z",
+          "utcOffset": "-25200s",
+          "civilTime": {
+            "date": {
+              "year": 2026,
+              "month": 10,
+              "day": 12
+            },
+            "time": {
+              "hours": 5,
+              "minutes": 50
+            }
+          }
+        },
+        "rootMeanSquareOfSuccessiveDifferencesMilliseconds": 40.8,
+        "metadata": {
+          "highFrequencyPower": 662.7,
+          "lowFrequencyPower": 2117.5
+        }
+      }
+    },
+    {
+      "dataSource": {
+        "recordingMethod": "DERIVED",
+        "device": {
+          "displayName": "Charge 6"
+        },
+        "platform": "FITBIT"
+      },
+      "heartRateVariability": {
+        "sampleTime": {
+          "physicalTime": "2026-10-12T12:45:00Z",
+          "utcOffset": "-25200s",
+          "civilTime": {
+            "date": {
+              "year": 2026,
+              "month": 10,
+              "day": 12
+            },
+            "time": {
+              "hours": 5,
+              "minutes": 45
+            }
+          }
+        },
+        "rootMeanSquareOfSuccessiveDifferencesMilliseconds": 31.1,
+        "metadata": {
+          "highFrequencyPower": 268.3,
+          "lowFrequencyPower": 576.2
+        }
+      }
+    },
+    {
+      "dataSource": {
+        "recordingMethod": "DERIVED",
+        "device": {
+          "displayName": "Charge 6"
+        },
+        "platform": "FITBIT"
+      },
+      "heartRateVariability": {
+        "sampleTime": {
+          "physicalTime": "2026-10-12T12:40:00Z",
+          "utcOffset": "-25200s",
+          "civilTime": {
+            "date": {
+              "year": 2026,
+              "month": 10,
+              "day": 12
+            },
+            "time": {
+              "hours": 5,
+              "minutes": 40
+            }
+          }
+        },
+        "rootMeanSquareOfSuccessiveDifferencesMilliseconds": 30.7,
+        "metadata": {
+          "highFrequencyPower": 282,
+          "lowFrequencyPower": 923.2
+        }
+      }
+    },
+    {
+      "dataSource": {
+        "recordingMethod": "DERIVED",
+        "device": {
+          "displayName": "Charge 6"
+        },
+        "platform": "FITBIT"
+      },
+      "heartRateVariability": {
+        "sampleTime": {
+          "physicalTime": "2026-10-12T12:35:00Z",
+          "utcOffset": "-25200s",
+          "civilTime": {
+            "date": {
+              "year": 2026,
+              "month": 10,
+              "day": 12
+            },
+            "time": {
+              "hours": 5,
+              "minutes": 35
+            }
+          }
+        },
+        "rootMeanSquareOfSuccessiveDifferencesMilliseconds": 69.9,
+        "metadata": {
+          "highFrequencyPower": 2998.5,
+          "lowFrequencyPower": 5465.8
+        }
+      }
+    },
+    {
+      "dataSource": {
+        "recordingMethod": "DERIVED",
+        "device": {
+          "displayName": "Charge 6"
+        },
+        "platform": "FITBIT"
+      },
+      "heartRateVariability": {
+        "sampleTime": {
+          "physicalTime": "2026-10-12T12:30:00Z",
+          "utcOffset": "-25200s",
+          "civilTime": {
+            "date": {
+              "year": 2026,
+              "month": 10,
+              "day": 12
+            },
+            "time": {
+              "hours": 5,
+              "minutes": 30
+            }
+          }
+        },
+        "rootMeanSquareOfSuccessiveDifferencesMilliseconds": 57.8,
+        "metadata": {
+          "highFrequencyPower": 835,
+          "lowFrequencyPower": 2655.4
+        }
+      }
+    },
+    {
+      "dataSource": {
+        "recordingMethod": "DERIVED",
+        "device": {
+          "displayName": "Charge 6"
+        },
+        "platform": "FITBIT"
+      },
+      "heartRateVariability": {
+        "sampleTime": {
+          "physicalTime": "2026-10-12T12:25:00Z",
+          "utcOffset": "-25200s",
+          "civilTime": {
+            "date": {
+              "year": 2026,
+              "month": 10,
+              "day": 12
+            },
+            "time": {
+              "hours": 5,
+              "minutes": 25
+            }
+          }
+        },
+        "rootMeanSquareOfSuccessiveDifferencesMilliseconds": 47.1,
+        "metadata": {
+          "highFrequencyPower": 399.2,
+          "lowFrequencyPower": 1467.1
+        }
+      }
+    },
+    {
+      "dataSource": {
+        "recordingMethod": "DERIVED",
+        "device": {
+          "displayName": "Charge 6"
+        },
+        "platform": "FITBIT"
+      },
+      "heartRateVariability": {
+        "sampleTime": {
+          "physicalTime": "2026-10-12T12:20:00Z",
+          "utcOffset": "-25200s",
+          "civilTime": {
+            "date": {
+              "year": 2026,
+              "month": 10,
+              "day": 12
+            },
+            "time": {
+              "hours": 5,
+              "minutes": 20
+            }
+          }
+        },
+        "rootMeanSquareOfSuccessiveDifferencesMilliseconds": 32.2,
+        "metadata": {
+          "highFrequencyPower": 420.6,
+          "lowFrequencyPower": 617.5
+        }
+      }
+    },
+    {
+      "dataSource": {
+        "recordingMethod": "DERIVED",
+        "device": {
+          "displayName": "Charge 6"
+        },
+        "platform": "FITBIT"
+      },
+      "heartRateVariability": {
+        "sampleTime": {
+          "physicalTime": "2026-10-12T12:15:00Z",
+          "utcOffset": "-25200s",
+          "civilTime": {
+            "date": {
+              "year": 2026,
+              "month": 10,
+              "day": 12
+            },
+            "time": {
+              "hours": 5,
+              "minutes": 15
+            }
+          }
+        },
+        "rootMeanSquareOfSuccessiveDifferencesMilliseconds": 27.8,
+        "metadata": {
+          "highFrequencyPower": 198.3,
+          "lowFrequencyPower": 740.5
+        }
+      }
+    },
+    {
+      "dataSource": {
+        "recordingMethod": "DERIVED",
+        "device": {
+          "displayName": "Charge 6"
+        },
+        "platform": "FITBIT"
+      },
+      "heartRateVariability": {
+        "sampleTime": {
+          "physicalTime": "2026-10-12T12:10:00Z",
+          "utcOffset": "-25200s",
+          "civilTime": {
+            "date": {
+              "year": 2026,
+              "month": 10,
+              "day": 12
+            },
+            "time": {
+              "hours": 5,
+              "minutes": 10
+            }
+          }
+        },
+        "rootMeanSquareOfSuccessiveDifferencesMilliseconds": 24.8,
+        "metadata": {
+          "highFrequencyPower": 206.1,
+          "lowFrequencyPower": 760.9
+        }
+      }
+    },
+    {
+      "dataSource": {
+        "recordingMethod": "DERIVED",
+        "device": {
+          "displayName": "Charge 6"
+        },
+        "platform": "FITBIT"
+      },
+      "heartRateVariability": {
+        "sampleTime": {
+          "physicalTime": "2026-10-12T12:05:00Z",
+          "utcOffset": "-25200s",
+          "civilTime": {
+            "date": {
+              "year": 2026,
+              "month": 10,
+              "day": 12
+            },
+            "time": {
+              "hours": 5,
+              "minutes": 5
+            }
+          }
+        },
+        "rootMeanSquareOfSuccessiveDifferencesMilliseconds": 29,
+        "metadata": {
+          "highFrequencyPower": 152.4,
+          "lowFrequencyPower": 963.9
+        }
+      }
+    },
+    {
+      "dataSource": {
+        "recordingMethod": "DERIVED",
+        "device": {
+          "displayName": "Charge 6"
+        },
+        "platform": "FITBIT"
+      },
+      "heartRateVariability": {
+        "sampleTime": {
+          "physicalTime": "2026-10-12T12:00:00Z",
+          "utcOffset": "-25200s",
+          "civilTime": {
+            "date": {
+              "year": 2026,
+              "month": 10,
+              "day": 12
+            },
+            "time": {
+              "hours": 5
+            }
+          }
+        },
+        "rootMeanSquareOfSuccessiveDifferencesMilliseconds": 24.8,
+        "metadata": {
+          "highFrequencyPower": 195.6,
+          "lowFrequencyPower": 749.5
+        }
+      }
+    },
+    {
+      "dataSource": {
+        "recordingMethod": "DERIVED",
+        "device": {
+          "displayName": "Charge 6"
+        },
+        "platform": "FITBIT"
+      },
+      "heartRateVariability": {
+        "sampleTime": {
+          "physicalTime": "2026-10-12T11:55:00Z",
+          "utcOffset": "-25200s",
+          "civilTime": {
+            "date": {
+              "year": 2026,
+              "month": 10,
+              "day": 12
+            },
+            "time": {
+              "hours": 4,
+              "minutes": 55
+            }
+          }
+        },
+        "rootMeanSquareOfSuccessiveDifferencesMilliseconds": 25.1,
+        "metadata": {
+          "highFrequencyPower": 142.4,
+          "lowFrequencyPower": 1176.6
+        }
+      }
+    },
+    {
+      "dataSource": {
+        "recordingMethod": "DERIVED",
+        "device": {
+          "displayName": "Charge 6"
+        },
+        "platform": "FITBIT"
+      },
+      "heartRateVariability": {
+        "sampleTime": {
+          "physicalTime": "2026-10-12T11:50:00Z",
+          "utcOffset": "-25200s",
+          "civilTime": {
+            "date": {
+              "year": 2026,
+              "month": 10,
+              "day": 12
+            },
+            "time": {
+              "hours": 4,
+              "minutes": 50
+            }
+          }
+        },
+        "rootMeanSquareOfSuccessiveDifferencesMilliseconds": 20.6,
+        "metadata": {
+          "highFrequencyPower": 195.8,
+          "lowFrequencyPower": 1422.8
+        }
+      }
+    },
+    {
+      "dataSource": {
+        "recordingMethod": "DERIVED",
+        "device": {
+          "displayName": "Charge 6"
+        },
+        "platform": "FITBIT"
+      },
+      "heartRateVariability": {
+        "sampleTime": {
+          "physicalTime": "2026-10-12T11:45:00Z",
+          "utcOffset": "-25200s",
+          "civilTime": {
+            "date": {
+              "year": 2026,
+              "month": 10,
+              "day": 12
+            },
+            "time": {
+              "hours": 4,
+              "minutes": 45
+            }
+          }
+        },
+        "rootMeanSquareOfSuccessiveDifferencesMilliseconds": 33.5,
+        "metadata": {
+          "highFrequencyPower": 878.3,
+          "lowFrequencyPower": 1642.5
+        }
+      }
+    },
+    {
+      "dataSource": {
+        "recordingMethod": "DERIVED",
+        "device": {
+          "displayName": "Charge 6"
+        },
+        "platform": "FITBIT"
+      },
+      "heartRateVariability": {
+        "sampleTime": {
+          "physicalTime": "2026-10-12T11:40:00Z",
+          "utcOffset": "-25200s",
+          "civilTime": {
+            "date": {
+              "year": 2026,
+              "month": 10,
+              "day": 12
+            },
+            "time": {
+              "hours": 4,
+              "minutes": 40
+            }
+          }
+        },
+        "rootMeanSquareOfSuccessiveDifferencesMilliseconds": 26.5,
+        "metadata": {
+          "highFrequencyPower": 95.4,
+          "lowFrequencyPower": 955.7
+        }
+      }
+    },
+    {
+      "dataSource": {
+        "recordingMethod": "DERIVED",
+        "device": {
+          "displayName": "Charge 6"
+        },
+        "platform": "FITBIT"
+      },
+      "heartRateVariability": {
+        "sampleTime": {
+          "physicalTime": "2026-10-12T11:35:00Z",
+          "utcOffset": "-25200s",
+          "civilTime": {
+            "date": {
+              "year": 2026,
+              "month": 10,
+              "day": 12
+            },
+            "time": {
+              "hours": 4,
+              "minutes": 35
+            }
+          }
+        },
+        "rootMeanSquareOfSuccessiveDifferencesMilliseconds": 18.7,
+        "metadata": {
+          "highFrequencyPower": 134.4,
+          "lowFrequencyPower": 620.8
+        }
+      }
+    },
+    {
+      "dataSource": {
+        "recordingMethod": "DERIVED",
+        "device": {
+          "displayName": "Charge 6"
+        },
+        "platform": "FITBIT"
+      },
+      "heartRateVariability": {
+        "sampleTime": {
+          "physicalTime": "2026-10-12T11:30:00Z",
+          "utcOffset": "-25200s",
+          "civilTime": {
+            "date": {
+              "year": 2026,
+              "month": 10,
+              "day": 12
+            },
+            "time": {
+              "hours": 4,
+              "minutes": 30
+            }
+          }
+        },
+        "rootMeanSquareOfSuccessiveDifferencesMilliseconds": 58,
+        "metadata": {
+          "highFrequencyPower": 937.6,
+          "lowFrequencyPower": 3958.4
+        }
+      }
+    },
+    {
+      "dataSource": {
+        "recordingMethod": "DERIVED",
+        "device": {
+          "displayName": "Charge 6"
+        },
+        "platform": "FITBIT"
+      },
+      "heartRateVariability": {
+        "sampleTime": {
+          "physicalTime": "2026-10-12T11:20:00Z",
+          "utcOffset": "-25200s",
+          "civilTime": {
+            "date": {
+              "year": 2026,
+              "month": 10,
+              "day": 12
+            },
+            "time": {
+              "hours": 4,
+              "minutes": 20
+            }
+          }
+        },
+        "rootMeanSquareOfSuccessiveDifferencesMilliseconds": 27.6,
+        "metadata": {
+          "highFrequencyPower": 199.7,
+          "lowFrequencyPower": 439.5
+        }
+      }
+    },
+    {
+      "dataSource": {
+        "recordingMethod": "DERIVED",
+        "device": {
+          "displayName": "Charge 6"
+        },
+        "platform": "FITBIT"
+      },
+      "heartRateVariability": {
+        "sampleTime": {
+          "physicalTime": "2026-10-12T11:15:00Z",
+          "utcOffset": "-25200s",
+          "civilTime": {
+            "date": {
+              "year": 2026,
+              "month": 10,
+              "day": 12
+            },
+            "time": {
+              "hours": 4,
+              "minutes": 15
+            }
+          }
+        },
+        "rootMeanSquareOfSuccessiveDifferencesMilliseconds": 45,
+        "metadata": {
+          "highFrequencyPower": 482.8,
+          "lowFrequencyPower": 2589.9
+        }
+      }
+    },
+    {
+      "dataSource": {
+        "recordingMethod": "DERIVED",
+        "device": {
+          "displayName": "Charge 6"
+        },
+        "platform": "FITBIT"
+      },
+      "heartRateVariability": {
+        "sampleTime": {
+          "physicalTime": "2026-10-12T11:10:00Z",
+          "utcOffset": "-25200s",
+          "civilTime": {
+            "date": {
+              "year": 2026,
+              "month": 10,
+              "day": 12
+            },
+            "time": {
+              "hours": 4,
+              "minutes": 10
+            }
+          }
+        },
+        "rootMeanSquareOfSuccessiveDifferencesMilliseconds": 58.2,
+        "metadata": {
+          "highFrequencyPower": 650.5,
+          "lowFrequencyPower": 846.6
+        }
+      }
+    }
+  ],
+  "nextPageToken": "Xm5h-6DapSZxElRuWjx5bmvy98zj85uG34tuMn16mu2pntsnZI32iqhq"
+}

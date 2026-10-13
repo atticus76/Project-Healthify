@@ -1,0 +1,160 @@
+{
+  "dataPoints": [
+    {
+      "name": "users/7730820981954880667/dataTypes/exercise/dataPoints/3251648405472993400",
+      "dataSource": {
+        "recordingMethod": "ACTIVELY_MEASURED",
+        "device": {
+          "formFactor": "FITNESS_BAND",
+          "displayName": "Charge 6"
+        },
+        "platform": "FITBIT"
+      },
+      "exercise": {
+        "interval": {
+          "startTime": "2026-10-12T18:43:54Z",
+          "startUtcOffset": "-25200s",
+          "endTime": "2026-10-12T19:00:15Z",
+          "endUtcOffset": "-25200s"
+        },
+        "exerciseType": "WALKING",
+        "metricsSummary": {
+          "caloriesKcal": 114,
+          "distanceMillimeters": 946336,
+          "steps": "1323",
+          "averagePaceSecondsPerMeter": 1.0345162817434823,
+          "averageHeartRateBeatsPerMinute": "106",
+          "heartRateZoneDurations": {
+            "lightTime": "1020s",
+            "moderateTime": "0s",
+            "vigorousTime": "0s",
+            "peakTime": "0s"
+          }
+        },
+        "exerciseMetadata": {},
+        "displayName": "Walk",
+        "activeDuration": "979s",
+        "exerciseEvents": [
+          {
+            "eventTime": "2026-10-12T18:43:54Z",
+            "eventUtcOffset": "-25200s",
+            "exerciseEventType": "START"
+          },
+          {
+            "eventTime": "2026-10-12T19:00:13Z",
+            "eventUtcOffset": "-25200s",
+            "exerciseEventType": "PAUSE"
+          },
+          {
+            "eventTime": "2026-10-12T19:00:15Z",
+            "eventUtcOffset": "-25200s",
+            "exerciseEventType": "STOP"
+          }
+        ],
+        "updateTime": "2026-10-12T19:00:23.585509Z",
+        "createTime": "2026-10-12T19:00:23.585509Z"
+      }
+    },
+    {
+      "name": "users/7730820981954880667/dataTypes/exercise/dataPoints/2355705176462209912",
+      "dataSource": {
+        "recordingMethod": "PASSIVELY_MEASURED",
+        "device": {
+          "formFactor": "FITNESS_BAND",
+          "displayName": "Charge 6"
+        },
+        "platform": "FITBIT"
+      },
+      "exercise": {
+        "interval": {
+          "startTime": "2026-10-11T09:12:56Z",
+          "startUtcOffset": "-25200s",
+          "endTime": "2026-10-11T09:43:39Z",
+          "endUtcOffset": "-25200s"
+        },
+        "exerciseType": "WALKING",
+        "metricsSummary": {
+          "caloriesKcal": 202,
+          "distanceMillimeters": 1851000,
+          "steps": "2619",
+          "averagePaceSecondsPerMeter": 0.9956780118854673,
+          "averageHeartRateBeatsPerMinute": "94",
+          "heartRateZoneDurations": {
+            "lightTime": "1860s",
+            "moderateTime": "0s",
+            "vigorousTime": "0s",
+            "peakTime": "0s"
+          }
+        },
+        "exerciseMetadata": {},
+        "displayName": "Walk",
+        "activeDuration": "1843s",
+        "exerciseEvents": [
+          {
+            "eventTime": "2026-10-11T09:12:56Z",
+            "eventUtcOffset": "-25200s",
+            "exerciseEventType": "START"
+          },
+          {
+            "eventTime": "2026-10-11T09:43:39Z",
+            "eventUtcOffset": "-25200s",
+            "exerciseEventType": "STOP"
+          }
+        ],
+        "updateTime": "2026-10-12T03:15:10.117821Z",
+        "createTime": "2026-10-12T03:15:10.117821Z"
+      }
+    },
+    {
+      "name": "users/7730820981954880667/dataTypes/exercise/dataPoints/2156553759727405176",
+      "dataSource": {
+        "recordingMethod": "PASSIVELY_MEASURED",
+        "device": {
+          "formFactor": "FITNESS_BAND",
+          "displayName": "Charge 6"
+        },
+        "platform": "FITBIT"
+      },
+      "exercise": {
+        "interval": {
+          "startTime": "2026-10-11T05:57:30Z",
+          "startUtcOffset": "-25200s",
+          "endTime": "2026-10-11T06:51:16Z",
+          "endUtcOffset": "-25200s"
+        },
+        "exerciseType": "WALKING",
+        "metricsSummary": {
+          "caloriesKcal": 346,
+          "distanceMillimeters": 2743200,
+          "steps": "3838",
+          "averagePaceSecondsPerMeter": 1.1759988334791485,
+          "averageHeartRateBeatsPerMinute": "97",
+          "activeZoneMinutes": "2",
+          "heartRateZoneDurations": {
+            "lightTime": "3120s",
+            "moderateTime": "120s",
+            "vigorousTime": "0s",
+            "peakTime": "0s"
+          }
+        },
+        "exerciseMetadata": {},
+        "displayName": "Walk",
+        "activeDuration": "3226s",
+        "exerciseEvents": [
+          {
+            "eventTime": "2026-10-11T05:57:30Z",
+            "eventUtcOffset": "-25200s",
+            "exerciseEventType": "START"
+          },
+          {
+            "eventTime": "2026-10-11T06:51:16Z",
+            "eventUtcOffset": "-25200s",
+            "exerciseEventType": "STOP"
+          }
+        ],
+        "updateTime": "2026-10-12T03:15:08.602942Z",
+        "createTime": "2026-10-12T03:15:08.602942Z"
+      }
+    }
+  ]
+}

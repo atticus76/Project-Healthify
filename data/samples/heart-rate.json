@@ -1,0 +1,1404 @@
+{
+  "dataPoints": [
+    {
+      "dataSource": {
+        "recordingMethod": "PASSIVELY_MEASURED",
+        "device": {
+          "displayName": "Charge 6"
+        },
+        "platform": "FITBIT"
+      },
+      "heartRate": {
+        "sampleTime": {
+          "physicalTime": "2026-10-12T23:05:24Z",
+          "utcOffset": "-25200s",
+          "civilTime": {
+            "date": {
+              "year": 2026,
+              "month": 10,
+              "day": 12
+            },
+            "time": {
+              "hours": 16,
+              "minutes": 5,
+              "seconds": 24
+            }
+          }
+        },
+        "beatsPerMinute": "65"
+      }
+    },
+    {
+      "dataSource": {
+        "recordingMethod": "PASSIVELY_MEASURED",
+        "device": {
+          "displayName": "Charge 6"
+        },
+        "platform": "FITBIT"
+      },
+      "heartRate": {
+        "sampleTime": {
+          "physicalTime": "2026-10-12T23:05:22Z",
+          "utcOffset": "-25200s",
+          "civilTime": {
+            "date": {
+              "year": 2026,
+              "month": 10,
+              "day": 12
+            },
+            "time": {
+              "hours": 16,
+              "minutes": 5,
+              "seconds": 22
+            }
+          }
+        },
+        "beatsPerMinute": "64"
+      }
+    },
+    {
+      "dataSource": {
+        "recordingMethod": "PASSIVELY_MEASURED",
+        "device": {
+          "displayName": "Charge 6"
+        },
+        "platform": "FITBIT"
+      },
+      "heartRate": {
+        "sampleTime": {
+          "physicalTime": "2026-10-12T23:05:21Z",
+          "utcOffset": "-25200s",
+          "civilTime": {
+            "date": {
+              "year": 2026,
+              "month": 10,
+              "day": 12
+            },
+            "time": {
+              "hours": 16,
+              "minutes": 5,
+              "seconds": 21
+            }
+          }
+        },
+        "beatsPerMinute": "63"
+      }
+    },
+    {
+      "dataSource": {
+        "recordingMethod": "PASSIVELY_MEASURED",
+        "device": {
+          "displayName": "Charge 6"
+        },
+        "platform": "FITBIT"
+      },
+      "heartRate": {
+        "sampleTime": {
+          "physicalTime": "2026-10-12T23:05:18Z",
+          "utcOffset": "-25200s",
+          "civilTime": {
+            "date": {
+              "year": 2026,
+              "month": 10,
+              "day": 12
+            },
+            "time": {
+              "hours": 16,
+              "minutes": 5,
+              "seconds": 18
+            }
+          }
+        },
+        "beatsPerMinute": "63"
+      }
+    },
+    {
+      "dataSource": {
+        "recordingMethod": "PASSIVELY_MEASURED",
+        "device": {
+          "displayName": "Charge 6"
+        },
+        "platform": "FITBIT"
+      },
+      "heartRate": {
+        "sampleTime": {
+          "physicalTime": "2026-10-12T23:05:16Z",
+          "utcOffset": "-25200s",
+          "civilTime": {
+            "date": {
+              "year": 2026,
+              "month": 10,
+              "day": 12
+            },
+            "time": {
+              "hours": 16,
+              "minutes": 5,
+              "seconds": 16
+            }
+          }
+        },
+        "beatsPerMinute": "64"
+      }
+    },
+    {
+      "dataSource": {
+        "recordingMethod": "PASSIVELY_MEASURED",
+        "device": {
+          "displayName": "Charge 6"
+        },
+        "platform": "FITBIT"
+      },
+      "heartRate": {
+        "sampleTime": {
+          "physicalTime": "2026-10-12T23:05:13Z",
+          "utcOffset": "-25200s",
+          "civilTime": {
+            "date": {
+              "year": 2026,
+              "month": 10,
+              "day": 12
+            },
+            "time": {
+              "hours": 16,
+              "minutes": 5,
+              "seconds": 13
+            }
+          }
+        },
+        "beatsPerMinute": "64"
+      }
+    },
+    {
+      "dataSource": {
+        "recordingMethod": "PASSIVELY_MEASURED",
+        "device": {
+          "displayName": "Charge 6"
+        },
+        "platform": "FITBIT"
+      },
+      "heartRate": {
+        "sampleTime": {
+          "physicalTime": "2026-10-12T23:05:11Z",
+          "utcOffset": "-25200s",
+          "civilTime": {
+            "date": {
+              "year": 2026,
+              "month": 10,
+              "day": 12
+            },
+            "time": {
+              "hours": 16,
+              "minutes": 5,
+              "seconds": 11
+            }
+          }
+        },
+        "beatsPerMinute": "63"
+      }
+    },
+    {
+      "dataSource": {
+        "recordingMethod": "PASSIVELY_MEASURED",
+        "device": {
+          "displayName": "Charge 6"
+        },
+        "platform": "FITBIT"
+      },
+      "heartRate": {
+        "sampleTime": {
+          "physicalTime": "2026-10-12T23:05:08Z",
+          "utcOffset": "-25200s",
+          "civilTime": {
+            "date": {
+              "year": 2026,
+              "month": 10,
+              "day": 12
+            },
+            "time": {
+              "hours": 16,
+              "minutes": 5,
+              "seconds": 8
+            }
+          }
+        },
+        "beatsPerMinute": "63"
+      }
+    },
+    {
+      "dataSource": {
+        "recordingMethod": "PASSIVELY_MEASURED",
+        "device": {
+          "displayName": "Charge 6"
+        },
+        "platform": "FITBIT"
+      },
+      "heartRate": {
+        "sampleTime": {
+          "physicalTime": "2026-10-12T23:05:05Z",
+          "utcOffset": "-25200s",
+          "civilTime": {
+            "date": {
+              "year": 2026,
+              "month": 10,
+              "day": 12
+            },
+            "time": {
+              "hours": 16,
+              "minutes": 5,
+              "seconds": 5
+            }
+          }
+        },
+        "beatsPerMinute": "63"
+      }
+    },
+    {
+      "dataSource": {
+        "recordingMethod": "PASSIVELY_MEASURED",
+        "device": {
+          "displayName": "Charge 6"
+        },
+        "platform": "FITBIT"
+      },
+      "heartRate": {
+        "sampleTime": {
+          "physicalTime": "2026-10-12T23:05:03Z",
+          "utcOffset": "-25200s",
+          "civilTime": {
+            "date": {
+              "year": 2026,
+              "month": 10,
+              "day": 12
+            },
+            "time": {
+              "hours": 16,
+              "minutes": 5,
+              "seconds": 3
+            }
+          }
+        },
+        "beatsPerMinute": "62"
+      }
+    },
+    {
+      "dataSource": {
+        "recordingMethod": "PASSIVELY_MEASURED",
+        "device": {
+          "displayName": "Charge 6"
+        },
+        "platform": "FITBIT"
+      },
+      "heartRate": {
+        "sampleTime": {
+          "physicalTime": "2026-10-12T23:05:02Z",
+          "utcOffset": "-25200s",
+          "civilTime": {
+            "date": {
+              "year": 2026,
+              "month": 10,
+              "day": 12
+            },
+            "time": {
+              "hours": 16,
+              "minutes": 5,
+              "seconds": 2
+            }
+          }
+        },
+        "beatsPerMinute": "61"
+      }
+    },
+    {
+      "dataSource": {
+        "recordingMethod": "PASSIVELY_MEASURED",
+        "device": {
+          "displayName": "Charge 6"
+        },
+        "platform": "FITBIT"
+      },
+      "heartRate": {
+        "sampleTime": {
+          "physicalTime": "2026-10-12T23:04:59Z",
+          "utcOffset": "-25200s",
+          "civilTime": {
+            "date": {
+              "year": 2026,
+              "month": 10,
+              "day": 12
+            },
+            "time": {
+              "hours": 16,
+              "minutes": 4,
+              "seconds": 59
+            }
+          }
+        },
+        "beatsPerMinute": "61"
+      }
+    },
+    {
+      "dataSource": {
+        "recordingMethod": "PASSIVELY_MEASURED",
+        "device": {
+          "displayName": "Charge 6"
+        },
+        "platform": "FITBIT"
+      },
+      "heartRate": {
+        "sampleTime": {
+          "physicalTime": "2026-10-12T23:04:57Z",
+          "utcOffset": "-25200s",
+          "civilTime": {
+            "date": {
+              "year": 2026,
+              "month": 10,
+              "day": 12
+            },
+            "time": {
+              "hours": 16,
+              "minutes": 4,
+              "seconds": 57
+            }
+          }
+        },
+        "beatsPerMinute": "62"
+      }
+    },
+    {
+      "dataSource": {
+        "recordingMethod": "PASSIVELY_MEASURED",
+        "device": {
+          "displayName": "Charge 6"
+        },
+        "platform": "FITBIT"
+      },
+      "heartRate": {
+        "sampleTime": {
+          "physicalTime": "2026-10-12T23:04:54Z",
+          "utcOffset": "-25200s",
+          "civilTime": {
+            "date": {
+              "year": 2026,
+              "month": 10,
+              "day": 12
+            },
+            "time": {
+              "hours": 16,
+              "minutes": 4,
+              "seconds": 54
+            }
+          }
+        },
+        "beatsPerMinute": "62"
+      }
+    },
+    {
+      "dataSource": {
+        "recordingMethod": "PASSIVELY_MEASURED",
+        "device": {
+          "displayName": "Charge 6"
+        },
+        "platform": "FITBIT"
+      },
+      "heartRate": {
+        "sampleTime": {
+          "physicalTime": "2026-10-12T23:04:51Z",
+          "utcOffset": "-25200s",
+          "civilTime": {
+            "date": {
+              "year": 2026,
+              "month": 10,
+              "day": 12
+            },
+            "time": {
+              "hours": 16,
+              "minutes": 4,
+              "seconds": 51
+            }
+          }
+        },
+        "beatsPerMinute": "62"
+      }
+    },
+    {
+      "dataSource": {
+        "recordingMethod": "PASSIVELY_MEASURED",
+        "device": {
+          "displayName": "Charge 6"
+        },
+        "platform": "FITBIT"
+      },
+      "heartRate": {
+        "sampleTime": {
+          "physicalTime": "2026-10-12T23:04:48Z",
+          "utcOffset": "-25200s",
+          "civilTime": {
+            "date": {
+              "year": 2026,
+              "month": 10,
+              "day": 12
+            },
+            "time": {
+              "hours": 16,
+              "minutes": 4,
+              "seconds": 48
+            }
+          }
+        },
+        "beatsPerMinute": "63"
+      }
+    },
+    {
+      "dataSource": {
+        "recordingMethod": "PASSIVELY_MEASURED",
+        "device": {
+          "displayName": "Charge 6"
+        },
+        "platform": "FITBIT"
+      },
+      "heartRate": {
+        "sampleTime": {
+          "physicalTime": "2026-10-12T23:04:46Z",
+          "utcOffset": "-25200s",
+          "civilTime": {
+            "date": {
+              "year": 2026,
+              "month": 10,
+              "day": 12
+            },
+            "time": {
+              "hours": 16,
+              "minutes": 4,
+              "seconds": 46
+            }
+          }
+        },
+        "beatsPerMinute": "62"
+      }
+    },
+    {
+      "dataSource": {
+        "recordingMethod": "PASSIVELY_MEASURED",
+        "device": {
+          "displayName": "Charge 6"
+        },
+        "platform": "FITBIT"
+      },
+      "heartRate": {
+        "sampleTime": {
+          "physicalTime": "2026-10-12T23:04:44Z",
+          "utcOffset": "-25200s",
+          "civilTime": {
+            "date": {
+              "year": 2026,
+              "month": 10,
+              "day": 12
+            },
+            "time": {
+              "hours": 16,
+              "minutes": 4,
+              "seconds": 44
+            }
+          }
+        },
+        "beatsPerMinute": "60"
+      }
+    },
+    {
+      "dataSource": {
+        "recordingMethod": "PASSIVELY_MEASURED",
+        "device": {
+          "displayName": "Charge 6"
+        },
+        "platform": "FITBIT"
+      },
+      "heartRate": {
+        "sampleTime": {
+          "physicalTime": "2026-10-12T23:04:41Z",
+          "utcOffset": "-25200s",
+          "civilTime": {
+            "date": {
+              "year": 2026,
+              "month": 10,
+              "day": 12
+            },
+            "time": {
+              "hours": 16,
+              "minutes": 4,
+              "seconds": 41
+            }
+          }
+        },
+        "beatsPerMinute": "60"
+      }
+    },
+    {
+      "dataSource": {
+        "recordingMethod": "PASSIVELY_MEASURED",
+        "device": {
+          "displayName": "Charge 6"
+        },
+        "platform": "FITBIT"
+      },
+      "heartRate": {
+        "sampleTime": {
+          "physicalTime": "2026-10-12T23:04:38Z",
+          "utcOffset": "-25200s",
+          "civilTime": {
+            "date": {
+              "year": 2026,
+              "month": 10,
+              "day": 12
+            },
+            "time": {
+              "hours": 16,
+              "minutes": 4,
+              "seconds": 38
+            }
+          }
+        },
+        "beatsPerMinute": "60"
+      }
+    },
+    {
+      "dataSource": {
+        "recordingMethod": "PASSIVELY_MEASURED",
+        "device": {
+          "displayName": "Charge 6"
+        },
+        "platform": "FITBIT"
+      },
+      "heartRate": {
+        "sampleTime": {
+          "physicalTime": "2026-10-12T23:04:36Z",
+          "utcOffset": "-25200s",
+          "civilTime": {
+            "date": {
+              "year": 2026,
+              "month": 10,
+              "day": 12
+            },
+            "time": {
+              "hours": 16,
+              "minutes": 4,
+              "seconds": 36
+            }
+          }
+        },
+        "beatsPerMinute": "61"
+      }
+    },
+    {
+      "dataSource": {
+        "recordingMethod": "PASSIVELY_MEASURED",
+        "device": {
+          "displayName": "Charge 6"
+        },
+        "platform": "FITBIT"
+      },
+      "heartRate": {
+        "sampleTime": {
+          "physicalTime": "2026-10-12T23:04:35Z",
+          "utcOffset": "-25200s",
+          "civilTime": {
+            "date": {
+              "year": 2026,
+              "month": 10,
+              "day": 12
+            },
+            "time": {
+              "hours": 16,
+              "minutes": 4,
+              "seconds": 35
+            }
+          }
+        },
+        "beatsPerMinute": "62"
+      }
+    },
+    {
+      "dataSource": {
+        "recordingMethod": "PASSIVELY_MEASURED",
+        "device": {
+          "displayName": "Charge 6"
+        },
+        "platform": "FITBIT"
+      },
+      "heartRate": {
+        "sampleTime": {
+          "physicalTime": "2026-10-12T23:04:32Z",
+          "utcOffset": "-25200s",
+          "civilTime": {
+            "date": {
+              "year": 2026,
+              "month": 10,
+              "day": 12
+            },
+            "time": {
+              "hours": 16,
+              "minutes": 4,
+              "seconds": 32
+            }
+          }
+        },
+        "beatsPerMinute": "62"
+      }
+    },
+    {
+      "dataSource": {
+        "recordingMethod": "PASSIVELY_MEASURED",
+        "device": {
+          "displayName": "Charge 6"
+        },
+        "platform": "FITBIT"
+      },
+      "heartRate": {
+        "sampleTime": {
+          "physicalTime": "2026-10-12T23:04:30Z",
+          "utcOffset": "-25200s",
+          "civilTime": {
+            "date": {
+              "year": 2026,
+              "month": 10,
+              "day": 12
+            },
+            "time": {
+              "hours": 16,
+              "minutes": 4,
+              "seconds": 30
+            }
+          }
+        },
+        "beatsPerMinute": "63"
+      }
+    },
+    {
+      "dataSource": {
+        "recordingMethod": "PASSIVELY_MEASURED",
+        "device": {
+          "displayName": "Charge 6"
+        },
+        "platform": "FITBIT"
+      },
+      "heartRate": {
+        "sampleTime": {
+          "physicalTime": "2026-10-12T23:04:28Z",
+          "utcOffset": "-25200s",
+          "civilTime": {
+            "date": {
+              "year": 2026,
+              "month": 10,
+              "day": 12
+            },
+            "time": {
+              "hours": 16,
+              "minutes": 4,
+              "seconds": 28
+            }
+          }
+        },
+        "beatsPerMinute": "64"
+      }
+    },
+    {
+      "dataSource": {
+        "recordingMethod": "PASSIVELY_MEASURED",
+        "device": {
+          "displayName": "Charge 6"
+        },
+        "platform": "FITBIT"
+      },
+      "heartRate": {
+        "sampleTime": {
+          "physicalTime": "2026-10-12T23:04:25Z",
+          "utcOffset": "-25200s",
+          "civilTime": {
+            "date": {
+              "year": 2026,
+              "month": 10,
+              "day": 12
+            },
+            "time": {
+              "hours": 16,
+              "minutes": 4,
+              "seconds": 25
+            }
+          }
+        },
+        "beatsPerMinute": "64"
+      }
+    },
+    {
+      "dataSource": {
+        "recordingMethod": "PASSIVELY_MEASURED",
+        "device": {
+          "displayName": "Charge 6"
+        },
+        "platform": "FITBIT"
+      },
+      "heartRate": {
+        "sampleTime": {
+          "physicalTime": "2026-10-12T23:04:23Z",
+          "utcOffset": "-25200s",
+          "civilTime": {
+            "date": {
+              "year": 2026,
+              "month": 10,
+              "day": 12
+            },
+            "time": {
+              "hours": 16,
+              "minutes": 4,
+              "seconds": 23
+            }
+          }
+        },
+        "beatsPerMinute": "64"
+      }
+    },
+    {
+      "dataSource": {
+        "recordingMethod": "PASSIVELY_MEASURED",
+        "device": {
+          "displayName": "Charge 6"
+        },
+        "platform": "FITBIT"
+      },
+      "heartRate": {
+        "sampleTime": {
+          "physicalTime": "2026-10-12T23:04:21Z",
+          "utcOffset": "-25200s",
+          "civilTime": {
+            "date": {
+              "year": 2026,
+              "month": 10,
+              "day": 12
+            },
+            "time": {
+              "hours": 16,
+              "minutes": 4,
+              "seconds": 21
+            }
+          }
+        },
+        "beatsPerMinute": "66"
+      }
+    },
+    {
+      "dataSource": {
+        "recordingMethod": "PASSIVELY_MEASURED",
+        "device": {
+          "displayName": "Charge 6"
+        },
+        "platform": "FITBIT"
+      },
+      "heartRate": {
+        "sampleTime": {
+          "physicalTime": "2026-10-12T23:04:19Z",
+          "utcOffset": "-25200s",
+          "civilTime": {
+            "date": {
+              "year": 2026,
+              "month": 10,
+              "day": 12
+            },
+            "time": {
+              "hours": 16,
+              "minutes": 4,
+              "seconds": 19
+            }
+          }
+        },
+        "beatsPerMinute": "67"
+      }
+    },
+    {
+      "dataSource": {
+        "recordingMethod": "PASSIVELY_MEASURED",
+        "device": {
+          "displayName": "Charge 6"
+        },
+        "platform": "FITBIT"
+      },
+      "heartRate": {
+        "sampleTime": {
+          "physicalTime": "2026-10-12T23:04:17Z",
+          "utcOffset": "-25200s",
+          "civilTime": {
+            "date": {
+              "year": 2026,
+              "month": 10,
+              "day": 12
+            },
+            "time": {
+              "hours": 16,
+              "minutes": 4,
+              "seconds": 17
+            }
+          }
+        },
+        "beatsPerMinute": "68"
+      }
+    },
+    {
+      "dataSource": {
+        "recordingMethod": "PASSIVELY_MEASURED",
+        "device": {
+          "displayName": "Charge 6"
+        },
+        "platform": "FITBIT"
+      },
+      "heartRate": {
+        "sampleTime": {
+          "physicalTime": "2026-10-12T23:04:15Z",
+          "utcOffset": "-25200s",
+          "civilTime": {
+            "date": {
+              "year": 2026,
+              "month": 10,
+              "day": 12
+            },
+            "time": {
+              "hours": 16,
+              "minutes": 4,
+              "seconds": 15
+            }
+          }
+        },
+        "beatsPerMinute": "69"
+      }
+    },
+    {
+      "dataSource": {
+        "recordingMethod": "PASSIVELY_MEASURED",
+        "device": {
+          "displayName": "Charge 6"
+        },
+        "platform": "FITBIT"
+      },
+      "heartRate": {
+        "sampleTime": {
+          "physicalTime": "2026-10-12T23:04:13Z",
+          "utcOffset": "-25200s",
+          "civilTime": {
+            "date": {
+              "year": 2026,
+              "month": 10,
+              "day": 12
+            },
+            "time": {
+              "hours": 16,
+              "minutes": 4,
+              "seconds": 13
+            }
+          }
+        },
+        "beatsPerMinute": "72"
+      }
+    },
+    {
+      "dataSource": {
+        "recordingMethod": "PASSIVELY_MEASURED",
+        "device": {
+          "displayName": "Charge 6"
+        },
+        "platform": "FITBIT"
+      },
+      "heartRate": {
+        "sampleTime": {
+          "physicalTime": "2026-10-12T23:04:10Z",
+          "utcOffset": "-25200s",
+          "civilTime": {
+            "date": {
+              "year": 2026,
+              "month": 10,
+              "day": 12
+            },
+            "time": {
+              "hours": 16,
+              "minutes": 4,
+              "seconds": 10
+            }
+          }
+        },
+        "beatsPerMinute": "72"
+      }
+    },
+    {
+      "dataSource": {
+        "recordingMethod": "PASSIVELY_MEASURED",
+        "device": {
+          "displayName": "Charge 6"
+        },
+        "platform": "FITBIT"
+      },
+      "heartRate": {
+        "sampleTime": {
+          "physicalTime": "2026-10-12T23:04:07Z",
+          "utcOffset": "-25200s",
+          "civilTime": {
+            "date": {
+              "year": 2026,
+              "month": 10,
+              "day": 12
+            },
+            "time": {
+              "hours": 16,
+              "minutes": 4,
+              "seconds": 7
+            }
+          }
+        },
+        "beatsPerMinute": "72"
+      }
+    },
+    {
+      "dataSource": {
+        "recordingMethod": "PASSIVELY_MEASURED",
+        "device": {
+          "displayName": "Charge 6"
+        },
+        "platform": "FITBIT"
+      },
+      "heartRate": {
+        "sampleTime": {
+          "physicalTime": "2026-10-12T23:04:06Z",
+          "utcOffset": "-25200s",
+          "civilTime": {
+            "date": {
+              "year": 2026,
+              "month": 10,
+              "day": 12
+            },
+            "time": {
+              "hours": 16,
+              "minutes": 4,
+              "seconds": 6
+            }
+          }
+        },
+        "beatsPerMinute": "70"
+      }
+    },
+    {
+      "dataSource": {
+        "recordingMethod": "PASSIVELY_MEASURED",
+        "device": {
+          "displayName": "Charge 6"
+        },
+        "platform": "FITBIT"
+      },
+      "heartRate": {
+        "sampleTime": {
+          "physicalTime": "2026-10-12T23:04:03Z",
+          "utcOffset": "-25200s",
+          "civilTime": {
+            "date": {
+              "year": 2026,
+              "month": 10,
+              "day": 12
+            },
+            "time": {
+              "hours": 16,
+              "minutes": 4,
+              "seconds": 3
+            }
+          }
+        },
+        "beatsPerMinute": "70"
+      }
+    },
+    {
+      "dataSource": {
+        "recordingMethod": "PASSIVELY_MEASURED",
+        "device": {
+          "displayName": "Charge 6"
+        },
+        "platform": "FITBIT"
+      },
+      "heartRate": {
+        "sampleTime": {
+          "physicalTime": "2026-10-12T23:04:00Z",
+          "utcOffset": "-25200s",
+          "civilTime": {
+            "date": {
+              "year": 2026,
+              "month": 10,
+              "day": 12
+            },
+            "time": {
+              "hours": 16,
+              "minutes": 4
+            }
+          }
+        },
+        "beatsPerMinute": "70"
+      }
+    },
+    {
+      "dataSource": {
+        "recordingMethod": "PASSIVELY_MEASURED",
+        "device": {
+          "displayName": "Charge 6"
+        },
+        "platform": "FITBIT"
+      },
+      "heartRate": {
+        "sampleTime": {
+          "physicalTime": "2026-10-12T23:03:59Z",
+          "utcOffset": "-25200s",
+          "civilTime": {
+            "date": {
+              "year": 2026,
+              "month": 10,
+              "day": 12
+            },
+            "time": {
+              "hours": 16,
+              "minutes": 3,
+              "seconds": 59
+            }
+          }
+        },
+        "beatsPerMinute": "71"
+      }
+    },
+    {
+      "dataSource": {
+        "recordingMethod": "PASSIVELY_MEASURED",
+        "device": {
+          "displayName": "Charge 6"
+        },
+        "platform": "FITBIT"
+      },
+      "heartRate": {
+        "sampleTime": {
+          "physicalTime": "2026-10-12T23:03:56Z",
+          "utcOffset": "-25200s",
+          "civilTime": {
+            "date": {
+              "year": 2026,
+              "month": 10,
+              "day": 12
+            },
+            "time": {
+              "hours": 16,
+              "minutes": 3,
+              "seconds": 56
+            }
+          }
+        },
+        "beatsPerMinute": "71"
+      }
+    },
+    {
+      "dataSource": {
+        "recordingMethod": "PASSIVELY_MEASURED",
+        "device": {
+          "displayName": "Charge 6"
+        },
+        "platform": "FITBIT"
+      },
+      "heartRate": {
+        "sampleTime": {
+          "physicalTime": "2026-10-12T23:03:54Z",
+          "utcOffset": "-25200s",
+          "civilTime": {
+            "date": {
+              "year": 2026,
+              "month": 10,
+              "day": 12
+            },
+            "time": {
+              "hours": 16,
+              "minutes": 3,
+              "seconds": 54
+            }
+          }
+        },
+        "beatsPerMinute": "70"
+      }
+    },
+    {
+      "dataSource": {
+        "recordingMethod": "PASSIVELY_MEASURED",
+        "device": {
+          "displayName": "Charge 6"
+        },
+        "platform": "FITBIT"
+      },
+      "heartRate": {
+        "sampleTime": {
+          "physicalTime": "2026-10-12T23:03:53Z",
+          "utcOffset": "-25200s",
+          "civilTime": {
+            "date": {
+              "year": 2026,
+              "month": 10,
+              "day": 12
+            },
+            "time": {
+              "hours": 16,
+              "minutes": 3,
+              "seconds": 53
+            }
+          }
+        },
+        "beatsPerMinute": "71"
+      }
+    },
+    {
+      "dataSource": {
+        "recordingMethod": "PASSIVELY_MEASURED",
+        "device": {
+          "displayName": "Charge 6"
+        },
+        "platform": "FITBIT"
+      },
+      "heartRate": {
+        "sampleTime": {
+          "physicalTime": "2026-10-12T23:03:50Z",
+          "utcOffset": "-25200s",
+          "civilTime": {
+            "date": {
+              "year": 2026,
+              "month": 10,
+              "day": 12
+            },
+            "time": {
+              "hours": 16,
+              "minutes": 3,
+              "seconds": 50
+            }
+          }
+        },
+        "beatsPerMinute": "71"
+      }
+    },
+    {
+      "dataSource": {
+        "recordingMethod": "PASSIVELY_MEASURED",
+        "device": {
+          "displayName": "Charge 6"
+        },
+        "platform": "FITBIT"
+      },
+      "heartRate": {
+        "sampleTime": {
+          "physicalTime": "2026-10-12T23:03:49Z",
+          "utcOffset": "-25200s",
+          "civilTime": {
+            "date": {
+              "year": 2026,
+              "month": 10,
+              "day": 12
+            },
+            "time": {
+              "hours": 16,
+              "minutes": 3,
+              "seconds": 49
+            }
+          }
+        },
+        "beatsPerMinute": "70"
+      }
+    },
+    {
+      "dataSource": {
+        "recordingMethod": "PASSIVELY_MEASURED",
+        "device": {
+          "displayName": "Charge 6"
+        },
+        "platform": "FITBIT"
+      },
+      "heartRate": {
+        "sampleTime": {
+          "physicalTime": "2026-10-12T23:03:46Z",
+          "utcOffset": "-25200s",
+          "civilTime": {
+            "date": {
+              "year": 2026,
+              "month": 10,
+              "day": 12
+            },
+            "time": {
+              "hours": 16,
+              "minutes": 3,
+              "seconds": 46
+            }
+          }
+        },
+        "beatsPerMinute": "70"
+      }
+    },
+    {
+      "dataSource": {
+        "recordingMethod": "PASSIVELY_MEASURED",
+        "device": {
+          "displayName": "Charge 6"
+        },
+        "platform": "FITBIT"
+      },
+      "heartRate": {
+        "sampleTime": {
+          "physicalTime": "2026-10-12T23:03:44Z",
+          "utcOffset": "-25200s",
+          "civilTime": {
+            "date": {
+              "year": 2026,
+              "month": 10,
+              "day": 12
+            },
+            "time": {
+              "hours": 16,
+              "minutes": 3,
+              "seconds": 44
+            }
+          }
+        },
+        "beatsPerMinute": "68"
+      }
+    },
+    {
+      "dataSource": {
+        "recordingMethod": "PASSIVELY_MEASURED",
+        "device": {
+          "displayName": "Charge 6"
+        },
+        "platform": "FITBIT"
+      },
+      "heartRate": {
+        "sampleTime": {
+          "physicalTime": "2026-10-12T23:03:42Z",
+          "utcOffset": "-25200s",
+          "civilTime": {
+            "date": {
+              "year": 2026,
+              "month": 10,
+              "day": 12
+            },
+            "time": {
+              "hours": 16,
+              "minutes": 3,
+              "seconds": 42
+            }
+          }
+        },
+        "beatsPerMinute": "67"
+      }
+    },
+    {
+      "dataSource": {
+        "recordingMethod": "PASSIVELY_MEASURED",
+        "device": {
+          "displayName": "Charge 6"
+        },
+        "platform": "FITBIT"
+      },
+      "heartRate": {
+        "sampleTime": {
+          "physicalTime": "2026-10-12T23:03:40Z",
+          "utcOffset": "-25200s",
+          "civilTime": {
+            "date": {
+              "year": 2026,
+              "month": 10,
+              "day": 12
+            },
+            "time": {
+              "hours": 16,
+              "minutes": 3,
+              "seconds": 40
+            }
+          }
+        },
+        "beatsPerMinute": "66"
+      }
+    },
+    {
+      "dataSource": {
+        "recordingMethod": "PASSIVELY_MEASURED",
+        "device": {
+          "displayName": "Charge 6"
+        },
+        "platform": "FITBIT"
+      },
+      "heartRate": {
+        "sampleTime": {
+          "physicalTime": "2026-10-12T23:03:38Z",
+          "utcOffset": "-25200s",
+          "civilTime": {
+            "date": {
+              "year": 2026,
+              "month": 10,
+              "day": 12
+            },
+            "time": {
+              "hours": 16,
+              "minutes": 3,
+              "seconds": 38
+            }
+          }
+        },
+        "beatsPerMinute": "65"
+      }
+    },
+    {
+      "dataSource": {
+        "recordingMethod": "PASSIVELY_MEASURED",
+        "device": {
+          "displayName": "Charge 6"
+        },
+        "platform": "FITBIT"
+      },
+      "heartRate": {
+        "sampleTime": {
+          "physicalTime": "2026-10-12T23:03:37Z",
+          "utcOffset": "-25200s",
+          "civilTime": {
+            "date": {
+              "year": 2026,
+              "month": 10,
+              "day": 12
+            },
+            "time": {
+              "hours": 16,
+              "minutes": 3,
+              "seconds": 37
+            }
+          }
+        },
+        "beatsPerMinute": "64"
+      }
+    },
+    {
+      "dataSource": {
+        "recordingMethod": "PASSIVELY_MEASURED",
+        "device": {
+          "displayName": "Charge 6"
+        },
+        "platform": "FITBIT"
+      },
+      "heartRate": {
+        "sampleTime": {
+          "physicalTime": "2026-10-12T23:03:36Z",
+          "utcOffset": "-25200s",
+          "civilTime": {
+            "date": {
+              "year": 2026,
+              "month": 10,
+              "day": 12
+            },
+            "time": {
+              "hours": 16,
+              "minutes": 3,
+              "seconds": 36
+            }
+          }
+        },
+        "beatsPerMinute": "63"
+      }
+    }
+  ],
+  "nextPageToken": "Xm5hu-7cpSZxKVRuWjx5bmvy98zj85uG34tuMn16mu2pntsnZI32iqhq"
+}
