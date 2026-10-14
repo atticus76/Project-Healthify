@@ -61,7 +61,7 @@ Healthify is a web app that pulls telemetry from a user's wearable (heart rate, 
 | NFR-01 | The UI is fast and reliable, with response times under 1 second. | |
 | NFR-02 | Third-party data failures and lost connections are handled gracefully: failed syncs are logged, retried with exponential backoff, and surfaced to the user, and the emulator (FR-08) can stand in for live data with a disclaimer. | Added after GenAI review |
 | NFR-03 | Personal health and account information is encrypted. | |
-| NFR-04 | The system handles multiple users simultaneously. | Needs a concrete number — see open decisions |
+| NFR-04 | The system supports at least 10 concurrent users on a single host while meeting NFR-01's <1 s response time. | Verify with a load test (e.g., Locust) |
 | NFR-05 | Cache user data to measure day-to-day changes in telemetry. | Under review — see open decisions |
 
 ---
@@ -195,7 +195,7 @@ Scenario: Goal missed
 Things the team still needs to agree on. Resolve these in a meeting or PR, then update the tables above.
 
 - [ ] **NFR-05 (caching):** Keep, rewrite, or retire? It was originally for a food logger, which is now out of scope, and day-to-day tracking is arguably covered by FR-06/FR-07.
-- [ ] **NFR-04:** Pick a concrete concurrent-user target so it's testable.
+- [x] **NFR-04:** Pick a concrete concurrent-user target so it's testable. → 10 concurrent users
 - [ ] **NFR-03:** Spell out what "encrypted" means: hashed passwords, HTTPS in transit, encryption at rest?
 - [ ] **Dashboard / login / session expiry:** Add FRs so US-03 traces back to a requirement.
 - [ ] **Wearable provider:** Google Health API or Whoop?
@@ -213,6 +213,7 @@ Things the team still needs to agree on. Resolve these in a meeting or PR, then 
 | 2026-09-20 | US-01 changed from Bluetooth pairing to OAuth account connection | Provider web APIs use OAuth, not Bluetooth |
 | 2026-09-20 | Goal setting moved from NFRs to FR-09 | It describes a feature, not a quality attribute |
 | 2026-09-20 | Added failure-handling NFR-02 | Replaces part of the caching rationale; GenAI review |
+| 2026-09-28 | NFR-04 set to 10 concurrent users on a single host | Make scalability testable |
 
 ---
 

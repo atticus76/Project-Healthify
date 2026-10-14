@@ -1,0 +1,61 @@
+{
+  "dataPoints": [
+    {
+      "dataSource": {
+        "recordingMethod": "PASSIVELY_MEASURED",
+        "device": {
+          "displayName": "Charge 6"
+        },
+        "platform": "FITBIT"
+      },
+      "dailyOxygenSaturation": {
+        "date": {
+          "year": 2026,
+          "month": 10,
+          "day": 12
+        },
+        "averagePercentage": 96.2,
+        "lowerBoundPercentage": 93.9,
+        "upperBoundPercentage": 99.2
+      }
+    },
+    {
+      "dataSource": {
+        "recordingMethod": "PASSIVELY_MEASURED",
+        "device": {
+          "displayName": "Charge 6"
+        },
+        "platform": "FITBIT"
+      },
+      "dailyOxygenSaturation": {
+        "date": {
+          "year": 2026,
+          "month": 10,
+          "day": 11
+        },
+        "averagePercentage": 95,
+        "lowerBoundPercentage": 92.7,
+        "upperBoundPercentage": 97.6
+      }
+    },
+    {
+      "dataSource": {
+        "recordingMethod": "PASSIVELY_MEASURED",
+        "device": {
+          "displayName": "Charge 6"
+        },
+        "platform": "FITBIT"
+      },
+      "dailyOxygenSaturation": {
+        "date": {
+          "year": 2026,
+          "month": 10,
+          "day": 10
+        },
+        "averagePercentage": 96,
+        "lowerBoundPercentage": 92.7,
+        "upperBoundPercentage": 99.6
+      }
+    }
+  ]
+}
