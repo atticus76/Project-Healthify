@@ -1,4 +1,4 @@
 from .header import page_header
-from .grid import feature_grid, feature_button
+from .grid import feature_grid
 from .card import device_card
-from .button import nav_button
+from .button import feature_button

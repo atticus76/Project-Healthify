@@ -1,5 +1,5 @@
 import reflex as rx
-from ..state import TelemetryState
+from ..state.telemetry import TelemetryState
 from backend.telemetry_emulator import DATA_TYPES
 
 def device_card() -> rx.Component:
@@ -34,7 +34,7 @@ def device_card() -> rx.Component:
                     rx.text("Connect a device or enable simulated Fitbit telemetry."),
                     rx.button(
                         "Connect a Device",
-                        on_click=rx.redirect("/device"),
+                        on_click=rx.redirect("/devices"),
                         size="4",
                         width="240px",
                         background_color=rx.color_mode_cond(

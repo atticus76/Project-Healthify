@@ -1,5 +1,5 @@
 import reflex as rx
-from .empty import empty_feature_page
+from .placeholders.empty import empty_feature_page
 
 @rx.page(route="/devices")
 def device_page() -> rx.Component:

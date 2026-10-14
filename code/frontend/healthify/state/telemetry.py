@@ -1,4 +1,6 @@
 import reflex as rx
+import json
+from backend.telemetry_emulator import PROFILES, generate_fitbit_data, summarize_fitbit_data
 
 class TelemetryState(rx.State):
     level: str = "Medium"

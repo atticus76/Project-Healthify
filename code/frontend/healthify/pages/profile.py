@@ -1,5 +1,5 @@
 import reflex as rx
-from ..components.header import page_header
+from ..components import page_header
 from ..state.profile import ProfileState
 
 @rx.page(route="/profile")

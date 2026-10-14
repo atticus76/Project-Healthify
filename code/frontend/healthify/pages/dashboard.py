@@ -1,5 +1,3 @@
-import json
-
 import reflex as rx
 
 #states
@@ -8,19 +6,11 @@ from ..state.dashboard import DashboardState
 #components
 from ..components import page_header, device_card, feature_grid
 
-from backend.profile_controller import save_profile, validate_profile
-from backend.telemetry_emulator import (
-    DATA_TYPES,
-    PROFILES,
-    generate_fitbit_data,
-    summarize_fitbit_data,
-)
-
 
 FEATURES = [
     ("Alerts & Notifications", "/alerts"),
     ("Health Profile", "/profile"),
-    ("Connect Device", "/devices")
+    ("Connect Device", "/devices"),
     ("Account", "/account"),
     ("Cloud Data", "/cloud-data"),
     ("Reports & Analytics", "/reports"),
