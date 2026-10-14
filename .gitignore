@@ -9,6 +9,7 @@
 .web
 *.db
 .states
+**/assets/external/
 
 # Google OAuth credentials -- never commit
 client_secret*.json
