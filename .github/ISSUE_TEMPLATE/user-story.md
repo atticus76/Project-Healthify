@@ -16,6 +16,14 @@ assignees: ''
 * [document what you know]
 
 ### Acceptance Criteria
+Scenario 1: Positive flow
+```gherkin
+Given [some context]
+When [certain action is taken]
+Then [the outcome of action is observed]
+```
+
+Scenario 2: Negative flow/edge case
 ```gherkin
 Given [some context]
 When [certain action is taken]
