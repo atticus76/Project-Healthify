@@ -1,0 +1,4 @@
+google-auth-oauthlib>=1.2
+python-dotenv   
+reflex==0.9.12
+requests>=2.31
