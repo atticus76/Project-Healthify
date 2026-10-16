@@ -1,5 +1,5 @@
 import reflex as rx
-from ..state import TelemetryState
+from ..state.telemetry import TelemetryState
 from backend.telemetry_emulator import DATA_TYPES
 
 def device_card() -> rx.Component:

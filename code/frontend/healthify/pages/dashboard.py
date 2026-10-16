@@ -20,7 +20,7 @@ from backend.telemetry_emulator import (
 FEATURES = [
     ("Alerts & Notifications", "/alerts"),
     ("Health Profile", "/profile"),
-    ("Connect Device", "/devices")
+    ("Connect Device", "/devices"),
     ("Account", "/account"),
     ("Cloud Data", "/cloud-data"),
     ("Reports & Analytics", "/reports"),

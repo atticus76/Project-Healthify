@@ -10,6 +10,6 @@ if str(CODE_ROOT) not in sys.path:
 
 
 config = rx.Config(
-	app_name="dashBoardUI",
-	app_module_import="dashBoardUI.dashBoardUI",
+	app_name="healthify",
+	app_module_import="healthify.healthify",
 )
