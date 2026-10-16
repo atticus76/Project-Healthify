@@ -11,7 +11,7 @@ BACKEND_DIR = Path(__file__).resolve().parents[3] / "backend"
 if str(BACKEND_DIR) not in sys.path:
     sys.path.insert(0, str(BACKEND_DIR))
 
-from account_controller import register_account  # noqa: E402
+from account_controller.py import register_account  # noqa: E402
 
 
 class AccountState(rx.State):
