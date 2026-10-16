@@ -5,21 +5,14 @@
 .env
 
 
-<<<<<<< HEAD
-__pycache__/
 *.py[cod]
 .web
-assets/external/
 *.db
 .states
-=======
-# typescript
-*.tsbuildinfo
-next-env.d.ts
+**/assets/external/
 
 # Google OAuth credentials -- never commit
 client_secret*.json
 .token.json
 __pycache__/
 .venv/
->>>>>>> c3b4029 (Added script for accessing and updating Google Health API JSON files. Added a .env and .env.example files for environment variables including CLIENT_ID, CLIENT_SECRET, and TOKEN_PATH. Cached JSON files from the API script are under code/data.)
