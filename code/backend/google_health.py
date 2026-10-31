@@ -26,7 +26,7 @@ EXPIRY_SKEW_S = 60
 
 # data type -> pageSize (results come back newest first)
 SYNC_DATA_TYPES = {
-    "heart-rate": 1,
+    "heart-rate": 50,  # enough samples for the 5-minute alert window (US-04)
     "daily-resting-heart-rate": 1,
     "daily-heart-rate-variability": 1,
     "steps": 50,
