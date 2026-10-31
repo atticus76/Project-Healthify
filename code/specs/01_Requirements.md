@@ -2,7 +2,7 @@
 
 > **Source of truth** for what we're building. If something here disagrees with a Google Doc, Discord message, or someone's memory, this file wins — or open a PR to change it.
 >
-> Originally derived from *Project Assignment 1* (Sep 17–20, 2026). The full assignment write-up, including the GenAI reflection, is in [`Project Healthify_Assignment1_Requirements.pdf`](../../Project%20Healthify_Assignment1_Requirements.pdf).
+> Originally derived from *Project Assignment 1* (Sep 17–20, 2026). The full assignment write-up, including the GenAI reflection, is in [`Project Healthify_Assignment1_Requirements.pdf`](../../docs/Reports/Project%20Healthify_Assignment1_Requirements.pdf).
 
 **Team:** Hans Anstey, Yogi Chopra, Atticus Crook, Mohamed Dawoud
 **Course:** CPTS 322 — Software Engineering Principles
@@ -45,7 +45,7 @@ Healthify is a web app that pulls telemetry from a user's wearable (heart rate, 
 | ID | Requirement | Notes |
 |---|---|---|
 | FR-01 | Connect to a supported wearable provider account (Google Health API or Whoop) via OAuth 2.0 and import telemetry: heart rate, HRV, step count, sleep, and calories burned. | Merged original FR-01 + FR-02 |
-| FR-02 | Notify the user in-app when a telemetry metric deviates from their personal baseline or from a general reference range for that metric. | |
+| FR-02 | Notify the user in-app when a telemetry metric deviates from their personal baseline or from a general reference range for that metric. | Delivered in-app plus browser notifications; see [S2-03 spec](features/S2-03-health-abnormality-alerts.md) |
 | FR-03 | Display a disclaimer that the app does not provide medical advice, is not a substitute for a doctor, and cannot detect medical emergencies. | Replaced original EMS auto-detection |
 | FR-04 | Allow the user to enter profile information (gender, age, weight) used to calculate their health metrics and baseline. | |
 | FR-05 | Allow the user to register an account with email and password, with credentials stored securely. | |
@@ -124,13 +124,16 @@ Scenario: Session expires
 
 ### US-04: Health Abnormality Alerts
 
-**As a** user, **I want** to be alerted when my wearable metrics show sudden abnormalities **so that** I can take preventative action.
+**As a** user, **I want** to be alerted immediately when my wearable metrics show sudden abnormalities **so that** I can take prompt medical or preventative action.
+
+Spec: [features/S2-03-health-abnormality-alerts.md](features/S2-03-health-abnormality-alerts.md)
 
 ```gherkin
 Scenario: Abnormal heart rate
   Given I have telemetry monitoring enabled
   When my resting heart rate exceeds 130 BPM for over 5 minutes
-  Then the system sends an alert about the abnormal heart rate
+  Then the system sends an urgent alert about the abnormal heart rate spike
+  And shows it in-app and, if I allowed it, as a browser notification
 
 Scenario: Spike during a disconnection
   Given my wearable loses connection while transferring data
@@ -199,7 +202,7 @@ Things the team still needs to agree on. Resolve these in a meeting or PR, then 
 - [ ] **NFR-03:** Spell out what "encrypted" means: hashed passwords, HTTPS in transit, encryption at rest?
 - [ ] **Dashboard / login / session expiry:** Add FRs so US-03 traces back to a requirement.
 - [ ] **Wearable provider:** Google Health API or Whoop?
-- [ ] **FR-02 thresholds:** Which metrics get alerts, and what counts as abnormal for each?
+- [ ] **FR-02 thresholds:** Which metrics get alerts, and what counts as abnormal for each? *Heart rate decided (above 130 BPM at rest for 5+ min, see S2-03); HRV, SpO2, and sleep still open.*
 
 ---
 
@@ -214,6 +217,7 @@ Things the team still needs to agree on. Resolve these in a meeting or PR, then 
 | 2026-09-20 | Goal setting moved from NFRs to FR-09 | It describes a feature, not a quality attribute |
 | 2026-09-20 | Added failure-handling NFR-02 | Replaces part of the caching rationale; GenAI review |
 | 2026-09-28 | NFR-04 set to 10 concurrent users on a single host | Make scalability testable |
+| 2026-10-30 | US-04 alerts delivered in-app plus via the browser Notifications API; heart-rate threshold set | Free, no third-party service; push notification from the scenario without Web Push complexity (S2-03) |
 
 ---
 

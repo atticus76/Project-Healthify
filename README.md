@@ -1,3 +1,59 @@
+# HealthTrack (Healthify)
+
+## Getting Started
+
+You need **Python 3.12** (see [tech-stack.md](code/specs/tech-stack.md)) and Windows PowerShell. Reflex downloads its own JavaScript tooling the first time it runs, so you don't need Node.
+
+### 1. Install Python 3.12
+
+```powershell
+py install 3.12        # Python install manager; or use the python.org installer
+py list                # 3.12 should be listed
+```
+
+### 2. Create the virtual environment (once)
+
+From the repo root:
+
+```powershell
+py -V:3.12 -m venv .venv
+.venv\Scripts\Activate.ps1
+python -m pip install --upgrade pip
+pip install -r requirements.txt
+```
+
+If PowerShell refuses to run `Activate.ps1`, run `Set-ExecutionPolicy -Scope CurrentUser RemoteSigned` once.
+
+### 3. (Optional) Google Health credentials
+
+Only needed to connect a real wearable on `/devices`. Copy `.env.example` to `.env` and fill in `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET`. Without it, use the **Telemetry Emulator**.
+
+### 4. Run the app
+
+```powershell
+.venv\Scripts\Activate.ps1
+cd code\frontend
+reflex run
+```
+
+Open http://localhost:3000. The backend runs on port 8000. The first run takes a minute while Reflex installs its frontend packages. Stop the app with `Ctrl+C`.
+
+### 5. Run the tests
+
+From the repo root, with the venv active:
+
+```powershell
+pytest
+```
+
+### Troubleshooting
+
+- **`No Python at 'C:\Program Files\Python39\python.exe'`** or similar: your `.venv` was built from a Python that's gone. Delete `.venv` and redo step 2.
+- **Port 3000 or 8000 already in use:** another `reflex run` is still open. Close it, or use `reflex run --frontend-port 3001 --backend-port 8001`.
+- **`code/frontend/reflex.lock/` shows as modified after running:** Reflex rewrites these files' line endings. Discard the change (`git checkout -- code/frontend/reflex.lock`) unless you changed dependencies.
+
+---
+
 ## Working Notes
 
 Group Members:
