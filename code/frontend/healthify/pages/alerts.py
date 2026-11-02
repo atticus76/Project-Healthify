@@ -78,6 +78,72 @@ def _notification_settings() -> rx.Component:
     )
 
 
+def _email_settings() -> rx.Component:
+    return rx.box(
+        rx.vstack(
+            rx.hstack(
+                rx.icon("mail", size=20),
+                rx.heading("Email alerts", size="4"),
+                rx.cond(
+                    AlertState.alert_email != "",
+                    rx.badge("On", color_scheme="green"),
+                    rx.badge("Off", color_scheme="gray"),
+                ),
+                align="center",
+            ),
+            rx.cond(
+                ~AlertState.email_configured,
+                rx.callout(
+                    "Email sending isn't set up yet. Add SMTP_USERNAME and SMTP_PASSWORD "
+                    "to .env (see .env.example), then restart the app.",
+                    icon="triangle_alert",
+                    color_scheme="orange",
+                    size="1",
+                ),
+            ),
+            rx.text("Every new alert is also emailed to this address.", size="2", color_scheme="gray"),
+            rx.form(
+                rx.hstack(
+                    rx.input(
+                        placeholder="you@example.com",
+                        type="email",
+                        value=AlertState.email_input,
+                        on_change=AlertState.set_email_input,
+                        flex="1",
+                        min_width="220px",
+                    ),
+                    rx.button("Save", type="submit"),
+                    rx.button(
+                        "Send test email",
+                        type="button",
+                        on_click=AlertState.send_test_email,
+                        loading=AlertState.sending_test,
+                        disabled=(AlertState.alert_email == "") | ~AlertState.email_configured,
+                        variant="outline",
+                    ),
+                    rx.cond(
+                        AlertState.alert_email != "",
+                        rx.button("Turn off", type="button", on_click=AlertState.turn_off_email, variant="ghost", color_scheme="gray"),
+                    ),
+                    spacing="2",
+                    wrap="wrap",
+                    width="100%",
+                ),
+                on_submit=AlertState.save_email,
+                width="100%",
+            ),
+            rx.cond(AlertState.email_error != "", rx.text(AlertState.email_error, color_scheme="red", size="2")),
+            rx.cond(AlertState.email_message != "", rx.text(AlertState.email_message, color_scheme="green", size="2")),
+            spacing="2",
+            align="stretch",
+        ),
+        width="100%",
+        padding="1em",
+        border_radius="12px",
+        border=rx.color_mode_cond("1px solid #e2e8f0", "1px solid #4a5568"),
+    )
+
+
 @rx.page(route="/alerts", title="Alerts | Healthify", on_load=AlertState.load_page)
 def alerts_page() -> rx.Component:
     return rx.vstack(
@@ -86,6 +152,7 @@ def alerts_page() -> rx.Component:
             rx.heading("Alerts & Notifications", size="8"),
             rx.callout(DISCLAIMER, icon="info", color_scheme="blue"),
             _notification_settings(),
+            _email_settings(),
             rx.hstack(
                 rx.heading("Alert history", size="5"),
                 rx.spacer(),

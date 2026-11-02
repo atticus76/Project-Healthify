@@ -16,6 +16,7 @@ Feature: Health abnormality alerts
     Then the system sends an urgent alert about an abnormal heart rate spike
     And the alert appears as an in-app toast, in the header badge, and on the Alerts page
     And, if the user allowed browser notifications, as a browser/OS notification
+    And, if an alert email address is saved, as an email to that address
 
   Scenario: Negative/edge case: spike during a disconnection
     Given the user's wearable loses connection while transferring telemetry data
@@ -25,7 +26,7 @@ Feature: Health abnormality alerts
     And does not raise a heart-rate alarm
 ```
 
-Tests: `code/backend/tests/test_alerts.py` (detection, storage, emulator scenarios) and `code/frontend/tests/test_alert_delivery.py` (delivery events).
+Tests: `code/backend/tests/test_alerts.py` (detection, storage, emulator scenarios), `code/backend/tests/test_email_alerts.py` (email, with SMTP mocked) and `code/frontend/tests/test_alert_delivery.py` (delivery events).
 
 ## Design
 
@@ -36,8 +37,16 @@ We compared six channels: in-app, the browser Notifications API, Web Push, Fireb
 |---|---|---|
 | **In-app** (Reflex `rx.toast`, header bell badge, `/alerts` page) | Whenever the app is open. This is the system of record. | Free |
 | **Browser Notifications API** (`new Notification(...)` via `rx.call_script`) | OS pop-up while a Healthify tab is open, even in the background; only after the user clicks "Enable browser notifications" | Free |
+| **Email** (`smtplib` over SMTP + STARTTLS, `code/backend/email_alerts.py`), added 2026-11-02 | Any time, even with the app closed, once the next sync finds the alert | Free with a Gmail app password (about 500 emails/day) |
 
 **Stretch:** Web Push (service worker + VAPID + `pywebpush`) would also deliver when the tab is closed. Only the delivery code (`notify()` in `state/alerts.py`) would change.
+
+### Email alerts
+- **Server setup (`.env`):** `SMTP_HOST`, `SMTP_PORT`, `SMTP_USERNAME`, `SMTP_PASSWORD` (Gmail app password), optional `SMTP_FROM`, `ALERT_EMAIL_TO` (default recipient), `HEALTHIFY_URL` (link in the email). Email is off unless the username and password are set.
+- **Recipient:** saved on the `/alerts` page (table `alert_settings`). If nothing has been saved, `ALERT_EMAIL_TO` is used. Choosing *Turn off* saves an empty address, which turns email off even if `ALERT_EMAIL_TO` is set.
+- **What's sent:** one email per new alert. Urgent alerts get the subject prefix `URGENT:` and high-priority headers. The body has the alert text, a link to `/alerts`, and the disclaimer (FR-03).
+- **Sending:** on a background thread with a 15 s timeout, so a slow mail server never blocks the page. Failures are logged and never stop the in-app or browser alert. *Send test email* on `/alerts` sends right away and shows the result.
+- **Privacy (NFR-03):** emails travel encrypted to the mail server (STARTTLS) but then sit in an ordinary inbox. The body is kept to the alert summary.
 
 ### Detection rules (`code/backend/alerts.py`)
 | Rule | Value | Constant |
@@ -69,7 +78,7 @@ SQLite table `health_alerts` in `healthtrack.db`: `id, user_id, kind, severity, 
 - Every alert, including browser notifications, carries the "not a medical device" disclaimer (FR-03).
 
 ## Out of scope
-- SMS, email, and Web Push delivery (see above)
+- SMS and Web Push delivery (see above)
 - Metrics other than heart rate (HRV, SpO2, sleep). FR-02 thresholds for those are still an open decision.
 - Personal-baseline thresholds; this version uses the fixed 130 BPM reference
 - Contacting emergency services (FR-03)

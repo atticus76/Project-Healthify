@@ -9,13 +9,13 @@ Our project is a web application written in Python 3.12 using a framework called
 | OAuth tokens | SQLite (`code/backend/healthtrack.db`) | `token_store.py` |
 | User profiles | SQLite (`code/backend/healthtrack.db`) | `profile_controller.py` |
 | Accounts | JSON file (`data/accounts.json`), SHA-256 password hashes | `account_controller.py` |
-| Health alerts | SQLite (`code/backend/healthtrack.db`) | `alerts.py` |
+| Health alerts and alert email address | SQLite (`code/backend/healthtrack.db`) | `alerts.py` |
 
 SQLite is our local development database. In Sprint 2 (S2-04, FR-06) we plan to move this data to a cloud-hosted PostgreSQL database. SQLite and PostgreSQL are two separate databases, so this is a migration, not a connection between them. Accounts will move off the JSON file as part of that work. Update this file when the cloud provider is chosen.
 
 ## Notifications
 
-Health alerts (US-04) use Reflex's built-in `rx.toast` for in-app messages and the browser's Notifications API (called through `rx.call_script`) for OS-level pop-ups. Neither needs a third-party service or API key. Web Push is a possible later upgrade.
+Health alerts (US-04) use Reflex's built-in `rx.toast` for in-app messages and the browser's Notifications API (called through `rx.call_script`) for OS-level pop-ups. Neither needs a third-party service or API key. Alerts can also be emailed using Python's built-in `smtplib` (`email_alerts.py`) through any SMTP server. We use a Gmail account with an app password, which is free. SMTP settings live in `.env` (see `.env.example`). Web Push is a possible later upgrade.
 
 ## Planned
 

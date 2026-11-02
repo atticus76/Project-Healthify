@@ -1,10 +1,11 @@
-"""Tests for how US-04 alerts are delivered (toast + browser notification).
+"""Tests for how US-04 alerts are delivered (toast, browser notification, email).
 
 Spec: code/specs/features/S2-03-health-abnormality-alerts.md
 """
 
 import json
 import unittest
+from unittest import mock
 
 from backend import alerts
 from healthify.state.alerts import _browser_notification, notify
@@ -20,6 +21,15 @@ GAP = {**URGENT, "id": 8, "title": "Wearable data gap", "severity": alerts.SEVER
 
 
 class AlertDeliveryTests(unittest.TestCase):
+    def setUp(self):
+        patcher = mock.patch("healthify.state.alerts.email_alerts.dispatch")
+        self.dispatch = patcher.start()
+        self.addCleanup(patcher.stop)
+
+    def test_new_alerts_are_also_emailed(self):
+        notify([URGENT, GAP], user_id="u")
+        self.dispatch.assert_called_once_with("u", [URGENT, GAP])
+
     def test_no_new_alerts_sends_nothing(self):
         self.assertEqual(notify([]), [])
 

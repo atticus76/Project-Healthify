@@ -24,9 +24,12 @@ pip install -r requirements.txt
 
 If PowerShell refuses to run `Activate.ps1`, run `Set-ExecutionPolicy -Scope CurrentUser RemoteSigned` once.
 
-### 3. (Optional) Google Health credentials
+### 3. (Optional) `.env` settings
 
-Only needed to connect a real wearable on `/devices`. Copy `.env.example` to `.env` and fill in `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET`. Without it, use the **Telemetry Emulator**.
+Copy `.env.example` to `.env`; everything in it is optional.
+
+- **Real wearable on `/devices`:** fill in `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET`. Without them, use the **Telemetry Emulator**.
+- **Email alerts:** fill in `SMTP_USERNAME` and `SMTP_PASSWORD`. For Gmail, `SMTP_PASSWORD` must be an [app password](https://myaccount.google.com/apppasswords), not your normal password, and the account needs 2-Step Verification. Then set the recipient on the Alerts page and click **Send test email**.
 
 ### 4. Run the app
 

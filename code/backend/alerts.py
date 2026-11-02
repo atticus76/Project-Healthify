@@ -6,7 +6,8 @@ Checks synced telemetry (Google Health API or the emulator, which share the
 same JSON shape) for a sustained high heart rate and for gaps in the data.
 Alerts are stored in the same healthtrack.db the profile feature uses so the
 Alerts page can show a history. Delivery (toast + browser notification) is the
-frontend's job; this module only decides what is abnormal and records it.
+frontend's job and email is email_alerts.py's; this module only decides what is
+abnormal and records it, plus the user's alert email address.
 """
 
 from __future__ import annotations
@@ -184,6 +185,14 @@ def _connect() -> Iterator[sqlite3.Connection]:
         )
         """
     )
+    conn.execute(
+        """
+        CREATE TABLE IF NOT EXISTS alert_settings (
+            user_id TEXT PRIMARY KEY,
+            email TEXT NOT NULL DEFAULT ''
+        )
+        """
+    )
     try:
         with conn:
             yield conn
@@ -260,3 +269,24 @@ def acknowledge(user_id: str, alert_id: int | None = None) -> None:
                 "UPDATE health_alerts SET acknowledged = 1 WHERE user_id = ? AND id = ?",
                 (user_id, alert_id),
             )
+
+
+def get_alert_email(user_id: str) -> str | None:
+    """The address saved on the Alerts page: None if never set, "" if turned off."""
+    with _connect() as conn:
+        row = conn.execute(
+            "SELECT email FROM alert_settings WHERE user_id = ?", (user_id,)
+        ).fetchone()
+    return row["email"] if row else None
+
+
+def set_alert_email(user_id: str, email: str) -> None:
+    """Save the alert email address; "" turns email alerts off."""
+    with _connect() as conn:
+        conn.execute(
+            """
+            INSERT INTO alert_settings (user_id, email) VALUES (?, ?)
+            ON CONFLICT(user_id) DO UPDATE SET email = excluded.email
+            """,
+            (user_id, email.strip()),
+        )

@@ -45,7 +45,7 @@ Healthify is a web app that pulls telemetry from a user's wearable (heart rate, 
 | ID | Requirement | Notes |
 |---|---|---|
 | FR-01 | Connect to a supported wearable provider account (Google Health API or Whoop) via OAuth 2.0 and import telemetry: heart rate, HRV, step count, sleep, and calories burned. | Merged original FR-01 + FR-02 |
-| FR-02 | Notify the user in-app when a telemetry metric deviates from their personal baseline or from a general reference range for that metric. | Delivered in-app plus browser notifications; see [S2-03 spec](features/S2-03-health-abnormality-alerts.md) |
+| FR-02 | Notify the user in-app when a telemetry metric deviates from their personal baseline or from a general reference range for that metric. | Delivered in-app plus browser notifications and optional email; see [S2-03 spec](features/S2-03-health-abnormality-alerts.md) |
 | FR-03 | Display a disclaimer that the app does not provide medical advice, is not a substitute for a doctor, and cannot detect medical emergencies. | Replaced original EMS auto-detection |
 | FR-04 | Allow the user to enter profile information (gender, age, weight) used to calculate their health metrics and baseline. | |
 | FR-05 | Allow the user to register an account with email and password, with credentials stored securely. | |
@@ -218,6 +218,7 @@ Things the team still needs to agree on. Resolve these in a meeting or PR, then 
 | 2026-09-20 | Added failure-handling NFR-02 | Replaces part of the caching rationale; GenAI review |
 | 2026-09-28 | NFR-04 set to 10 concurrent users on a single host | Make scalability testable |
 | 2026-10-30 | US-04 alerts delivered in-app plus via the browser Notifications API; heart-rate threshold set | Free, no third-party service; push notification from the scenario without Web Push complexity (S2-03) |
+| 2026-11-02 | US-04 alerts also emailed (SMTP, e.g. a free Gmail app password) to an address set on the Alerts page | Reaches the user when the app is closed; free, standard-library only (S2-03) |
 
 ---
 
