@@ -60,6 +60,11 @@ PROFILES = {
     },
 }
 
+# Emulated events for demoing alerts (US-04). "normal" is the default.
+SCENARIOS = ("normal", "heart-rate-spike", "connection-drop")
+SPIKE_SAMPLES = 14  # 30 s apart, so the spike lasts 6.5 minutes
+DROP_SAMPLES = (6, 22)  # newest-first indexes missing while "disconnected" (8 min)
+
 
 def _iso_utc(value: datetime) -> str:
     return value.astimezone(UTC).isoformat(timespec="seconds").replace("+00:00", "Z")
@@ -112,11 +117,18 @@ def _date_record(value: date) -> dict[str, int]:
 
 
 def generate_fitbit_data(
-    level: str, now: datetime | None = None
+    level: str, now: datetime | None = None, scenario: str = "normal"
 ) -> dict[str, dict[str, list[dict[str, Any]]]]:
-    """Return profile-scaled data points grouped by Fitbit data type."""
+    """Return profile-scaled data points grouped by Fitbit data type.
+
+    scenario="heart-rate-spike" makes the latest heart-rate samples read above
+    130 BPM at rest. scenario="connection-drop" removes heart-rate samples as if
+    the wearable disconnected, with the readings just before the drop elevated.
+    """
     if level not in PROFILES:
         raise ValueError(f"Unknown simulation level: {level}")
+    if scenario not in SCENARIOS:
+        raise ValueError(f"Unknown simulation scenario: {scenario}")
 
     profile = PROFILES[level]
     rng = random.Random()
@@ -149,14 +161,21 @@ def generate_fitbit_data(
         )
 
     for index in range(DATA_TYPES["heart-rate"]):
+        if scenario == "connection-drop" and DROP_SAMPLES[0] <= index < DROP_SAMPLES[1]:
+            continue
         sample = current - timedelta(seconds=index * 30)
+        bpm = rng.randint(*profile["heart_rate"])
+        if scenario == "heart-rate-spike" and index < SPIKE_SAMPLES:
+            bpm = rng.randint(135, 155)
+        elif scenario == "connection-drop" and DROP_SAMPLES[1] <= index < DROP_SAMPLES[1] + 4:
+            bpm = rng.randint(135, 155)
         append(
             "heart-rate",
             {
                 "dataSource": _data_source(),
                 "heartRate": {
                     "sampleTime": _sample_time(sample),
-                    "beatsPerMinute": str(rng.randint(*profile["heart_rate"])),
+                    "beatsPerMinute": str(bpm),
                 },
             },
         )
@@ -266,9 +285,13 @@ def generate_fitbit_data(
         )
 
     sessions_per_day = rng.randint(*profile["exercise_sessions"])
+    # In alert scenarios, start sessions yesterday so the spike reads as at rest.
+    first_exercise_day = 0 if scenario == "normal" else 1
     for index in range(DATA_TYPES["exercise"]):
         duration_seconds = rng.randint(20, 60) * 60
-        end = current - timedelta(days=index // max(sessions_per_day, 1))
+        end = current - timedelta(
+            days=first_exercise_day + index // max(sessions_per_day, 1)
+        )
         start = end - timedelta(seconds=duration_seconds)
         steps = rng.randint(1_000, 5_000)
         distance_m = round(steps * 0.76, 2)

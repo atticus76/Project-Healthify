@@ -2,7 +2,7 @@
 
 This roadmap drives **spec-driven development** for HealthTrack. Every feature gets a written spec before any code is written, and the spec stays the source of truth for implementation, tests, and review.
 
-Requirement IDs (FR-xx / NFR-xx) refer to [docs/Reports/01_Requirements.md](../../docs/Reports/01_Requirements.md). Related specs: [mission.md](mission.md), [tech-stack.md](tech-stack.md).
+Requirement IDs (FR-xx / NFR-xx) refer to [01_Requirements.md](01_Requirements.md). Related specs: [mission.md](mission.md), [tech-stack.md](tech-stack.md).
 
 Work is tracked on the [HealthTrack project board](https://github.com/users/atticus76/projects/4/views/1). The **Board item**, **Status**, **Owner**, and **Priority** columns below mirror the board. The **Spec** and **Tests** checkboxes track the spec-driven stages, which the board doesn't track.
 
@@ -112,8 +112,10 @@ Each roadmap item goes through these stages in order:
 - **Spec must define:** supported goal types, progress calculation, reminder triggers and frequency, and how reminders are dismissed.
 
 ### S2-03: Health abnormality alerts
+Spec: [features/S2-03-health-abnormality-alerts.md](features/S2-03-health-abnormality-alerts.md) (in review)
 - In-app alert when a metric deviates from the user's personal baseline or a general reference range.
 - Every alert carries the "not medical advice" disclaimer (FR-03).
+- Delivered as an in-app toast, header badge, and `/alerts` history, plus a browser notification when the user allows it.
 - **Spec must define:** which metrics are monitored, thresholds and baseline window for each (open decision in the requirements doc), alert severity, and de-duplication so the same alert doesn't repeat.
 
 ### S2-04: Cloud data storage & retrieval

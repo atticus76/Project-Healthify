@@ -19,6 +19,17 @@ def emulator_page() -> rx.Component:
                 on_change=TelemetryState.set_level,
                 width="100%",
             ),
+            rx.text("Alert scenario", weight="bold"),
+            rx.select.root(
+                rx.select.trigger(width="100%"),
+                rx.select.content(
+                    rx.select.item("Normal readings", value="normal"),
+                    rx.select.item("Heart-rate spike (urgent alert)", value="heart-rate-spike"),
+                    rx.select.item("Connection drop (data gap, no alarm)", value="connection-drop"),
+                ),
+                value=TelemetryState.scenario,
+                on_change=TelemetryState.set_scenario,
+            ),
             rx.cond(
                 TelemetryState.enabled,
                 rx.hstack(

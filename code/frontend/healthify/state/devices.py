@@ -8,7 +8,9 @@ from datetime import datetime
 import reflex as rx
 import requests
 
-from backend import google_health, google_oauth
+from backend import alerts, google_health, google_oauth
+
+from .alerts import notify
 
 
 def _fmt(ts: int | None) -> str:
@@ -65,22 +67,26 @@ class DeviceState(rx.State):
             return rx.redirect("/devices", replace=True)
 
         self.message = "Google account connected."
-        self._sync()
+        events = self._sync()
         # replace=True keeps the one-time ?code= URL out of browser history.
-        return rx.redirect("/devices", replace=True)
+        return [rx.redirect("/devices", replace=True), *events]
 
     def sync_now(self):
         self.busy = True
         self.error = ""
         self.message = ""
         yield  # push the spinner to the browser before the slow HTTP calls
-        self._sync()
+        events = self._sync()
         self.busy = False
+        yield events
 
-    def _sync(self):
+    def _sync(self) -> list:
+        """Sync, then return the events that deliver any new alerts (US-04)."""
+        events = []
         try:
             results = google_health.sync()
             self.summaries = google_health.summarize(results)
+            events = notify(alerts.check_telemetry(results, google_health.DEMO_USER_ID))
         except google_health.ReconnectRequired as exc:
             self.error = str(exc)
         except requests.HTTPError as exc:
@@ -88,6 +94,7 @@ class DeviceState(rx.State):
         except requests.RequestException:
             self.error = "Couldn't reach Google Health. Sync failed."
         self._load_status()
+        return events
 
     def disconnect_account(self):
         google_health.disconnect()

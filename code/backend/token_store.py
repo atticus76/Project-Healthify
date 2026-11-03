@@ -17,6 +17,8 @@ from __future__ import annotations
 
 import sqlite3
 import time
+from collections.abc import Iterator
+from contextlib import contextmanager
 from pathlib import Path
 from typing import Any
 
@@ -29,7 +31,13 @@ STATUS_CONNECTED = "connected"
 STATUS_RECONNECT = "reconnect_required"
 
 
-def _connect() -> sqlite3.Connection:
+@contextmanager
+def _connect() -> Iterator[sqlite3.Connection]:
+    """Commit on success, roll back on error, and always close the file.
+
+    A bare `with sqlite3.connect()` only commits; the open handle keeps the
+    file locked on Windows.
+    """
     conn = sqlite3.connect(DATABASE_PATH)
     conn.row_factory = sqlite3.Row
     conn.execute(
@@ -58,7 +66,11 @@ def _connect() -> sqlite3.Connection:
         )
         """
     )
-    return conn
+    try:
+        with conn:
+            yield conn
+    finally:
+        conn.close()
 
 
 # --- pending OAuth requests ---------------------------------------------------

@@ -2,6 +2,7 @@ import reflex as rx
 
 #states
 from ..state.dashboard import DashboardState
+from ..state.alerts import AlertState
 
 #components
 from ..components import page_header, device_card, feature_grid
@@ -20,7 +21,7 @@ FEATURES = [
 ]
 SORTED_FEATURES = sorted(FEATURES, key=lambda feature: feature[0].lower())
 
-@rx.page(route="/")
+@rx.page(route="/", on_load=AlertState.load)
 def dashboard() -> rx.Component:
     return rx.vstack(
         page_header(),
