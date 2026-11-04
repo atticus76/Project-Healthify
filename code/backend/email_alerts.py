@@ -38,6 +38,11 @@ class EmailNotConfigured(Exception):
     """SMTP credentials are missing from .env."""
 
 
+def reload_config() -> None:
+    """Reload local SMTP settings so page state reflects the current .env."""
+    load_dotenv(REPO_ROOT / ".env", override=True)
+
+
 def is_valid_address(address: str) -> bool:
     return bool(EMAIL_PATTERN.match(address.strip()))
 

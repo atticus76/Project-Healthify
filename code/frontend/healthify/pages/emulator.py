@@ -1,8 +1,9 @@
 import reflex as rx
 from ..components import page_header
 from ..state.telemetry import TelemetryState
+from ..state.auth import AuthState
 
-@rx.page(route="/emulator")
+@rx.page(route="/emulator", on_load=[AuthState.require_login, TelemetryState.load_page])
 def emulator_page() -> rx.Component:
     return rx.vstack(
         page_header(),
@@ -11,6 +12,16 @@ def emulator_page() -> rx.Component:
             rx.text(
                 "Generate synthetic Fitbit-style records for all supported data types. "
                 "This data is simulated and is not a health measurement."
+            ),
+            rx.button(
+                "Automatic refresh",
+                id="telemetry-auto-refresh",
+                on_click=TelemetryState.auto_refresh,
+                opacity="0",
+                position="absolute",
+                width="1px",
+                height="1px",
+                pointer_events="none",
             ),
             rx.text("Simulation activity level", weight="bold"),
             rx.select(

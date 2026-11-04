@@ -1,4 +1,4 @@
-# HealthTrack (Healthify)
+# Healthify
 
 ## Getting Started
 
@@ -19,7 +19,7 @@ From the repo root:
 py -V:3.12 -m venv .venv
 .venv\Scripts\Activate.ps1
 python -m pip install --upgrade pip
-pip install -r requirements.txt
+pip install -r code\requirements.txt
 ```
 
 If PowerShell refuses to run `Activate.ps1`, run `Set-ExecutionPolicy -Scope CurrentUser RemoteSigned` once.
@@ -33,6 +33,13 @@ Copy `.env.example` to `.env`; everything in it is optional.
 
 ### 4. Run the app
 
+You can run `run_healthify.bat` directly by double-clicking it. It activates
+the root virtual environment, installs the project requirements, and starts the
+Reflex app from `code\frontend`. When Reflex stops, choose `R` to restart it or
+`T` to close the launcher.
+
+Alternatively, run these commands manually:
+
 ```powershell
 .venv\Scripts\Activate.ps1
 cd code\frontend
@@ -40,6 +47,13 @@ reflex run
 ```
 
 Open http://localhost:3000. The backend runs on port 8000. The first run takes a minute while Reflex installs its frontend packages. Stop the app with `Ctrl+C`.
+
+The demo opens on a sign-in page. New accounts may use a username and an
+optional email address; passwords must be at least eight characters and include
+an uppercase letter, number, and special character. Demo account records are
+stored in `code\backend\users.txt`, including profile defaults and basic
+application settings. This file-backed login is intentionally temporary and is
+not production authentication.
 
 ### 5. Run the tests
 
@@ -67,7 +81,7 @@ Yogi Chopra
 
 
 
-Project: HealthTrack: A Real-Time Health Monitoring System Using Wearable Devices -
+Project: Healthify: A Real-Time Health Monitoring System Using Wearable Devices -
 Using wearable technologies and bioinformatics (? heart rate monitor? Apple watch? I might have an old one I can steal from my dad, should provide loads of info about heart rate, heart rate variability, sleep w/ iPhone or watch)
 
 Do we really have to use a real watch? What about an engine or a simulator?
@@ -141,5 +155,3 @@ Does each scenario describe one primary behavior?
 Are the Then outcomes observable and testable?
 Does the alternate scenario examine a meaningful condition?
 Can you identify which business rule is verified?
-
-

@@ -1,0 +1,48 @@
+{
+  "dawood1789": {
+    "username": "dawood1789",
+    "email": "",
+    "password_hash": "1e242abe0bb5f2a9904d88f1dcfa7c9a682e7aaedd388584d75ba6c96deb2b15",
+    "profile": {
+      "gender": "Male",
+      "age": 22,
+      "weight_lb": 200.0,
+      "complete": true
+    },
+    "app_state": {
+      "theme": "light",
+      "device_name": "",
+      "telemetry_enabled": true
+    }
+  },
+  "new": {
+    "username": "new",
+    "email": "",
+    "password_hash": "6ce8f40133d2ba01e180bcc6b0a116128677732590dac575790c4854cff068df",
+    "profile": {
+      "gender": "Prefer not to say",
+      "age": 30,
+      "weight_lb": 170.0,
+      "complete": true
+    },
+    "app_state": {
+      "theme": "light",
+      "device_name": ""
+    }
+  },
+  "newuser": {
+    "username": "newuser",
+    "email": "",
+    "password_hash": "1e242abe0bb5f2a9904d88f1dcfa7c9a682e7aaedd388584d75ba6c96deb2b15",
+    "profile": {
+      "gender": "Prefer not to say",
+      "age": 30,
+      "weight_lb": 170.0,
+      "complete": true
+    },
+    "app_state": {
+      "theme": "light",
+      "device_name": ""
+    }
+  }
+}

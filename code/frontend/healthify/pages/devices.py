@@ -7,6 +7,7 @@ import reflex as rx
 
 from ..components import page_header
 from ..state.devices import DeviceState
+from ..state.auth import AuthState
 
 GREEN = rx.color_mode_cond("#2f855a", "#276749")
 GREEN_HOVER = rx.color_mode_cond("#276749", "#1c4532")
@@ -85,7 +86,7 @@ def _connected() -> rx.Component:
     )
 
 
-@rx.page(route="/devices", title="Connect Device | Healthify", on_load=DeviceState.load)
+@rx.page(route="/devices", title="Connect Device | Healthify", on_load=[AuthState.require_login, DeviceState.load])
 def device_page() -> rx.Component:
     return rx.vstack(
         page_header(),
@@ -126,7 +127,7 @@ def device_page() -> rx.Component:
     )
 
 
-@rx.page(route="/devices/callback", title="Connecting... | Healthify", on_load=DeviceState.handle_callback)
+@rx.page(route="/devices/callback", title="Connecting... | Healthify", on_load=[AuthState.require_login, DeviceState.handle_callback])
 def device_callback_page() -> rx.Component:
     return rx.center(
         rx.vstack(

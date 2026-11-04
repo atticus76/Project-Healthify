@@ -2,6 +2,37 @@ import reflex as rx
 from ..state.telemetry import TelemetryState
 from backend.telemetry_emulator import DATA_TYPES
 
+
+def _telemetry_chart(title: str, points) -> rx.Component:
+    return rx.vstack(
+        rx.text(title, weight="bold", size="2"),
+        rx.recharts.line_chart(
+            rx.recharts.line(
+                data_key="value",
+                type_="monotone",
+                stroke="#38a169",
+                is_animation_active=False,
+            ),
+            rx.recharts.x_axis(
+                data_key="time",
+                type_="number",
+                domain=[1, 10],
+                ticks=list(range(1, 11)),
+            ),
+            rx.recharts.y_axis(),
+            data=points,
+            width="100%",
+            height=120,
+        ),
+        width="100%",
+        min_width="100%",
+        max_width="100%",
+        align="stretch",
+        align_self="stretch",
+        spacing="1",
+    )
+
+
 def device_card() -> rx.Component:
     return rx.box(
         rx.vstack(
@@ -9,6 +40,7 @@ def device_card() -> rx.Component:
             rx.cond(
                 TelemetryState.enabled,
                 rx.vstack(
+                    rx.text("Device: ", TelemetryState.device_name, weight="bold"),
                     rx.badge("SIMULATED FITBIT DATA", color_scheme="green"),
                     rx.text(
                         "Profile: ",
@@ -27,7 +59,42 @@ def device_card() -> rx.Component:
                         ),
                         color="white",
                     ),
-                    align="center",
+                    rx.box(
+                        _telemetry_chart("Steps", TelemetryState.steps_points),
+                        _telemetry_chart("Heart rate", TelemetryState.heart_rate_points),
+                        _telemetry_chart(
+                            "Resting heart rate",
+                            TelemetryState.resting_heart_rate_points,
+                        ),
+                        _telemetry_chart("Heart-rate variability", TelemetryState.hrv_points),
+                        _telemetry_chart(
+                            "Daily heart-rate variability",
+                            TelemetryState.daily_hrv_points,
+                        ),
+                        _telemetry_chart(
+                            "Active-zone minutes",
+                            TelemetryState.zone_minutes_points,
+                        ),
+                        _telemetry_chart("Total calories", TelemetryState.calories_points),
+                        _telemetry_chart("Distance", TelemetryState.distance_points),
+                        _telemetry_chart(
+                            "Oxygen saturation",
+                            TelemetryState.oxygen_points,
+                        ),
+                        width="100%",
+                        min_width="100%",
+                        align="stretch",
+                        align_self="stretch",
+                        box_sizing="border-box",
+                        max_height="390px",
+                        overflow_y="auto",
+                        overflow_x="hidden",
+                        padding="0.5em",
+                        border_radius="8px",
+                        background_color=rx.color_mode_cond("#ffffff", "#1a202c"),
+                    ),
+                    width="100%",
+                    align="stretch",
                     spacing="3",
                 ),
                 rx.vstack(
