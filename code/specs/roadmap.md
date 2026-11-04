@@ -1,10 +1,10 @@
-# HealthTrack Roadmap
+# Healthify Roadmap
 
-This roadmap drives **spec-driven development** for HealthTrack. Every feature gets a written spec before any code is written, and the spec stays the source of truth for implementation, tests, and review.
+This roadmap drives **spec-driven development** for Healthify. Every feature gets a written spec before any code is written, and the spec stays the source of truth for implementation, tests, and review.
 
 Requirement IDs (FR-xx / NFR-xx) refer to [01_Requirements.md](01_Requirements.md). Related specs: [mission.md](mission.md), [tech-stack.md](tech-stack.md).
 
-Work is tracked on the [HealthTrack project board](https://github.com/users/atticus76/projects/4/views/1). The **Board item**, **Status**, **Owner**, and **Priority** columns below mirror the board. The **Spec** and **Tests** checkboxes track the spec-driven stages, which the board doesn't track.
+Work is tracked on the [Healthify project board](https://github.com/users/atticus76/projects/4/views/1). The **Board item**, **Status**, **Owner**, and **Priority** columns below mirror the board. The **Spec** and **Tests** checkboxes track the spec-driven stages, which the board doesn't track.
 
 > **ID mismatch:** some board items use older FR numbers than the requirements doc. Board FR-07 (cloud storage) = doc **FR-06**, board FR-08 (reporting) = doc **FR-07**, board FR-09 (emulator) = doc **FR-08**. This roadmap uses the requirements-doc IDs; rename the board items to match.
 

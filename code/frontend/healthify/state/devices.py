@@ -9,6 +9,7 @@ import reflex as rx
 import requests
 
 from backend import alerts, google_health, google_oauth
+from backend import auth_controller
 
 from .alerts import notify
 
@@ -86,7 +87,9 @@ class DeviceState(rx.State):
         try:
             results = google_health.sync()
             self.summaries = google_health.summarize(results)
-            events = notify(alerts.check_telemetry(results, google_health.DEMO_USER_ID))
+            events = notify(
+                alerts.check_telemetry(results, auth_controller.get_active_user())
+            )
         except google_health.ReconnectRequired as exc:
             self.error = str(exc)
         except requests.HTTPError as exc:

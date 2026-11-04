@@ -4,7 +4,7 @@ and authorization works tonight, but just wanted to get a script that works for 
 
 To run this script (from the scripts folder)...
 1. Activate your virtual environment for Python (differs across OS' I believe?)
-2. pip install -r requirements.txt
+2. pip install -r code\requirements.txt
 3. python3 fetch_samples.py
 4. deactivate
 

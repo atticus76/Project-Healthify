@@ -1,10 +1,11 @@
 import reflex as rx
 from ..state.alerts import AlertState
+from ..state.auth import AuthState
 
 def page_header() -> rx.Component:
     return rx.hstack(
         rx.heading("Healthify", size="7"),
-        rx.text("Welcome USER", size="4"),
+        rx.text("Welcome ", AuthState.username, size="4"),
         rx.spacer(),
         rx.link(
             rx.hstack(
@@ -20,6 +21,7 @@ def page_header() -> rx.Component:
             aria_label="Alerts",
         ),
         rx.color_mode.button(),
+        rx.button("Sign out", on_click=AuthState.logout, variant="ghost", color="white"),
         width="100%",
         padding="1em 2em",
         background_color=rx.color_mode_cond("#2f855a", "#22543d"),

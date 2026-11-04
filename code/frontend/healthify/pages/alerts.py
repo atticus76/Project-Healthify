@@ -5,6 +5,7 @@ import reflex as rx
 from backend.alerts import DISCLAIMER
 from ..components import page_header
 from ..state.alerts import AlertState
+from ..state.auth import AuthState
 
 
 def _alert_row(alert) -> rx.Component:
@@ -144,7 +145,7 @@ def _email_settings() -> rx.Component:
     )
 
 
-@rx.page(route="/alerts", title="Alerts | Healthify", on_load=AlertState.load_page)
+@rx.page(route="/alerts", title="Alerts | Healthify", on_load=[AuthState.require_login, AlertState.load_page])
 def alerts_page() -> rx.Component:
     return rx.vstack(
         page_header(),

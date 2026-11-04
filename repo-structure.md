@@ -1,53 +1,44 @@
-Project_Name/
-│
-├── README.md                      # What, why, how, demo, team, setup
-├── CONTRIBUTING.md                 # How we work: branches, PRs, code style
-├── .gitignore                      # OS/IDE/build artifacts ignored
-├── LICENSE                         # If applicable
-│
-├── docs/                           # All non-code artifacts
-│   ├── MoM/                        # Minutes of Meeting (dated files)
-│   │   ├── MoM_2025-08-26.md
-│   │   └── TEMPLATE_MoM.md
-│   ├── Reports/                    # Requirements/Design/Final
-│   │   ├── 01_Requirements.md
-│   │   ├── 02_Design.md
-│   │   ├── 03_TestPlan.md
-│   │   └── 04_FinalReport.md
-│   ├── PresentationsVideos/        # Sprint reviews (slides + demo video links)
-│   │   ├── Sprint1.pptx
-│   │   └── Sprint1_Video.mp4 (YouTube link also acceptable)
-│   └── ProjectManagement/          # Timeline, risks, meeting schedule
-│       ├── Timeline.md
-│       ├── RiskRegister.md
-│       └── Stakeholders.md
-│
-├── resources/                      # Learning references
-│   ├── ResearchPapers/
-│   ├── Links.md
-│   └── Tutorials.md
-│
-├── code/                           # Main project code
+# Healthify repository structure
+
+```text
+Healthify/
+├── README.md
+├── .env.example
+├── .gitignore
+├── pytest.ini
+├── run_healthify.bat                 # Windows launcher
+├── code/
+│   ├── requirements.txt             # Authoritative Python dependencies
 │   ├── backend/
-│   │   ├── src/
+│   │   ├── api/
 │   │   ├── tests/
-│   │   └── README.md
+│   │   ├── alerts.py
+│   │   ├── email_alerts.py
+│   │   ├── goals.py
+│   │   ├── profile_controller.py
+│   │   ├── telemetry_emulator.py
+│   │   └── token_store.py
 │   ├── frontend/
-│   │   ├── src/
-│   │   ├── tests/
-│   │   └── README.md
-│   ├── scripts/                    # Utilities, data loaders
-│   └── README.md
-│
-├── tests/                          # End-to-end/integration tests
-│   └── README.md
-│
-├── data/                           # Sample/mock data (if allowed)
-│   ├── raw/                        # Unmodified
-│   ├── processed/                  # Cleaned/transformed
-│   └── README.md                   # Document source, privacy, usage
-│
+│   │   ├── rxconfig.py
+│   │   ├── healthify/
+│   │   │   ├── components/
+│   │   │   ├── pages/
+│   │   │   ├── state/
+│   │   │   └── healthify.py
+│   │   └── reflex.lock/
+│   ├── scripts/
+│   └── specs/
+│       ├── features/
+│       ├── 01_Requirements.md
+│       ├── roadmap.md
+│       └── tech-stack.md
+├── data/                            # Local/sample data
+├── docs/
+│   └── Reports/
 └── .github/
     └── ISSUE_TEMPLATE/
-        ├── bug_report.md
-        └── feature_request.md
+```
+
+The Reflex app is launched from `code/frontend`, where `rxconfig.py` is located.
+The root virtual environment is `.venv`, and dependencies are installed from
+`code/requirements.txt`.

@@ -14,8 +14,7 @@ from datetime import datetime
 
 import reflex as rx
 
-from backend import alerts, email_alerts
-from backend.google_health import DEMO_USER_ID
+from backend import alerts, auth_controller, email_alerts
 
 
 def _fmt(iso: str) -> str:
@@ -36,8 +35,9 @@ def _browser_notification(alert: dict) -> str:
     )
 
 
-def notify(new_alerts: list[dict], user_id: str = DEMO_USER_ID) -> list:
+def notify(new_alerts: list[dict], user_id: str | None = None) -> list:
     """Deliver freshly created alerts: start the emails, return the UI events."""
+    user_id = user_id or auth_controller.get_active_user()
     email_alerts.dispatch(user_id, new_alerts)
     events = []
     for alert in new_alerts:
@@ -62,7 +62,8 @@ class AlertState(rx.State):
     sending_test: bool = False
 
     def load(self):
-        rows = alerts.list_alerts(DEMO_USER_ID)
+        user_id = auth_controller.get_active_user()
+        rows = alerts.list_alerts(user_id)
         self.items = [
             {
                 "id": str(row["id"]),
@@ -78,8 +79,10 @@ class AlertState(rx.State):
 
     def load_page(self):
         """on_load for /alerts: read the list, email settings, and browser permission."""
+        email_alerts.reload_config()
+        user_id = auth_controller.get_active_user()
         self.load()
-        self.alert_email = email_alerts.recipient(DEMO_USER_ID)
+        self.alert_email = email_alerts.recipient(user_id)
         self.email_input = self.alert_email
         self.email_configured = email_alerts.is_configured()
         self.email_message = ""
@@ -99,11 +102,11 @@ class AlertState(rx.State):
         )
 
     def acknowledge(self, alert_id: str):
-        alerts.acknowledge(DEMO_USER_ID, int(alert_id))
+        alerts.acknowledge(auth_controller.get_active_user(), int(alert_id))
         self.load()
 
     def acknowledge_all(self):
-        alerts.acknowledge(DEMO_USER_ID)
+        alerts.acknowledge(auth_controller.get_active_user())
         self.load()
 
     def set_email_input(self, value: str):
@@ -117,12 +120,12 @@ class AlertState(rx.State):
         if not email_alerts.is_valid_address(address):
             self.email_error = "Enter a valid email address, like name@example.com."
             return
-        alerts.set_alert_email(DEMO_USER_ID, address)
+        alerts.set_alert_email(auth_controller.get_active_user(), address)
         self.alert_email = address
         self.email_message = f"Alerts will be emailed to {address}."
 
     def turn_off_email(self):
-        alerts.set_alert_email(DEMO_USER_ID, "")
+        alerts.set_alert_email(auth_controller.get_active_user(), "")
         self.alert_email = ""
         self.email_input = ""
         self.email_error = ""
@@ -134,7 +137,7 @@ class AlertState(rx.State):
         self.sending_test = True
         yield  # show the spinner while the mail server responds
         try:
-            sent_to = email_alerts.send_test(DEMO_USER_ID)
+            sent_to = email_alerts.send_test(auth_controller.get_active_user())
             self.email_message = f"Test email sent to {sent_to}. Check your inbox (and spam folder)."
         except (ValueError, email_alerts.EmailNotConfigured) as exc:
             self.email_error = str(exc)
