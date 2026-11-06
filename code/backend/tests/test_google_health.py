@@ -2,7 +2,7 @@
 
 AI-GENERATED (Claude) for the device-connection demo.
 
-Run from the repo root:  PYTHONPATH=code python -m pytest code/backend/tests
+Runs against healthify-test (S2-04) and is skipped if TEST_DATABASE_URL isn't set.
 """
 
 import base64
@@ -10,11 +10,12 @@ import json
 import time
 import unittest
 from pathlib import Path
-from tempfile import TemporaryDirectory
 from unittest import mock
 from urllib.parse import parse_qs, urlsplit
 
-from backend import google_health, google_oauth, token_store
+import pytest
+
+from backend import auth_controller, google_health, google_oauth, token_store
 
 SAMPLES = Path(__file__).resolve().parents[3] / "data" / "samples"
 
@@ -42,11 +43,14 @@ class FakeResponse:
 ALL_SCOPES = " ".join(google_oauth.SCOPES)
 
 
+USER = "alice"
+
+
+@pytest.mark.usefixtures("test_db")
 class DeviceConnectionFlowTest(unittest.TestCase):
     def setUp(self):
-        self.tmp = TemporaryDirectory()
+        auth_controller.register(USER, "", "Testpass1!")
         self.patches = [
-            mock.patch.object(token_store, "DATABASE_PATH", Path(self.tmp.name) / "test.db"),
             mock.patch.dict("os.environ", {"GOOGLE_CLIENT_ID": "cid", "GOOGLE_CLIENT_SECRET": "secret"}),
         ]
         for p in self.patches:
@@ -55,10 +59,9 @@ class DeviceConnectionFlowTest(unittest.TestCase):
     def tearDown(self):
         for p in self.patches:
             p.stop()
-        self.tmp.cleanup()
 
     def _connect(self, scope=ALL_SCOPES):
-        url = google_health.start_connection()
+        url = google_health.start_connection(USER)
         state = parse_qs(urlsplit(url).query)["state"][0]
         token_resp = FakeResponse(200, {
             "access_token": "access-1", "refresh_token": "refresh-1", "expires_in": 3599,
@@ -69,7 +72,7 @@ class DeviceConnectionFlowTest(unittest.TestCase):
         return url, post
 
     def test_authorization_url_has_pkce_and_offline_access(self):
-        url = google_health.start_connection()
+        url = google_health.start_connection(USER)
         q = parse_qs(urlsplit(url).query)
         self.assertEqual(q["code_challenge_method"], ["S256"])
         self.assertEqual(q["access_type"], ["offline"])
@@ -80,9 +83,20 @@ class DeviceConnectionFlowTest(unittest.TestCase):
         sent = post.call_args.kwargs["data"]
         self.assertEqual(sent["grant_type"], "authorization_code")
         self.assertTrue(sent["code_verifier"])
-        status = google_health.get_status()
+        status = google_health.get_status(USER)
         self.assertEqual(status["status"], "connected")
         self.assertEqual(status["email"], "atticus@example.com")
+
+    def test_connection_belongs_to_the_user_who_started_it(self):
+        auth_controller.register("bob", "", "Testpass1!")
+        self._connect()
+        self.assertEqual(google_health.get_status(USER)["status"], "connected")
+        self.assertIsNone(google_health.get_status("bob"))
+
+    def test_there_is_no_shared_demo_user(self):
+        # Every call says whose device it is; nothing falls back to "new-user".
+        with self.assertRaises(TypeError):
+            google_health.get_status()
 
     def test_unknown_or_reused_state_is_rejected(self):
         with self.assertRaises(google_health.ConnectionFailed):
@@ -95,7 +109,7 @@ class DeviceConnectionFlowTest(unittest.TestCase):
     def test_missing_health_scope_is_rejected(self):
         with self.assertRaises(google_health.ConnectionFailed):
             self._connect(scope="openid email")
-        self.assertIsNone(google_health.get_status())
+        self.assertIsNone(google_health.get_status(USER))
 
     def test_sync_uses_bearer_token_and_summarizes(self):
         self._connect()
@@ -106,26 +120,26 @@ class DeviceConnectionFlowTest(unittest.TestCase):
             return FakeResponse(200, json.loads((SAMPLES / f"{data_type}.json").read_text()))
 
         with mock.patch("backend.google_health.requests.get", side_effect=fake_get):
-            results = google_health.sync()
+            results = google_health.sync(USER)
         lines = google_health.summarize(results)
         self.assertTrue(any("Resting heart rate" in line for line in lines))
-        self.assertEqual(google_health.get_status()["device_name"], "Charge 6")
+        self.assertEqual(google_health.get_status(USER)["device_name"], "Charge 6")
 
     def test_expired_access_token_is_refreshed(self):
         self._connect()
-        token_store.update_access_token("new-user", "access-1", int(time.time()) - 10)
+        token_store.update_access_token(USER, "access-1", int(time.time()) - 10)
         refresh = FakeResponse(200, {"access_token": "access-2", "expires_in": 3599})
         with mock.patch("backend.google_oauth.requests.post", return_value=refresh):
-            self.assertEqual(google_health._access_token("new-user"), "access-2")
+            self.assertEqual(google_health._access_token(USER), "access-2")
 
     def test_revoked_refresh_token_requires_reconnect(self):
         self._connect()
-        token_store.update_access_token("new-user", "access-1", int(time.time()) - 10)
+        token_store.update_access_token(USER, "access-1", int(time.time()) - 10)
         bad = FakeResponse(400, {"error": "invalid_grant", "error_description": "Token has been expired or revoked."})
         with mock.patch("backend.google_oauth.requests.post", return_value=bad):
             with self.assertRaises(google_health.ReconnectRequired):
-                google_health._access_token("new-user")
-        self.assertEqual(google_health.get_status()["status"], "reconnect_required")
+                google_health._access_token(USER)
+        self.assertEqual(google_health.get_status(USER)["status"], "reconnect_required")
 
 
 if __name__ == "__main__":
