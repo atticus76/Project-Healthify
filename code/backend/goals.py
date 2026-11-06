@@ -8,7 +8,9 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any, Iterator
 
-from .alerts import DATABASE_PATH
+# Local SQLite file, used until this module is ported to the cloud (S2-04 task 4).
+DATABASE_PATH = Path(__file__).resolve().parent / "healthtrack.db"
+
 
 GOAL_DAILY_STEPS = "daily_steps"
 MILESTONES = (25, 50, 75, 100)

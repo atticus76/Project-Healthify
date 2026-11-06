@@ -4,24 +4,19 @@ Spec: code/specs/features/S2-03-health-abnormality-alerts.md
 
 Checks synced telemetry (Google Health API or the emulator, which share the
 same JSON shape) for a sustained high heart rate and for gaps in the data.
-Alerts are stored in the same healthtrack.db the profile feature uses so the
-Alerts page can show a history. Delivery (toast + browser notification) is the
+Alerts are stored in the cloud health_alerts table (S2-04) so the Alerts page
+can show a history. Delivery (toast + browser notification) is the
 frontend's job and email is email_alerts.py's; this module only decides what is
 abnormal and records it, plus the user's alert email address.
 """
 
 from __future__ import annotations
 
-import sqlite3
-from collections.abc import Iterator
-from contextlib import contextmanager
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
-from pathlib import Path
 from typing import Any
 
-
-DATABASE_PATH = Path(__file__).resolve().parent / "healthtrack.db"
+from backend.db import connect
 
 HIGH_HEART_RATE_BPM = 130
 SUSTAINED_FOR = timedelta(minutes=5)
@@ -161,63 +156,33 @@ def evaluate_heart_rate(
 
 
 # --- storing alerts --------------------------------------------------------------------
-
-@contextmanager
-def _connect() -> Iterator[sqlite3.Connection]:
-    """Commit on success, roll back on error, and always close the file."""
-    conn = sqlite3.connect(DATABASE_PATH)
-    conn.row_factory = sqlite3.Row
-    conn.execute(
-        """
-        CREATE TABLE IF NOT EXISTS health_alerts (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            user_id TEXT NOT NULL,
-            kind TEXT NOT NULL,
-            severity TEXT NOT NULL,
-            title TEXT NOT NULL,
-            message TEXT NOT NULL,
-            started_at TEXT NOT NULL,
-            ended_at TEXT NOT NULL,
-            peak_bpm INTEGER,
-            created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
-            acknowledged INTEGER NOT NULL DEFAULT 0,
-            UNIQUE (user_id, kind, started_at)
-        )
-        """
-    )
-    conn.execute(
-        """
-        CREATE TABLE IF NOT EXISTS alert_settings (
-            user_id TEXT PRIMARY KEY,
-            email TEXT NOT NULL DEFAULT ''
-        )
-        """
-    )
-    try:
-        with conn:
-            yield conn
-    finally:
-        conn.close()
+# Tables: health_alerts and alert_settings in code/backend/db/schema.sql. Every
+# user_id must be an existing account.
 
 
 def check_telemetry(data: dict[str, Any], user_id: str) -> list[dict[str, Any]]:
     """Evaluate a sync's telemetry and return only the alerts that are new.
 
     Re-syncing overlapping data finds the same events again; the UNIQUE
-    constraint drops those so the user isn't alerted twice for one event.
+    (user_id, kind, started_at) constraint drops those so the user isn't
+    alerted twice for one event.
     """
     findings = evaluate_heart_rate(
         extract_heart_rate(data), extract_exercise_intervals(data)
     )
-    new_ids = []
-    with _connect() as conn:
+    if not findings:
+        return []
+    new_alerts = []
+    with connect("save alerts") as conn:
         for finding in findings:
-            cursor = conn.execute(
+            row = conn.execute(
                 """
-                INSERT OR IGNORE INTO health_alerts (
+                INSERT INTO health_alerts (
                     user_id, kind, severity, title, message,
                     started_at, ended_at, peak_bpm
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+                ON CONFLICT (user_id, kind, started_at) DO NOTHING
+                RETURNING *
                 """,
                 (
                     user_id,
@@ -229,64 +194,59 @@ def check_telemetry(data: dict[str, Any], user_id: str) -> list[dict[str, Any]]:
                     finding.ended_at.isoformat(),
                     finding.peak_bpm,
                 ),
-            )
-            if cursor.rowcount:
-                new_ids.append(cursor.lastrowid)
-        if not new_ids:
-            return []
-        rows = conn.execute(
-            f"SELECT * FROM health_alerts WHERE id IN ({','.join('?' * len(new_ids))}) ORDER BY id",
-            new_ids,
-        ).fetchall()
-    return [dict(row) for row in rows]
+            ).fetchone()
+            if row is not None:  # None means this event was already saved
+                new_alerts.append(row)
+    return new_alerts
 
 
 def list_alerts(user_id: str) -> list[dict[str, Any]]:
-    with _connect() as conn:
-        rows = conn.execute(
-            "SELECT * FROM health_alerts WHERE user_id = ? ORDER BY started_at DESC, id DESC",
+    with connect("load alerts") as conn:
+        return conn.execute(
+            "SELECT * FROM health_alerts WHERE user_id = %s ORDER BY started_at DESC, id DESC",
             (user_id,),
         ).fetchall()
-    return [dict(row) for row in rows]
 
 
 def unacknowledged_count(user_id: str) -> int:
-    with _connect() as conn:
+    with connect("count unread alerts") as conn:
         row = conn.execute(
-            "SELECT COUNT(*) FROM health_alerts WHERE user_id = ? AND acknowledged = 0",
+            "SELECT count(*) AS n FROM health_alerts WHERE user_id = %s AND acknowledged = 0",
             (user_id,),
         ).fetchone()
-    return row[0]
+    return row["n"]
 
 
 def acknowledge(user_id: str, alert_id: int | None = None) -> None:
     """Mark one alert (or all of the user's alerts) as seen."""
-    with _connect() as conn:
+    with connect("acknowledge alerts") as conn:
         if alert_id is None:
-            conn.execute("UPDATE health_alerts SET acknowledged = 1 WHERE user_id = ?", (user_id,))
+            conn.execute(
+                "UPDATE health_alerts SET acknowledged = 1 WHERE user_id = %s", (user_id,)
+            )
         else:
             conn.execute(
-                "UPDATE health_alerts SET acknowledged = 1 WHERE user_id = ? AND id = ?",
+                "UPDATE health_alerts SET acknowledged = 1 WHERE user_id = %s AND id = %s",
                 (user_id, alert_id),
             )
 
 
 def get_alert_email(user_id: str) -> str | None:
     """The address saved on the Alerts page: None if never set, "" if turned off."""
-    with _connect() as conn:
+    with connect("load alert email") as conn:
         row = conn.execute(
-            "SELECT email FROM alert_settings WHERE user_id = ?", (user_id,)
+            "SELECT email FROM alert_settings WHERE user_id = %s", (user_id,)
         ).fetchone()
     return row["email"] if row else None
 
 
 def set_alert_email(user_id: str, email: str) -> None:
     """Save the alert email address; "" turns email alerts off."""
-    with _connect() as conn:
+    with connect("save alert email") as conn:
         conn.execute(
             """
-            INSERT INTO alert_settings (user_id, email) VALUES (?, ?)
-            ON CONFLICT(user_id) DO UPDATE SET email = excluded.email
+            INSERT INTO alert_settings (user_id, email) VALUES (%s, %s)
+            ON CONFLICT (user_id) DO UPDATE SET email = excluded.email
             """,
             (user_id, email.strip()),
         )
