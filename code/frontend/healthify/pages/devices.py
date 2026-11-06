@@ -86,6 +86,24 @@ def _connected() -> rx.Component:
     )
 
 
+def _sync_failed() -> rx.Component:
+    return _panel(
+        rx.hstack(rx.heading("Google Health", size="5"), rx.badge("Sync failed", color_scheme="red"), align="center"),
+        rx.text("Account: ", rx.text.strong(DeviceState.email)),
+        rx.text("The last sync didn't work: ", DeviceState.sync_error),
+        rx.text(
+            "Healthify will try again automatically around ", DeviceState.next_sync,
+            ", waiting longer after each failure. Last successful sync: ", DeviceState.last_sync, ".",
+            size="2",
+            color_scheme="gray",
+        ),
+        rx.hstack(
+            _primary_button("Sync Now", DeviceState.sync_now, loading=DeviceState.busy),
+            rx.button("Disconnect", on_click=DeviceState.disconnect_account, variant="outline", size="3"),
+        ),
+    )
+
+
 @rx.page(route="/devices", title="Connect Device | Healthify", on_load=[AuthState.require_login, DeviceState.load])
 def device_page() -> rx.Component:
     return rx.vstack(
@@ -103,6 +121,7 @@ def device_page() -> rx.Component:
             rx.match(
                 DeviceState.status,
                 ("connected", _connected()),
+                ("sync_failed", _sync_failed()),
                 ("reconnect_required", _reconnect()),
                 _not_connected(),
             ),

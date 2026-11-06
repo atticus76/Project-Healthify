@@ -67,6 +67,7 @@ Each roadmap item goes through these stages in order:
 - **Spec must define:** scopes requested, token lifecycle, error states, and retry/backoff behaviour (NFR-02).
 
 ### S1-03: Device connection
+Spec (scenario 2, scheduled sync and backoff): [features/S1-03-scheduled-device-sync.md](features/S1-03-scheduled-device-sync.md)
 - Devices page: connect, disconnect, and view the connection status of a real or emulated Fitbit.
 - Falls back to the emulator when the live connection is unavailable.
 - **Spec must define:** connection states (disconnected / connecting / connected / reconnect required / emulated), the transitions between them, and what the UI shows for each.

@@ -1,6 +1,7 @@
 import reflex as rx
 from backend import db
 from backend import goals as goals_backend
+from backend import google_health
 from backend import reports as reports_backend
 from .errors import handle_backend_exception
 from .pages import dashboard, profile, emulator, devices, alerts, goals, reports, login
@@ -12,3 +13,4 @@ db.require_database_url()
 app = rx.App(backend_exception_handler=handle_backend_exception)
 goals_backend.start_scheduler()
 reports_backend.start_scheduler()
+google_health.start_scheduler()

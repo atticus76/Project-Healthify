@@ -115,6 +115,11 @@ CREATE TABLE IF NOT EXISTS google_connections (
     connected_at  BIGINT NOT NULL,
     last_sync_at  BIGINT
 );
+-- Scheduled sync and backoff (US-01 scenario 2). ADD COLUMN IF NOT EXISTS
+-- also upgrades databases created before these columns existed.
+ALTER TABLE google_connections ADD COLUMN IF NOT EXISTS next_sync_at    BIGINT;
+ALTER TABLE google_connections ADD COLUMN IF NOT EXISTS sync_failures   INTEGER NOT NULL DEFAULT 0;
+ALTER TABLE google_connections ADD COLUMN IF NOT EXISTS last_sync_error TEXT NOT NULL DEFAULT '';
 
 -- Latest synced telemetry per user and source (history is S3-04).
 -- Today this is an in-memory dict in telemetry_emulator.py.

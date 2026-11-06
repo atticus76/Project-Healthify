@@ -20,7 +20,9 @@ def _fmt(ts: int | None) -> str:
 
 
 class DeviceState(SessionState):
-    status: str = "disconnected"  # disconnected | connected | reconnect_required
+    status: str = "disconnected"  # disconnected | connected | sync_failed | reconnect_required
+    sync_error: str = ""  # why the last sync failed (sync_failed only)
+    next_sync: str = ""  # when the scheduler will try again
     email: str = ""
     device_name: str = ""
     last_sync: str = "never"
@@ -47,6 +49,8 @@ class DeviceState(SessionState):
         self.email = info["email"]
         self.device_name = info["device_name"]
         self.last_sync = _fmt(info["last_sync_at"])
+        self.sync_error = info["last_sync_error"]
+        self.next_sync = _fmt(info["next_sync_at"]) if info["next_sync_at"] else "soon"
 
     def load(self):
         """on_load for /devices."""
@@ -106,10 +110,13 @@ class DeviceState(SessionState):
             events = notify(alerts.check_telemetry(results, self._user()), self._user())
         except google_health.ReconnectRequired as exc:
             self.error = str(exc)
-        except requests.HTTPError as exc:
-            self.error = f"Google Health API error ({exc.response.status_code}). Sync failed."
-        except requests.RequestException:
-            self.error = "Couldn't reach Google Health. Sync failed."
+        except requests.RequestException as exc:
+            # Recorded like a scheduled failure so the page shows "Sync failed"
+            # and the scheduler backs off.
+            try:
+                self.error = google_health.record_sync_failure(self._user(), exc) + " Sync failed."
+            except DatabaseError as db_exc:
+                self.error = str(db_exc)
         except DatabaseError as exc:
             self.error = str(exc)
         self._load_status()

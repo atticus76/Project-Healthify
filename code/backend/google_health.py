@@ -8,15 +8,32 @@ it never touches tokens directly.
 
 from __future__ import annotations
 
+import logging
+import threading
 import time
 from datetime import datetime
 from typing import Any
 
 import requests
 
-from . import google_oauth, telemetry_store, token_store
+from backend.db import DatabaseError
+
+from . import alerts, email_alerts, google_oauth, telemetry_store, token_store
+
+log = logging.getLogger(__name__)
 
 API_BASE = "https://health.googleapis.com/v4/users/me"
+
+# Scheduled sync (US-01 scenario 2; spec: code/specs/features/S1-03-scheduled-device-sync.md)
+SYNC_EVERY_S = 30 * 60  # each connected user, when healthy
+RETRY_FIRST_S = 5 * 60  # first retry after a failure; doubles each time
+RETRY_MAX_S = 6 * 60 * 60  # never wait longer than this (unless Google's Retry-After says so)
+SCHEDULER_TICK_S = 60  # how often the scheduler looks for due syncs
+_scheduler_started = False
+
+
+def _now() -> float:
+    return time.time()
 
 # Refresh a little before the access token actually expires.
 EXPIRY_SKEW_S = 60
@@ -94,6 +111,8 @@ def get_status(user_id: str) -> dict[str, Any] | None:
         "device_name": conn["device_name"] or "",
         "connected_at": conn["connected_at"],
         "last_sync_at": conn["last_sync_at"],
+        "last_sync_error": conn["last_sync_error"] or "",
+        "next_sync_at": conn["next_sync_at"],
     }
 
 
@@ -110,10 +129,85 @@ def sync(user_id: str) -> dict[str, dict]:
     results: dict[str, dict] = {}
     for data_type, page_size in SYNC_DATA_TYPES.items():
         results[data_type] = _api_get(user_id, f"/dataTypes/{data_type}/dataPoints", {"pageSize": page_size})
-    token_store.record_sync(user_id, _device_name(results))
+    token_store.record_sync(user_id, _device_name(results), int(_now() + SYNC_EVERY_S))
     # Saved right away so reports (and other computers) see real device data.
     telemetry_store.save(user_id, results, source="google", force=True)
     return results
+
+
+def _failure_message(exc: Exception) -> tuple[str, int]:
+    """What to show the user, and Google's Retry-After in seconds (0 if none)."""
+    if isinstance(exc, requests.HTTPError) and exc.response is not None:
+        code = exc.response.status_code
+        if code == 429:
+            try:
+                retry_after = int(exc.response.headers.get("Retry-After", 0))
+            except (TypeError, ValueError):
+                retry_after = 0
+            return "Google Health rate limit reached.", retry_after
+        return f"Google Health API error ({code}).", 0
+    if isinstance(exc, google_oauth.OAuthError):
+        return f"Google sign-in error: {exc}", 0
+    return "Couldn't reach Google Health.", 0
+
+
+def record_sync_failure(user_id: str, exc: Exception) -> str:
+    """Log a failed sync, mark it on the connection and back off.
+
+    The next attempt waits RETRY_FIRST_S, doubling with each failure in a row
+    up to RETRY_MAX_S, or Google's Retry-After if that is longer. Returns the
+    message shown to the user.
+    """
+    message, retry_after = _failure_message(exc)
+    log.warning("Google sync failed for %r: %s (%r)", user_id, message, exc)
+    failures = token_store.record_sync_failure(user_id, message)
+    delay = min(RETRY_FIRST_S * 2 ** max(failures - 1, 0), RETRY_MAX_S)
+    token_store.schedule_next_sync(user_id, int(_now() + max(delay, retry_after)))
+    return message
+
+
+def sync_due() -> list[str]:
+    """Sync every connection that's due. Returns the user_ids synced successfully.
+
+    New heart-rate alerts are saved and emailed (nobody may be on the page to
+    see a toast). One user's failure doesn't stop the others.
+    """
+    synced = []
+    for user_id in token_store.due_for_sync(int(_now())):
+        try:
+            results = sync(user_id)
+        except ReconnectRequired as exc:
+            # Already marked; not retried until the user reconnects.
+            log.warning("Google sync for %r needs a reconnect: %s", user_id, exc)
+            continue
+        except (requests.RequestException, google_oauth.OAuthError) as exc:
+            record_sync_failure(user_id, exc)
+            continue
+        except DatabaseError:
+            continue  # already logged by backend.db; try again next tick
+        new_alerts = alerts.check_telemetry(results, user_id)
+        if new_alerts:
+            email_alerts.dispatch(user_id, new_alerts)
+        synced.append(user_id)
+    return synced
+
+
+def start_scheduler() -> None:
+    """Every minute, sync the connections that are due (in a background thread)."""
+    global _scheduler_started
+    if _scheduler_started:
+        return
+    _scheduler_started = True
+
+    def run() -> None:
+        while True:
+            try:
+                sync_due()
+            except Exception:  # keep the scheduler alive (e.g. Supabase paused)
+                log.exception("Scheduled Google sync failed; trying again later.")
+            time.sleep(SCHEDULER_TICK_S)
+
+    threading.Thread(target=run, name="healthify-google-sync", daemon=True).start()
 
 
 # --- tokens & HTTP -----------------------------------------------------------------
