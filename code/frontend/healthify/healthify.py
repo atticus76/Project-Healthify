@@ -10,5 +10,5 @@ from .pages.placeholders import cloud_data, disclaimer
 db.require_database_url()
 
 app = rx.App()
-goals_backend.start_scheduler(DEMO_USER_ID)
+goals_backend.start_scheduler()
 reports_backend.start_scheduler(DEMO_USER_ID)
