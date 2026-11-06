@@ -16,3 +16,7 @@ client_secret*.json
 .token.json
 __pycache__/
 .venv/
+
+# Local account stores (usernames, emails, password hashes) -- never commit
+code/backend/users.txt
+data/accounts.json
