@@ -16,7 +16,7 @@ from typing import Any
 
 from backend.db import connect
 
-from . import alerts, email_alerts, goals, telemetry_emulator
+from . import alerts, email_alerts, goals, telemetry_emulator, telemetry_store
 
 log = logging.getLogger(__name__)
 
@@ -89,7 +89,7 @@ def generate_report(
     telemetry = (
         telemetry
         if telemetry is not None
-        else telemetry_emulator.get_latest_telemetry(user_id)
+        else telemetry_store.get_latest(user_id)
     )
     end = now or _now()
     preferences = get_preferences(user_id)

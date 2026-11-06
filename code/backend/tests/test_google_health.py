@@ -15,7 +15,7 @@ from urllib.parse import parse_qs, urlsplit
 
 import pytest
 
-from backend import auth_controller, google_health, google_oauth, token_store
+from backend import auth_controller, google_health, google_oauth, telemetry_store, token_store
 
 SAMPLES = Path(__file__).resolve().parents[3] / "data" / "samples"
 
@@ -124,6 +124,18 @@ class DeviceConnectionFlowTest(unittest.TestCase):
         lines = google_health.summarize(results)
         self.assertTrue(any("Resting heart rate" in line for line in lines))
         self.assertEqual(google_health.get_status(USER)["device_name"], "Charge 6")
+
+    def test_sync_saves_a_google_snapshot_for_reports(self):
+        self._connect()
+
+        def fake_get(url, params, headers, timeout):
+            data_type = url.split("/dataTypes/")[1].split("/")[0]
+            return FakeResponse(200, json.loads((SAMPLES / f"{data_type}.json").read_text()))
+
+        with mock.patch("backend.google_health.requests.get", side_effect=fake_get):
+            results = google_health.sync(USER)
+        telemetry_store._reset_cache()  # read it back from the database
+        self.assertEqual(telemetry_store.get_latest(USER), results)
 
     def test_expired_access_token_is_refreshed(self):
         self._connect()

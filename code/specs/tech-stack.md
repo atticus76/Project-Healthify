@@ -13,7 +13,7 @@ Our project is a web application written in Python 3.12 using a framework called
 | Health alerts and alert email address | SQLite (`code/backend/healthtrack.db`) | `alerts.py` |
 | Report preferences and generated reports | SQLite (`code/backend/healthtrack.db`) | `reports.py` |
 | OAuth tokens and in-progress OAuth requests | SQLite (`code/backend/healthtrack.db`) | `token_store.py` |
-| Latest synced telemetry | In memory only (lost when the server restarts) | `telemetry_emulator.py` |
+| Latest synced telemetry (emulator and Google) | In memory, saved to Supabase (`telemetry_snapshots`) at most once a minute; Google syncs right away | `telemetry_store.py` |
 
 SQLite is our local development database. In Sprint 2 (S2-04, FR-06) we are moving this data to a cloud-hosted PostgreSQL database on **Supabase**. SQLite and PostgreSQL are two separate databases, so this is a migration, not a connection between them. We use Supabase only as a PostgreSQL server: the app connects with `psycopg` and plain SQL, with no ORM and no Supabase SDK. Both account files move into one `users` table as part of that work. See [features/S2-04-cloud-data-storage.md](features/S2-04-cloud-data-storage.md) (draft).
 

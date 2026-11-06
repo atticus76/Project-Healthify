@@ -2,7 +2,6 @@ import reflex as rx
 from datetime import datetime
 
 from backend import auth_controller, email_alerts, reports as reports_backend
-from backend import telemetry_emulator
 
 
 def _readable_timestamp(value: str) -> str:
@@ -90,7 +89,6 @@ class ReportsState(rx.State):
 
     def refresh_report(self):
         try:
-            telemetry_emulator.get_latest_telemetry(self._user_id())
             self._set_report(reports_backend.generate_report(self._user_id(), persist=False))
         except (ValueError, OSError) as exc:
             self.error = str(exc)
