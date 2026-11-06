@@ -12,7 +12,7 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any, Iterator
 
-from . import alerts, email_alerts, goals, telemetry_emulator
+from . import alerts, email_alerts, goals, telemetry_emulator, telemetry_store
 
 # Local SQLite file, used until this module is ported to the cloud (S2-04 task 4).
 DATABASE_PATH = Path(__file__).resolve().parent / "healthtrack.db"
@@ -122,7 +122,7 @@ def generate_report(
     telemetry = (
         telemetry
         if telemetry is not None
-        else telemetry_emulator.get_latest_telemetry(user_id)
+        else telemetry_store.get_latest(user_id)
     )
     end = now or _now()
     preferences = get_preferences(user_id)

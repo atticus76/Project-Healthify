@@ -40,4 +40,8 @@ def test_db(_test_schema: str, monkeypatch: pytest.MonkeyPatch) -> Iterator[None
     monkeypatch.setenv("DATABASE_URL", _test_schema)
     with db.connect("reset test database") as conn:
         conn.execute(f"TRUNCATE {', '.join(db.TABLES)} RESTART IDENTITY CASCADE")
+    # The latest-telemetry cache would otherwise carry over between tests.
+    from backend import telemetry_store
+
+    telemetry_store._reset_cache()
     yield

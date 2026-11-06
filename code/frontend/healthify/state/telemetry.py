@@ -1,12 +1,10 @@
 import reflex as rx
 import json
-from backend import alerts, auth_controller
+from backend import alerts, auth_controller, telemetry_store
 from backend.telemetry_emulator import (
     PROFILES,
     SCENARIOS,
-    clear_latest_telemetry,
     generate_fitbit_data,
-    set_latest_telemetry,
     summarize_fitbit_data,
 )
 from backend import goals as goals_backend
@@ -39,7 +37,7 @@ class TelemetryState(rx.State):
         if user:
             self.enabled = bool(user.get("app_state", {}).get("telemetry_enabled", False))
         if not self.enabled:
-            clear_latest_telemetry(user_id)
+            telemetry_store.clear(user_id, "emulator")
         return rx.call_script(
             "if (window.healthifyTelemetryRefresh) "
             "clearInterval(window.healthifyTelemetryRefresh);"
@@ -86,7 +84,7 @@ class TelemetryState(rx.State):
         app_state = dict(user.get("app_state", {}))
         app_state["telemetry_enabled"] = False
         update_user(auth_controller.get_active_user(), app_state=app_state)
-        clear_latest_telemetry(auth_controller.get_active_user())
+        telemetry_store.clear(auth_controller.get_active_user(), "emulator")
         self.show_payload = False
         self.summaries = []
         self.payload_json = ""
@@ -97,7 +95,8 @@ class TelemetryState(rx.State):
 
     def _generate_data(self):
         data = generate_fitbit_data(self.level, scenario=self.scenario)
-        set_latest_telemetry(auth_controller.get_active_user(), data)
+        # In memory every refresh; saved to the cloud at most once a minute.
+        telemetry_store.save(auth_controller.get_active_user(), data, source="emulator")
         self.summaries = summarize_fitbit_data(data)
         self.payload_json = json.dumps(data, indent=2)
         if self.chart_cycle_position >= self.chart_window_seconds:

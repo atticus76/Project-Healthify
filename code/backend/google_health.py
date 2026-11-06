@@ -14,7 +14,7 @@ from typing import Any
 
 import requests
 
-from . import google_oauth, token_store
+from . import google_oauth, telemetry_store, token_store
 
 API_BASE = "https://health.googleapis.com/v4/users/me"
 
@@ -115,6 +115,8 @@ def sync(user_id: str) -> dict[str, dict]:
     for data_type, page_size in SYNC_DATA_TYPES.items():
         results[data_type] = _api_get(user_id, f"/dataTypes/{data_type}/dataPoints", {"pageSize": page_size})
     token_store.record_sync(user_id, _device_name(results))
+    # Saved right away so reports (and other computers) see real device data.
+    telemetry_store.save(user_id, results, source="google", force=True)
     return results
 
 

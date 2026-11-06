@@ -22,7 +22,6 @@ DATA_TYPES = {
 }
 
 DEVICE_NAME = "Healthify Simulator"
-_latest_telemetry: dict[str, dict[str, dict[str, list[dict[str, Any]]]]] = {}
 UTC = timezone.utc
 LOCAL = timezone(timedelta(hours=-7))
 PROFILES = {
@@ -419,22 +418,6 @@ def generate_fitbit_data(
         )
 
     return result
-
-
-def set_latest_telemetry(
-    user_id: str, data: dict[str, dict[str, list[dict[str, Any]]]]
-) -> None:
-    _latest_telemetry[user_id] = data
-
-
-def get_latest_telemetry(
-    user_id: str,
-) -> dict[str, dict[str, list[dict[str, Any]]]] | None:
-    return _latest_telemetry.get(user_id)
-
-
-def clear_latest_telemetry(user_id: str) -> None:
-    _latest_telemetry.pop(user_id, None)
 
 
 def summarize_fitbit_data(
