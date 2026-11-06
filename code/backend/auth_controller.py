@@ -21,7 +21,7 @@ _active_user = ""
 
 def set_active_user(username: str) -> None:
     global _active_user
-    _active_user = _key(username)
+    _active_user = _username_key(username)
 
 
 def get_active_user() -> str:
@@ -47,7 +47,13 @@ def _save_users(users: dict[str, dict[str, Any]]) -> None:
     USERS_FILE.write_text(json.dumps(users, indent=2), encoding="utf-8")
 
 
-def _key(value: str) -> str:
+def _username_key(value: str) -> str:
+    """Usernames are case-sensitive: "Alice" and "alice" are different accounts."""
+    return value.strip()
+
+
+def _email_key(value: str) -> str:
+    """Emails are case-insensitive, since mail servers treat them that way."""
     return value.strip().lower()
 
 
@@ -70,11 +76,11 @@ def _valid_password(password: str) -> str | None:
 def register(
     username: str, email: str, password: str, theme: str = "light"
 ) -> tuple[bool, str, str]:
-    username_key = _key(username)
-    email_key = _key(email)
+    username_key = _username_key(username)
+    email_key = _email_key(email)
     if len(username_key) < 3:
         return False, "Username must be at least 3 characters long.", ""
-    if "@" in username_key or not re.fullmatch(r"[a-z0-9_.-]+", username_key):
+    if "@" in username_key or not re.fullmatch(r"[A-Za-z0-9_.-]+", username_key):
         return False, "Username may contain letters, numbers, '.', '_' or '-'.", ""
     if email_key and ("@" not in email_key or "." not in email_key.rsplit("@", 1)[-1]):
         return False, "Please enter a valid email address or leave it blank.", ""
@@ -101,22 +107,27 @@ def register(
 
 def authenticate(identifier: str, password: str) -> tuple[bool, str, str]:
     users = _load_users()
-    key = _key(identifier)
-    username = key if key in users else next(
-        (name for name, user in users.items() if user.get("email") == key), ""
-    )
+    # Usernames can't contain "@", so an identifier with "@" is an email.
+    if "@" in identifier:
+        email = _email_key(identifier)
+        username = next(
+            (name for name, user in users.items() if user.get("email") == email), ""
+        )
+    else:
+        key = _username_key(identifier)
+        username = key if key in users else ""
     if not username or users[username].get("password_hash") != _hash_password(password):
         return False, "Invalid username/email or password.", ""
     return True, "Signed in.", username
 
 
 def get_user(username: str) -> dict[str, Any] | None:
-    return _load_users().get(_key(username))
+    return _load_users().get(_username_key(username))
 
 
 def update_user(username: str, **changes: Any) -> None:
     users = _load_users()
-    key = _key(username)
+    key = _username_key(username)
     if key not in users:
         raise ValueError("User account was not found.")
     users[key].update(changes)
