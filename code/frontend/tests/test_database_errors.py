@@ -29,6 +29,7 @@ def test_the_app_uses_the_handler():
     from unittest import mock
 
     with mock.patch.dict(os.environ, {"DATABASE_URL": "postgresql://example"}), \
-            mock.patch("backend.goals.start_scheduler"), mock.patch("backend.reports.start_scheduler"):
+            mock.patch("backend.goals.start_scheduler"), mock.patch("backend.reports.start_scheduler"), \
+            mock.patch("backend.google_health.start_scheduler"):
         app_module = importlib.import_module("healthify.healthify")
     assert app_module.app.backend_exception_handler is errors.handle_backend_exception
