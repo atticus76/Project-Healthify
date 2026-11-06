@@ -1,13 +1,16 @@
 import reflex as rx
 
 from backend import auth_controller, profile_controller
+
+from .session import SessionState
 from backend.db import DatabaseError
 from backend.profile_controller import validate_profile
 
 
-class AuthState(rx.State):
+class AuthState(SessionState):
     identifier: str = ""
-    username: str = ""
+    # The sign-up form's username box. Signing in sets SessionState.username.
+    signup_username: str = ""
     email: str = ""
     password: str = ""
     mode: str = "login"
@@ -26,8 +29,8 @@ class AuthState(rx.State):
         self.identifier = value
         self.error = ""
 
-    def set_username(self, value: str):
-        self.username = value
+    def set_signup_username(self, value: str):
+        self.signup_username = value
         self.error = ""
 
     def set_email(self, value: str):
@@ -70,7 +73,7 @@ class AuthState(rx.State):
         try:
             if self.mode == "signup":
                 success, message, account = auth_controller.sign_up(
-                    self.username, self.email, self.password, selected_theme
+                    self.signup_username, self.email, self.password, selected_theme
                 )
             else:
                 success, message, account = auth_controller.sign_in(
@@ -84,8 +87,8 @@ class AuthState(rx.State):
             return
         username = account["username"]
         profile_complete = account["has_profile"]
-        self.username = username
-        auth_controller.set_active_user(username)
+        self.username = username  # this browser is now signed in
+        self.signup_username = ""
         self.email = account["email"]
         self.theme = selected_theme
         self.password = ""
@@ -148,14 +151,10 @@ class AuthState(rx.State):
         return rx.redirect("/")
 
     def logout(self):
-        auth_controller.clear_active_user()
         self.username = ""
+        self.signup_username = ""
         self.email = ""
         self.identifier = ""
         self.password = ""
         self.theme = "light"
         return rx.redirect("/login")
-
-    def require_login(self):
-        if not self.username:
-            return rx.redirect("/login")

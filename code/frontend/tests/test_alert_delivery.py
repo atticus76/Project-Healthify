@@ -31,11 +31,11 @@ class AlertDeliveryTests(unittest.TestCase):
         self.dispatch.assert_called_once_with("u", [URGENT, GAP])
 
     def test_no_new_alerts_sends_nothing(self):
-        self.assertEqual(notify([]), [])
+        self.assertEqual(notify([], user_id="u"), [])
 
     def test_each_alert_gets_a_toast_and_a_browser_notification(self):
         # two per alert, plus one event that refreshes the unread count
-        self.assertEqual(len(notify([URGENT, GAP])), 5)
+        self.assertEqual(len(notify([URGENT, GAP], user_id="u")), 5)
 
     def test_browser_notification_only_fires_with_permission(self):
         script = _browser_notification(URGENT)

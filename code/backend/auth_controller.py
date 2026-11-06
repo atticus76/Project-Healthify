@@ -17,25 +17,10 @@ from psycopg.types.json import Jsonb
 
 from backend.db import connect
 
-# The signed-in user is still one global shared by every browser. It moves
-# into AuthState in S2-04 task 5 (cleanup C2).
-_active_user = ""
+# Who is signed in is per browser session (SessionState in the frontend), not
+# stored here (S2-04 task 5).
 
 _UPDATABLE_FIELDS = {"email", "app_state"}
-
-
-def set_active_user(username: str) -> None:
-    global _active_user
-    _active_user = _username_key(username)
-
-
-def get_active_user() -> str:
-    return _active_user
-
-
-def clear_active_user() -> None:
-    global _active_user
-    _active_user = ""
 
 
 def _username_key(value: str) -> str:

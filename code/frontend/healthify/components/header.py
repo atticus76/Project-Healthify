@@ -1,3 +1,4 @@
+from healthify.state.session import SessionState
 import reflex as rx
 from ..state.alerts import AlertState
 from ..state.auth import AuthState
@@ -5,7 +6,7 @@ from ..state.auth import AuthState
 def page_header() -> rx.Component:
     return rx.hstack(
         rx.heading("Healthify", size="7"),
-        rx.text("Welcome ", AuthState.username, size="4"),
+        rx.text("Welcome ", SessionState.username, size="4"),
         rx.spacer(),
         rx.link(
             rx.hstack(
