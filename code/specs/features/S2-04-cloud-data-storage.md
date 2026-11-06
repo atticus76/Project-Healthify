@@ -78,8 +78,8 @@ We compared Supabase, Neon, Firestore, Turso, and Google Cloud SQL.
 ### Connecting
 - One shared module, `code/backend/db/__init__.py` (imported as `from backend.db import connect`), with a `connect()` context manager. It lives in the `db/` package next to `schema.sql` because Python can't have both a `db.py` module and a `db/` package in the same folder. It reads `DATABASE_URL` from `.env` (python-dotenv), opens a `psycopg` connection with `row_factory=dict_row`, commits on success, rolls back on error, and closes the connection. It replaces the five separate `DATABASE_PATH` / `_connect()` copies.
 - Use Supabase's **Session pooler** connection string (Project → Connect). The direct connection string is IPv6-only on the free plan and fails on many home and campus networks. Avoid the Transaction pooler (port 6543), because it doesn't support the prepared statements psycopg creates automatically.
-- New dependency: `psycopg[binary]` in `code/requirements.txt`. Add `DATABASE_URL=` to `.env.example`. The real value is shared privately inside the team and never committed.
-- A connection per call, same as today. Opening a remote connection is slower than opening a local SQLite file; if pages get close to the 1 s budget (NFR-01), switch to `psycopg_pool` in S3-01.
+- New dependency: `psycopg[binary,pool]` in `code/requirements.txt`. Add `DATABASE_URL=` to `.env.example`. The real value is shared privately inside the team and never committed.
+- **Connection pool (moved up from S3-01, decided 2026-11-05).** Opening a new connection to Supabase takes ~200 ms, so a page making five separate calls took ~1 s, the whole NFR-01 budget. `connect()` borrows from a `psycopg_pool` pool instead (1–4 connections per running app, since four teammates share the free plan's connection limit). Measured: one query ~87 ms (was ~208), sign-in ~112 ms, five separate calls ~444 ms (was ~1,000). Each connection is checked before use (~20 ms), so one Supabase dropped after a pause is replaced instead of failing the request. psycopg's automatic prepared statements are off, because they can collide behind Supabase's own pooler once connections are reused.
 
 ### Schema
 All `CREATE TABLE` statements move into one file, `code/backend/db/schema.sql`, which can be re-run safely (`CREATE TABLE IF NOT EXISTS`). A small script, `python -m backend.db.init`, runs it. Modules no longer create or alter tables at import time, and the ad-hoc `ALTER TABLE` / `PRAGMA table_info` / `sqlite_master` migration code in `goals.py` is deleted because the new database starts from the final schema.
@@ -159,7 +159,7 @@ Found while reviewing the code on 2026-11-05.
 ## Out of scope
 - Moving existing local data. Everything in `healthtrack.db` and `users.txt` is test data; teammates re-register.
 - Supabase Auth, Storage, Realtime, and the `supabase-py` SDK (see the provider rule above).
-- Encryption and stronger password hashing (S3-02), connection pooling (S3-01), load testing (S3-03), telemetry history and day-over-day caching (S3-04).
+- Encryption and stronger password hashing (S3-02), load testing (S3-03), telemetry history and day-over-day caching (S3-04).
 
 ## Open questions
 - Convert `TEXT` timestamps to `TIMESTAMPTZ` and `INTEGER` flags to `BOOLEAN` now, or as a follow-up after the straight port works?
