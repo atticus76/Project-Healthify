@@ -18,10 +18,6 @@ from . import google_oauth, token_store
 
 API_BASE = "https://health.googleapis.com/v4/users/me"
 
-# Still used by the goals and reports schedulers in healthify.py until those
-# modules are ported (S2-04 task 4). The device flow always uses the signed-in user.
-DEMO_USER_ID = "new-user"
-
 # Refresh a little before the access token actually expires.
 EXPIRY_SKEW_S = 60
 

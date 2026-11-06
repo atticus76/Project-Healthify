@@ -1,59 +1,27 @@
-"""Recurring health report preferences and latest-report generation."""
+"""Recurring health report preferences and latest-report generation.
+
+Stored in the cloud report_preferences and health_reports tables (S2-04).
+Every user_id must be an existing account.
+"""
 
 from __future__ import annotations
 
 import json
-import sqlite3
+import logging
 import smtplib
 import threading
 import time
-from contextlib import contextmanager
 from datetime import datetime, timedelta, timezone
-from pathlib import Path
-from typing import Any, Iterator
+from typing import Any
+
+from backend.db import connect
 
 from . import alerts, email_alerts, goals, telemetry_emulator
 
-# Local SQLite file, used until this module is ported to the cloud (S2-04 task 4).
-DATABASE_PATH = Path(__file__).resolve().parent / "healthtrack.db"
+log = logging.getLogger(__name__)
 
 FREQUENCIES = ("daily", "weekly")
 _scheduler_started = False
-
-
-@contextmanager
-def _connect() -> Iterator[sqlite3.Connection]:
-    conn = sqlite3.connect(DATABASE_PATH)
-    conn.row_factory = sqlite3.Row
-    conn.execute(
-        """
-        CREATE TABLE IF NOT EXISTS report_preferences (
-            user_id TEXT PRIMARY KEY,
-            frequency TEXT NOT NULL,
-            email TEXT NOT NULL,
-            updated_at TEXT NOT NULL
-        )
-        """
-    )
-    conn.execute(
-        """
-        CREATE TABLE IF NOT EXISTS health_reports (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            user_id TEXT NOT NULL,
-            period_start TEXT NOT NULL,
-            period_end TEXT NOT NULL,
-            generated_at TEXT NOT NULL,
-            content TEXT NOT NULL,
-            delivery_status TEXT NOT NULL DEFAULT 'not_sent',
-            delivery_error TEXT NOT NULL DEFAULT ''
-        )
-        """
-    )
-    try:
-        with conn:
-            yield conn
-    finally:
-        conn.close()
 
 
 def _now() -> datetime:
@@ -67,12 +35,11 @@ def _validate_frequency(frequency: str) -> str:
 
 
 def get_preferences(user_id: str) -> dict[str, str] | None:
-    with _connect() as conn:
-        row = conn.execute(
-            "SELECT frequency, email, updated_at FROM report_preferences WHERE user_id = ?",
+    with connect("load report preferences") as conn:
+        return conn.execute(
+            "SELECT frequency, email, updated_at FROM report_preferences WHERE user_id = %s",
             (user_id,),
         ).fetchone()
-    return dict(row) if row else None
 
 
 def save_preferences(user_id: str, frequency: str, email: str) -> dict[str, str]:
@@ -80,12 +47,12 @@ def save_preferences(user_id: str, frequency: str, email: str) -> dict[str, str]
     if not email_alerts.is_valid_address(email):
         raise ValueError("Enter a valid email address.")
     updated = _now().isoformat()
-    with _connect() as conn:
+    with connect("save report preferences") as conn:
         conn.execute(
             """
             INSERT INTO report_preferences (user_id, frequency, email, updated_at)
-            VALUES (?, ?, ?, ?)
-            ON CONFLICT(user_id) DO UPDATE SET
+            VALUES (%s, %s, %s, %s)
+            ON CONFLICT (user_id) DO UPDATE SET
                 frequency = excluded.frequency,
                 email = excluded.email,
                 updated_at = excluded.updated_at
@@ -157,33 +124,35 @@ def generate_report(
             "delivery_status": "not_sent",
             "delivery_error": "",
         }
-    with _connect() as conn:
-        cursor = conn.execute(
+    with connect("save report") as conn:
+        row = conn.execute(
             """
             INSERT INTO health_reports
                 (user_id, period_start, period_end, generated_at, content)
-            VALUES (?, ?, ?, ?, ?)
+            VALUES (%s, %s, %s, %s, %s)
+            RETURNING *
             """,
             (user_id, start.isoformat(), end.isoformat(), end.isoformat(), json.dumps(content)),
-        )
-        report_id = cursor.lastrowid
-    return get_report(user_id, report_id)
+        ).fetchone()
+    return _report_dict(row)
 
 
-def get_report(user_id: str, report_id: int | None = None) -> dict[str, Any] | None:
-    with _connect() as conn:
-        query = (
-            "SELECT * FROM health_reports WHERE user_id = ? ORDER BY generated_at DESC, id DESC LIMIT 1"
-            if report_id is None
-            else "SELECT * FROM health_reports WHERE user_id = ? AND id = ?"
-        )
-        params: tuple[Any, ...] = (user_id,) if report_id is None else (user_id, report_id)
-        row = conn.execute(query, params).fetchone()
-    if not row:
-        return None
+def _report_dict(row: dict[str, Any]) -> dict[str, Any]:
     result = dict(row)
     result["content"] = json.loads(result["content"])
     return result
+
+
+def get_report(user_id: str, report_id: int | None = None) -> dict[str, Any] | None:
+    query = (
+        "SELECT * FROM health_reports WHERE user_id = %s ORDER BY generated_at DESC, id DESC LIMIT 1"
+        if report_id is None
+        else "SELECT * FROM health_reports WHERE user_id = %s AND id = %s"
+    )
+    params: tuple[Any, ...] = (user_id,) if report_id is None else (user_id, report_id)
+    with connect("load report") as conn:
+        row = conn.execute(query, params).fetchone()
+    return _report_dict(row) if row else None
 
 
 def deliver_report(user_id: str, report: dict[str, Any]) -> dict[str, Any]:
@@ -208,9 +177,9 @@ def deliver_report(user_id: str, report: dict[str, Any]) -> dict[str, Any]:
         ValueError,
     ) as exc:
         status, error = "failed", str(exc)
-    with _connect() as conn:
+    with connect("save report delivery status") as conn:
         conn.execute(
-            "UPDATE health_reports SET delivery_status = ?, delivery_error = ? WHERE id = ? AND user_id = ?",
+            "UPDATE health_reports SET delivery_status = %s, delivery_error = %s WHERE id = %s AND user_id = %s",
             (status, error, report["id"], user_id),
         )
     report["delivery_status"] = status
@@ -233,7 +202,33 @@ def _is_due(preferences: dict[str, str], report: dict[str, Any] | None) -> bool:
     return _now() >= next_midnight.astimezone(timezone.utc)
 
 
-def start_scheduler(user_id: str, interval_seconds: int = 60) -> None:
+def send_due_reports() -> list[str]:
+    """Generate and email every report that's due. Returns the user_ids served."""
+    with connect("find due reports") as conn:
+        rows = conn.execute(
+            """
+            SELECT p.user_id, p.frequency, p.email, latest.generated_at
+            FROM report_preferences p
+            LEFT JOIN LATERAL (
+                SELECT generated_at FROM health_reports r
+                WHERE r.user_id = p.user_id
+                ORDER BY r.generated_at DESC, r.id DESC
+                LIMIT 1
+            ) latest ON true
+            ORDER BY p.user_id
+            """
+        ).fetchall()
+    served = []
+    for row in rows:
+        last = {"generated_at": row["generated_at"]} if row["generated_at"] else None
+        if _is_due(row, last):
+            deliver_report(row["user_id"], generate_report(row["user_id"]))
+            served.append(row["user_id"])
+    return served
+
+
+def start_scheduler(interval_seconds: int = 60) -> None:
+    """Every minute, send every user's report that's due."""
     global _scheduler_started
     if _scheduler_started:
         return
@@ -241,9 +236,10 @@ def start_scheduler(user_id: str, interval_seconds: int = 60) -> None:
 
     def run() -> None:
         while True:
-            preferences = get_preferences(user_id)
-            if preferences and _is_due(preferences, get_report(user_id)):
-                deliver_report(user_id, generate_report(user_id))
+            try:
+                send_due_reports()
+            except Exception:  # keep the scheduler alive (e.g. Supabase paused)
+                log.exception("Report check failed; trying again later.")
             time.sleep(interval_seconds)
 
     threading.Thread(target=run, name="healthify-report-scheduler", daemon=True).start()
