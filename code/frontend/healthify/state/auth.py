@@ -66,28 +66,27 @@ class AuthState(rx.State):
 
     def submit(self):
         selected_theme = self.theme
+        # sign_up / sign_in each use one database connection (~200 ms each).
         try:
             if self.mode == "signup":
-                success, message, username = auth_controller.register(
+                success, message, account = auth_controller.sign_up(
                     self.username, self.email, self.password, selected_theme
                 )
             else:
-                success, message, username = auth_controller.authenticate(
-                    self.identifier, self.password
+                success, message, account = auth_controller.sign_in(
+                    self.identifier, self.password, selected_theme
                 )
-            if success:
-                user = auth_controller.get_user(username)
-                auth_controller.set_theme(username, selected_theme)
-                profile_complete = profile_controller.get_profile(username) is not None
         except DatabaseError as error:
             self.error = str(error)
             return
         if not success:
             self.error = message
             return
+        username = account["username"]
+        profile_complete = account["has_profile"]
         self.username = username
         auth_controller.set_active_user(username)
-        self.email = user.get("email", "") if user else ""
+        self.email = account["email"]
         self.theme = selected_theme
         self.password = ""
         self.error = ""

@@ -158,3 +158,75 @@ def test_updating_an_unknown_user_or_field_is_an_error():
 def test_accounts_no_longer_use_users_txt():
     assert not hasattr(auth_controller, "USERS_FILE")
     assert not hasattr(auth_controller, "save_profile")
+
+
+# --- One connection per sign-in / sign-up (NFR-01: pages under 1 s) ----------
+# Opening a Supabase connection takes ~200 ms, so these must not open several.
+
+
+@pytest.fixture
+def count_connections(monkeypatch: pytest.MonkeyPatch) -> list[str]:
+    opened: list[str] = []
+    real_connect = auth_controller.connect
+
+    def counting_connect(operation: str = "database query"):
+        opened.append(operation)
+        return real_connect(operation)
+
+    monkeypatch.setattr(auth_controller, "connect", counting_connect)
+    return opened
+
+
+def test_sign_in_returns_account_and_profile_status_in_one_connection(count_connections):
+    auth_controller.register("alice", "alice@example.com", PASSWORD)
+    count_connections.clear()
+
+    ok, message, account = auth_controller.sign_in("ALICE@example.com", PASSWORD, "dark")
+
+    assert (ok, message) == (True, "Signed in.")
+    assert account["username"] == "alice"
+    assert account["email"] == "alice@example.com"
+    assert account["app_state"]["theme"] == "dark"
+    assert account["has_profile"] is False
+    assert len(count_connections) == 1
+    assert auth_controller.get_user("alice")["app_state"]["theme"] == "dark"
+
+
+def test_sign_in_sees_a_saved_profile(count_connections):
+    from backend import profile_controller
+
+    auth_controller.register("alice", "", PASSWORD)
+    profile_controller.save_profile("alice", "Female", 28, 140.0)
+    assert auth_controller.sign_in("alice", PASSWORD, "light")[2]["has_profile"] is True
+
+
+def test_failed_sign_in_changes_nothing():
+    auth_controller.register("alice", "", PASSWORD, theme="light")
+    assert auth_controller.sign_in("alice", "Wrongpass1!", "dark") == (
+        False,
+        "Invalid username/email or password.",
+        None,
+    )
+    assert auth_controller.get_user("alice")["app_state"]["theme"] == "light"
+
+
+def test_sign_up_returns_the_new_account_in_one_connection(count_connections):
+    ok, message, account = auth_controller.sign_up("Alice", "", PASSWORD, "dark")
+    assert (ok, message) == (True, "Account created.")
+    assert account["username"] == "Alice"
+    assert account["email"] == ""
+    assert account["app_state"]["theme"] == "dark"
+    assert account["has_profile"] is False
+    assert len(count_connections) == 1
+
+
+def test_sign_up_rejections_return_no_account(count_connections):
+    auth_controller.register("alice", "", PASSWORD)
+    count_connections.clear()
+    assert auth_controller.sign_up("alice", "", PASSWORD, "light") == (
+        False,
+        "That username is already in use.",
+        None,
+    )
+    assert auth_controller.sign_up("bob", "", "weak", "light")[2] is None
+    assert len(count_connections) == 1  # invalid input never connects

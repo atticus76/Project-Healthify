@@ -64,52 +64,119 @@ def _valid_password(password: str) -> str | None:
     return None
 
 
-def register(
-    username: str, email: str, password: str, theme: str = "light"
-) -> tuple[bool, str, str]:
-    username_key = _username_key(username)
-    email_key = _email_key(email)
+_INVALID_LOGIN = "Invalid username/email or password."
+
+# Saves the chosen theme and returns what the app needs after signing in,
+# including whether the user has a profile, in one round trip.
+_START_SESSION = """
+    UPDATE users
+    SET app_state = jsonb_set(app_state, '{theme}', to_jsonb(%s::text))
+    WHERE username = %s
+    RETURNING username, COALESCE(email, '') AS email, app_state,
+        EXISTS (SELECT 1 FROM health_profiles WHERE user_id = users.username) AS has_profile
+"""
+
+
+def _clean_theme(theme: str) -> str:
+    return theme if theme in {"light", "dark"} else "light"
+
+
+def _registration_error(username_key: str, email_key: str, password: str) -> str | None:
+    """Check sign-up input without touching the database."""
     if len(username_key) < 3:
-        return False, "Username must be at least 3 characters long.", ""
+        return "Username must be at least 3 characters long."
     if "@" in username_key or not re.fullmatch(r"[A-Za-z0-9_.-]+", username_key):
-        return False, "Username may contain letters, numbers, '.', '_' or '-'.", ""
+        return "Username may contain letters, numbers, '.', '_' or '-'."
     if email_key and ("@" not in email_key or "." not in email_key.rsplit("@", 1)[-1]):
-        return False, "Please enter a valid email address or leave it blank.", ""
-    password_error = _valid_password(password)
-    if password_error:
-        return False, password_error, ""
-
-    app_state = {"theme": theme if theme in {"light", "dark"} else "light", "device_name": ""}
-    with connect("register account") as conn:
-        if email_key and conn.execute(
-            "SELECT 1 FROM users WHERE email = %s", (email_key,)
-        ).fetchone():
-            return False, "That email is already in use.", ""
-        created = conn.execute(
-            """
-            INSERT INTO users (username, email, password_hash, app_state)
-            VALUES (%s, %s, %s, %s)
-            ON CONFLICT (username) DO NOTHING
-            RETURNING username
-            """,
-            (username_key, email_key or None, _hash_password(password), Jsonb(app_state)),
-        ).fetchone()
-    if created is None:
-        return False, "That username is already in use.", ""
-    return True, "Account created.", username_key
+        return "Please enter a valid email address or leave it blank."
+    return _valid_password(password)
 
 
-def authenticate(identifier: str, password: str) -> tuple[bool, str, str]:
+def _insert_user(conn, username_key: str, email_key: str, password: str, theme: str) -> str | None:
+    """Insert the account. Returns an error message, or None on success."""
+    if email_key and conn.execute(
+        "SELECT 1 FROM users WHERE email = %s", (email_key,)
+    ).fetchone():
+        return "That email is already in use."
+    created = conn.execute(
+        """
+        INSERT INTO users (username, email, password_hash, app_state)
+        VALUES (%s, %s, %s, %s)
+        ON CONFLICT (username) DO NOTHING
+        RETURNING username
+        """,
+        (
+            username_key,
+            email_key or None,
+            _hash_password(password),
+            Jsonb({"theme": _clean_theme(theme), "device_name": ""}),
+        ),
+    ).fetchone()
+    return None if created else "That username is already in use."
+
+
+def _check_login(conn, identifier: str, password: str) -> str | None:
+    """Return the username if the password matches, else None."""
     # Usernames can't contain "@", so an identifier with "@" is an email.
     if "@" in identifier:
         query, key = "SELECT username, password_hash FROM users WHERE email = %s", _email_key(identifier)
     else:
         query, key = "SELECT username, password_hash FROM users WHERE username = %s", _username_key(identifier)
-    with connect("sign in") as conn:
-        row = conn.execute(query, (key,)).fetchone()
+    row = conn.execute(query, (key,)).fetchone()
     if row is None or row["password_hash"] != _hash_password(password):
-        return False, "Invalid username/email or password.", ""
-    return True, "Signed in.", row["username"]
+        return None
+    return row["username"]
+
+
+def register(
+    username: str, email: str, password: str, theme: str = "light"
+) -> tuple[bool, str, str]:
+    username_key, email_key = _username_key(username), _email_key(email)
+    error = _registration_error(username_key, email_key, password)
+    if error:
+        return False, error, ""
+    with connect("register account") as conn:
+        error = _insert_user(conn, username_key, email_key, password, theme)
+    if error:
+        return False, error, ""
+    return True, "Account created.", username_key
+
+
+def authenticate(identifier: str, password: str) -> tuple[bool, str, str]:
+    with connect("sign in") as conn:
+        username = _check_login(conn, identifier, password)
+    if username is None:
+        return False, _INVALID_LOGIN, ""
+    return True, "Signed in.", username
+
+
+def sign_up(
+    username: str, email: str, password: str, theme: str = "light"
+) -> tuple[bool, str, dict[str, Any] | None]:
+    """Create the account and return it (with `has_profile`) in one connection."""
+    username_key, email_key = _username_key(username), _email_key(email)
+    error = _registration_error(username_key, email_key, password)
+    if error:
+        return False, error, None
+    with connect("sign up") as conn:
+        error = _insert_user(conn, username_key, email_key, password, theme)
+        if error:
+            return False, error, None
+        account = conn.execute(_START_SESSION, (_clean_theme(theme), username_key)).fetchone()
+    return True, "Account created.", account
+
+
+def sign_in(
+    identifier: str, password: str, theme: str = "light"
+) -> tuple[bool, str, dict[str, Any] | None]:
+    """Check the password, save the chosen theme, and return the account with
+    `has_profile`, all in one connection."""
+    with connect("sign in") as conn:
+        username = _check_login(conn, identifier, password)
+        if username is None:
+            return False, _INVALID_LOGIN, None
+        account = conn.execute(_START_SESSION, (_clean_theme(theme), username)).fetchone()
+    return True, "Signed in.", account
 
 
 def get_user(username: str) -> dict[str, Any] | None:
