@@ -28,6 +28,19 @@ def test_missing_database_url_says_what_to_do(monkeypatch: pytest.MonkeyPatch):
     assert ".env.example" in str(error.value)
 
 
+def test_app_startup_stops_without_database_url(monkeypatch: pytest.MonkeyPatch):
+    monkeypatch.delenv("DATABASE_URL", raising=False)
+    with pytest.raises(SystemExit) as stop:
+        db.require_database_url()
+    assert "DATABASE_URL is required" in str(stop.value)
+    assert ".env.example" in str(stop.value)
+
+
+def test_app_startup_continues_with_database_url(monkeypatch: pytest.MonkeyPatch):
+    monkeypatch.setenv("DATABASE_URL", "postgresql://example")
+    db.require_database_url()
+
+
 def test_init_script_reports_missing_database_url(monkeypatch, capsys):
     monkeypatch.delenv("DATABASE_URL", raising=False)
     assert db_init.main() == 1
