@@ -1,22 +1,27 @@
-"""Small file-backed authentication service for the Healthify demo."""
+"""Login-page accounts, stored in the cloud `users` table (S2-04).
+
+Usernames are case-sensitive ("Alice" and "alice" are different accounts).
+Emails are case-insensitive: they're lowercased before saving or looking up,
+and stored as NULL when left blank.
+
+Database failures raise `backend.db.DatabaseError`; callers show its message.
+"""
 
 from __future__ import annotations
 
 import hashlib
-import json
 import re
-from pathlib import Path
 from typing import Any
 
+from psycopg.types.json import Jsonb
 
-USERS_FILE = Path(__file__).resolve().parent / "users.txt"
-DEFAULT_PROFILE = {
-    "gender": "Prefer not to say",
-    "age": 30,
-    "weight_lb": 170.0,
-    "complete": False,
-}
+from backend.db import connect
+
+# The signed-in user is still one global shared by every browser. It moves
+# into AuthState in S2-04 task 5 (cleanup C2).
 _active_user = ""
+
+_UPDATABLE_FIELDS = {"email", "app_state"}
 
 
 def set_active_user(username: str) -> None:
@@ -31,20 +36,6 @@ def get_active_user() -> str:
 def clear_active_user() -> None:
     global _active_user
     _active_user = ""
-
-
-def _load_users() -> dict[str, dict[str, Any]]:
-    if not USERS_FILE.exists():
-        return {}
-    try:
-        value = json.loads(USERS_FILE.read_text(encoding="utf-8"))
-    except (OSError, json.JSONDecodeError):
-        return {}
-    return value if isinstance(value, dict) else {}
-
-
-def _save_users(users: dict[str, dict[str, Any]]) -> None:
-    USERS_FILE.write_text(json.dumps(users, indent=2), encoding="utf-8")
 
 
 def _username_key(value: str) -> str:
@@ -88,50 +79,75 @@ def register(
     if password_error:
         return False, password_error, ""
 
-    users = _load_users()
-    if username_key in users:
+    app_state = {"theme": theme if theme in {"light", "dark"} else "light", "device_name": ""}
+    with connect("register account") as conn:
+        if email_key and conn.execute(
+            "SELECT 1 FROM users WHERE email = %s", (email_key,)
+        ).fetchone():
+            return False, "That email is already in use.", ""
+        created = conn.execute(
+            """
+            INSERT INTO users (username, email, password_hash, app_state)
+            VALUES (%s, %s, %s, %s)
+            ON CONFLICT (username) DO NOTHING
+            RETURNING username
+            """,
+            (username_key, email_key or None, _hash_password(password), Jsonb(app_state)),
+        ).fetchone()
+    if created is None:
         return False, "That username is already in use.", ""
-    if any(user.get("email", "") == email_key and email_key for user in users.values()):
-        return False, "That email is already in use.", ""
-
-    users[username_key] = {
-        "username": username_key,
-        "email": email_key,
-        "password_hash": _hash_password(password),
-        "profile": dict(DEFAULT_PROFILE),
-        "app_state": {"theme": theme if theme in {"light", "dark"} else "light", "device_name": ""},
-    }
-    _save_users(users)
     return True, "Account created.", username_key
 
 
 def authenticate(identifier: str, password: str) -> tuple[bool, str, str]:
-    users = _load_users()
     # Usernames can't contain "@", so an identifier with "@" is an email.
     if "@" in identifier:
-        email = _email_key(identifier)
-        username = next(
-            (name for name, user in users.items() if user.get("email") == email), ""
-        )
+        query, key = "SELECT username, password_hash FROM users WHERE email = %s", _email_key(identifier)
     else:
-        key = _username_key(identifier)
-        username = key if key in users else ""
-    if not username or users[username].get("password_hash") != _hash_password(password):
+        query, key = "SELECT username, password_hash FROM users WHERE username = %s", _username_key(identifier)
+    with connect("sign in") as conn:
+        row = conn.execute(query, (key,)).fetchone()
+    if row is None or row["password_hash"] != _hash_password(password):
         return False, "Invalid username/email or password.", ""
-    return True, "Signed in.", username
+    return True, "Signed in.", row["username"]
 
 
 def get_user(username: str) -> dict[str, Any] | None:
-    return _load_users().get(_username_key(username))
+    """Return the account (never the password hash), or None if it doesn't exist."""
+    with connect("load account") as conn:
+        row = conn.execute(
+            "SELECT username, email, app_state, created_at FROM users WHERE username = %s",
+            (_username_key(username),),
+        ).fetchone()
+    if row is None:
+        return None
+    return {**row, "email": row["email"] or ""}
 
 
 def update_user(username: str, **changes: Any) -> None:
-    users = _load_users()
-    key = _username_key(username)
-    if key not in users:
+    """Update `email` and/or `app_state` for an existing account."""
+    unknown = set(changes) - _UPDATABLE_FIELDS
+    if unknown:
+        raise ValueError(f"Can't update these account fields: {', '.join(sorted(unknown))}")
+    values: dict[str, Any] = {}
+    if "email" in changes:
+        values["email"] = _email_key(changes["email"]) or None
+    if "app_state" in changes:
+        values["app_state"] = Jsonb(dict(changes["app_state"]))
+    with connect("update account") as conn:
+        if values:
+            # Column names come from _UPDATABLE_FIELDS, never from user input.
+            assignments = ", ".join(f"{column} = %({column})s" for column in values)
+            row = conn.execute(
+                f"UPDATE users SET {assignments} WHERE username = %(username)s RETURNING username",
+                {**values, "username": _username_key(username)},
+            ).fetchone()
+        else:
+            row = conn.execute(
+                "SELECT username FROM users WHERE username = %s", (_username_key(username),)
+            ).fetchone()
+    if row is None:
         raise ValueError("User account was not found.")
-    users[key].update(changes)
-    _save_users(users)
 
 
 def set_theme(username: str, theme: str) -> None:
@@ -140,19 +156,6 @@ def set_theme(username: str, theme: str) -> None:
     user = get_user(username)
     if user is None:
         raise ValueError("User account was not found.")
-    app_state = dict(user.get("app_state", {}))
+    app_state = dict(user.get("app_state") or {})
     app_state["theme"] = theme
     update_user(username, app_state=app_state)
-
-
-def save_profile(username: str, gender: str, age: int, weight_lb: float) -> None:
-    user = get_user(username)
-    if user is None:
-        raise ValueError("User account was not found.")
-    profile = {
-        "gender": gender,
-        "age": age,
-        "weight_lb": weight_lb,
-        "complete": True,
-    }
-    update_user(username, profile=profile)

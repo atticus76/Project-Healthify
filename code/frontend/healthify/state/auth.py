@@ -1,7 +1,8 @@
 import reflex as rx
 
-from backend import auth_controller
-from backend.profile_controller import calculate_baseline_metrics, validate_profile
+from backend import auth_controller, profile_controller
+from backend.db import DatabaseError
+from backend.profile_controller import validate_profile
 
 
 class AuthState(rx.State):
@@ -65,27 +66,32 @@ class AuthState(rx.State):
 
     def submit(self):
         selected_theme = self.theme
-        if self.mode == "signup":
-            success, message, username = auth_controller.register(
-                self.username, self.email, self.password, selected_theme
-            )
-        else:
-            success, message, username = auth_controller.authenticate(
-                self.identifier, self.password
-            )
+        try:
+            if self.mode == "signup":
+                success, message, username = auth_controller.register(
+                    self.username, self.email, self.password, selected_theme
+                )
+            else:
+                success, message, username = auth_controller.authenticate(
+                    self.identifier, self.password
+                )
+            if success:
+                user = auth_controller.get_user(username)
+                auth_controller.set_theme(username, selected_theme)
+                profile_complete = profile_controller.get_profile(username) is not None
+        except DatabaseError as error:
+            self.error = str(error)
+            return
         if not success:
             self.error = message
             return
-        user = auth_controller.get_user(username)
         self.username = username
         auth_controller.set_active_user(username)
         self.email = user.get("email", "") if user else ""
         self.theme = selected_theme
-        auth_controller.set_theme(username, selected_theme)
         self.password = ""
         self.error = ""
         self.message = message
-        profile_complete = bool(user and user.get("profile", {}).get("complete"))
         theme_script = (
             "localStorage.setItem('color-mode', '"
             + self.theme
@@ -101,8 +107,12 @@ class AuthState(rx.State):
     def load_profile(self):
         if not self.username:
             return rx.redirect("/login")
-        user = auth_controller.get_user(self.username)
-        profile = user.get("profile", {}) if user else {}
+        try:
+            profile = profile_controller.get_profile(self.username) or {}
+        except DatabaseError as error:
+            self.profile_error = str(error)
+            return
+        self.profile_error = ""
         self.gender = profile.get("gender", "Prefer not to say")
         self.age = str(profile.get("age", 30))
         self.weight_lb = str(profile.get("weight_lb", 170.0))
@@ -122,15 +132,17 @@ class AuthState(rx.State):
             self.profile_error = " ".join(errors.values())
             self.profile_saved = ""
             return
-        auth_controller.save_profile(
-            self.username, self.gender, int(self.age), float(self.weight_lb)
-        )
-        metrics = calculate_baseline_metrics(
-            self.gender, int(self.age), float(self.weight_lb)
-        )
-        self.baseline_weight_lb = f"{metrics['baseline_weight_lb']:.1f} lb"
+        try:
+            saved = profile_controller.save_profile(
+                self.username, self.gender, int(self.age), float(self.weight_lb)
+            )
+        except DatabaseError as error:
+            self.profile_error = str(error)
+            self.profile_saved = ""
+            return
+        self.baseline_weight_lb = f"{saved['baseline_weight_lb']:.1f} lb"
         self.estimated_daily_calories = (
-            f"{int(metrics['estimated_daily_calories'])} kcal/day"
+            f"{int(saved['estimated_daily_calories'])} kcal/day"
         )
         self.profile_error = ""
         self.profile_saved = "Profile saved."

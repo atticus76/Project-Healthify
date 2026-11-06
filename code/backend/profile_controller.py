@@ -1,13 +1,15 @@
-"""Profile persistence and baseline metric calculations."""
+"""Health profiles (cloud `health_profiles` table) and baseline metric calculations.
+
+health_profiles is the only copy of a user's gender, age and weight (S2-04,
+cleanup C4). A user with no row hasn't completed their profile yet.
+"""
 
 from __future__ import annotations
 
-import sqlite3
-from pathlib import Path
 from typing import Any
 
+from backend.db import connect
 
-DATABASE_PATH = Path(__file__).resolve().parent / "healthtrack.db"
 MIN_AGE = 13
 MAX_AGE = 120
 MIN_WEIGHT_LB = 1.0
@@ -58,54 +60,40 @@ def calculate_baseline_metrics(
     }
 
 
-def save_profile(
-    profile_id: str, gender: str, age: int, weight_lb: float
-) -> dict[str, Any]:
-    """Persist a profile and return the saved profile with baseline metrics."""
+def save_profile(user_id: str, gender: str, age: int, weight_lb: float) -> dict[str, Any]:
+    """Save (or replace) the user's profile and return it with baseline metrics."""
     metrics = calculate_baseline_metrics(gender, age, weight_lb)
-
-    with sqlite3.connect(DATABASE_PATH) as connection:
-        connection.execute(
-            """
-            CREATE TABLE IF NOT EXISTS health_profiles (
-                profile_id TEXT PRIMARY KEY,
-                gender TEXT NOT NULL,
-                age INTEGER NOT NULL,
-                weight_lb REAL NOT NULL,
-                baseline_weight_lb REAL NOT NULL,
-                estimated_daily_calories INTEGER NOT NULL,
-                updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
-            )
-            """
-        )
-        connection.execute(
+    with connect("save profile") as conn:
+        row = conn.execute(
             """
             INSERT INTO health_profiles (
-                profile_id, gender, age, weight_lb,
+                user_id, gender, age, weight_lb,
                 baseline_weight_lb, estimated_daily_calories
-            ) VALUES (?, ?, ?, ?, ?, ?)
-            ON CONFLICT(profile_id) DO UPDATE SET
+            ) VALUES (%s, %s, %s, %s, %s, %s)
+            ON CONFLICT (user_id) DO UPDATE SET
                 gender = excluded.gender,
                 age = excluded.age,
                 weight_lb = excluded.weight_lb,
                 baseline_weight_lb = excluded.baseline_weight_lb,
                 estimated_daily_calories = excluded.estimated_daily_calories,
-                updated_at = CURRENT_TIMESTAMP
+                updated_at = to_char(now() AT TIME ZONE 'UTC', 'YYYY-MM-DD HH24:MI:SS')
+            RETURNING *
             """,
             (
-                profile_id,
+                user_id,
                 gender,
                 age,
                 weight_lb,
                 metrics["baseline_weight_lb"],
                 metrics["estimated_daily_calories"],
             ),
-        )
+        ).fetchone()
+    return row
 
-    return {
-        "profile_id": profile_id,
-        "gender": gender,
-        "age": age,
-        "weight_lb": weight_lb,
-        **metrics,
-    }
+
+def get_profile(user_id: str) -> dict[str, Any] | None:
+    """Return the user's profile, or None if they haven't completed one."""
+    with connect("load profile") as conn:
+        return conn.execute(
+            "SELECT * FROM health_profiles WHERE user_id = %s", (user_id,)
+        ).fetchone()

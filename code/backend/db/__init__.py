@@ -84,6 +84,14 @@ def database_url() -> str:
     return url
 
 
+def require_database_url() -> None:
+    """Stop the app at startup with a clear message if DATABASE_URL is missing."""
+    try:
+        database_url()
+    except MissingDatabaseURL as exc:
+        raise SystemExit(str(exc)) from None
+
+
 @contextmanager
 def connect(operation: str = "database query") -> Iterator[psycopg.Connection]:
     """Open a connection for one unit of work.
