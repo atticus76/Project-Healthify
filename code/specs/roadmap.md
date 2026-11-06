@@ -119,7 +119,7 @@ Spec: [features/S2-03-health-abnormality-alerts.md](features/S2-03-health-abnorm
 - **Spec must define:** which metrics are monitored, thresholds and baseline window for each (open decision in the requirements doc), alert severity, and de-duplication so the same alert doesn't repeat.
 
 ### S2-04: Cloud data storage & retrieval
-Spec: [features/S2-04-cloud-data-storage.md](features/S2-04-cloud-data-storage.md) (draft)
+Spec: [features/S2-04-cloud-data-storage.md](features/S2-04-cloud-data-storage.md) (implemented; `/account` cleanup open)
 - Move user, profile, goal, and telemetry data from local SQLite to a cloud database.
 - Data is scoped per user and survives sign-out and switching devices.
 - **Spec must define:** cloud provider and DB choice (update [tech-stack.md](tech-stack.md)), schema, migration from the local DB, and retrieval APIs.

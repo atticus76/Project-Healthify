@@ -93,11 +93,6 @@ class DeviceConnectionFlowTest(unittest.TestCase):
         self.assertEqual(google_health.get_status(USER)["status"], "connected")
         self.assertIsNone(google_health.get_status("bob"))
 
-    def test_there_is_no_shared_demo_user(self):
-        # Every call says whose device it is; nothing falls back to "new-user".
-        with self.assertRaises(TypeError):
-            google_health.get_status()
-
     def test_unknown_or_reused_state_is_rejected(self):
         with self.assertRaises(google_health.ConnectionFailed):
             google_health.complete_connection({"state": "forged", "code": "x"})

@@ -4,18 +4,19 @@ Our project is a web application written in Python 3.12 using a framework called
 
 ## Data storage
 
-| Data | Where it lives now | Code |
-|---|---|---|
-| Accounts used by the login page (username, email, password hash, theme, profile) | JSON in `code/backend/users.txt`, SHA-256 password hashes | `auth_controller.py` |
-| Accounts from the `/account` registration page (US-02) | JSON in `data/accounts.json`, SHA-256 password hashes | `account_controller.py` |
-| User profiles | SQLite (`code/backend/healthtrack.db`) | `profile_controller.py` |
-| Goals and goal progress | SQLite (`code/backend/healthtrack.db`) | `goals.py` |
-| Health alerts and alert email address | SQLite (`code/backend/healthtrack.db`) | `alerts.py` |
-| Report preferences and generated reports | SQLite (`code/backend/healthtrack.db`) | `reports.py` |
-| OAuth tokens and in-progress OAuth requests | SQLite (`code/backend/healthtrack.db`) | `token_store.py` |
-| Latest synced telemetry (emulator and Google) | In memory, saved to Supabase (`telemetry_snapshots`) at most once a minute; Google syncs right away | `telemetry_store.py` |
+All app data lives in a cloud-hosted **PostgreSQL** database on **Supabase** (S2-04, FR-06). We use Supabase only as a PostgreSQL server: the app connects with `psycopg` (v3) through a small connection pool (`psycopg_pool`) and plain SQL, with no ORM and no Supabase SDK. The connection string is `DATABASE_URL` in `.env`; tests use a separate `healthify-test` project (`TEST_DATABASE_URL`). The schema is in `code/backend/db/schema.sql`. See [features/S2-04-cloud-data-storage.md](features/S2-04-cloud-data-storage.md).
 
-SQLite is our local development database. In Sprint 2 (S2-04, FR-06) we are moving this data to a cloud-hosted PostgreSQL database on **Supabase**. SQLite and PostgreSQL are two separate databases, so this is a migration, not a connection between them. We use Supabase only as a PostgreSQL server: the app connects with `psycopg` and plain SQL, with no ORM and no Supabase SDK. Both account files move into one `users` table as part of that work. See [features/S2-04-cloud-data-storage.md](features/S2-04-cloud-data-storage.md) (draft).
+| Data | Table(s) | Code |
+|---|---|---|
+| Accounts (username, email, password hash, app settings) | `users` (SHA-256 password hashes until S3-02) | `auth_controller.py` |
+| Health profiles | `health_profiles` | `profile_controller.py` |
+| Goals and goal progress | `health_goals`, `goal_progress` | `goals.py` |
+| Health alerts and alert email address | `health_alerts`, `alert_settings` | `alerts.py` |
+| Report preferences and generated reports | `report_preferences`, `health_reports` | `reports.py` |
+| Google OAuth tokens and in-progress OAuth requests | `google_connections`, `oauth_pending` (plaintext tokens until S3-02) | `token_store.py` |
+| Latest synced telemetry (emulator and Google) | `telemetry_snapshots`; kept in memory and saved at most once a minute, Google syncs right away | `telemetry_store.py` |
+
+The `/account` registration page (US-02, `account_controller.py`) still writes `data/accounts.json` and isn't reachable from the app; whether to remove or rework it is open (S2-04 cleanup C3). SQLite (`healthtrack.db`) and `users.txt` are no longer used.
 
 ## Charts
 
