@@ -50,8 +50,10 @@ def test_init_script_reports_missing_database_url(monkeypatch, capsys):
 def test_unreachable_database_shows_message_and_logs_operation(
     monkeypatch: pytest.MonkeyPatch, caplog: pytest.LogCaptureFixture
 ):
-    # Port 1 on localhost refuses connections immediately.
+    # Port 1 on localhost refuses connections immediately. Don't wait the full
+    # default time for the pool to give up.
     monkeypatch.setenv("DATABASE_URL", "postgresql://nobody:nothing@127.0.0.1:1/none")
+    monkeypatch.setattr(db, "POOL_WAIT_SECONDS", 2)
     with caplog.at_level(logging.ERROR, logger="backend.db"):
         with pytest.raises(db.DatabaseError) as error:
             with db.connect("load goals"):
@@ -183,3 +185,39 @@ def test_json_columns_round_trip(test_db):
             (Jsonb(state),),
         )
         assert conn.execute("SELECT app_state FROM users").fetchone()["app_state"] == state
+
+
+# --- Connection pool (NFR-01: a new Supabase connection costs ~200 ms) -------
+
+
+def test_connections_are_reused(test_db):
+    # pg_backend_pid() can't tell: Supabase's pooler reuses server processes
+    # even for brand-new client connections. Count the app's own connections.
+    with db.connect() as conn:  # warm up
+        conn.execute("SELECT 1")
+    pool = db._pool(db.database_url())
+    opened_before = pool.get_stats().get("connections_num", 0)
+    for _ in range(6):
+        with db.connect() as conn:
+            conn.execute("SELECT 1")
+    assert pool.get_stats().get("connections_num", 0) == opened_before
+
+
+def test_dropped_connection_does_not_break_the_next_request(test_db):
+    with pytest.raises(db.DatabaseError):
+        with db.connect("simulate a dropped connection") as conn:
+            conn.execute("SELECT pg_terminate_backend(pg_backend_pid())")
+    with db.connect() as conn:
+        assert conn.execute("SELECT 1 AS one").fetchone() == {"one": 1}
+
+
+def test_each_block_is_its_own_transaction(test_db):
+    with db.connect() as conn:
+        conn.execute("INSERT INTO users (username, password_hash) VALUES ('alice', 'x')")
+    with pytest.raises(RuntimeError):
+        with db.connect() as conn:
+            conn.execute("INSERT INTO users (username, password_hash) VALUES ('bob', 'x')")
+            raise RuntimeError("roll back bob")
+    with db.connect() as conn:
+        names = [r["username"] for r in conn.execute("SELECT username FROM users").fetchall()]
+    assert names == ["alice"]
