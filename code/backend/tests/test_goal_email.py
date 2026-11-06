@@ -1,6 +1,4 @@
 import os
-from pathlib import Path
-import tempfile
 from unittest import TestCase, mock
 
 import pytest
@@ -11,13 +9,6 @@ from backend import alerts, auth_controller, goals
 @pytest.mark.usefixtures("test_db")
 class GoalEmailTests(TestCase):
     def setUp(self):
-        # Goals are still in SQLite (temp file) until their S2-04 port; the
-        # alert email setting is in the cloud test database.
-        self.temp = tempfile.TemporaryDirectory()
-        self.addCleanup(self.temp.cleanup)
-        self.database = mock.patch.object(goals, "DATABASE_PATH", Path(self.temp.name) / "test.db")
-        self.database.start()
-        self.addCleanup(self.database.stop)
         auth_controller.register("user", "", "Testpass1!")
 
     def test_goal_progress_uses_shared_alert_email_setting(self):

@@ -1,32 +1,315 @@
-from datetime import date
-from pathlib import Path
-from unittest import TestCase, mock
+"""Goals in the cloud health_goals / goal_progress tables (FR-09, S2-04).
 
-from backend import goals
+Runs against healthify-test and is skipped if TEST_DATABASE_URL isn't set.
+Time is controlled by patching goals._now.
+"""
+
+from contextlib import contextmanager
+from datetime import date, datetime, timedelta, timezone
+
+import pytest
+
+from backend import auth_controller, db, goals
+
+pytestmark = pytest.mark.usefixtures("test_db")
+
+START = datetime(2026, 11, 4, 15, 0, tzinfo=timezone.utc)
 
 
-class GoalTests(TestCase):
-    def setUp(self):
-        self.database = mock.patch.object(
-            goals, "DATABASE_PATH", Path(self._testMethodName + ".db")
+@pytest.fixture
+def clock(monkeypatch: pytest.MonkeyPatch):
+    """Set the current time with clock.now = ...; starts at START."""
+
+    class Clock:
+        now = START
+
+    monkeypatch.setattr(goals, "_now", lambda: Clock.now)
+    return Clock
+
+
+@pytest.fixture
+def user() -> str:
+    auth_controller.register("user", "", "Testpass1!")
+    return "user"
+
+
+@pytest.fixture
+def count_queries(monkeypatch: pytest.MonkeyPatch):
+    """Count connections opened and statements run by goals."""
+    counts = {"connections": 0, "queries": 0}
+    real_connect = goals.connect
+
+    class CountingConnection:
+        def __init__(self, conn):
+            self._conn = conn
+
+        def execute(self, *args, **kwargs):
+            counts["queries"] += 1
+            return self._conn.execute(*args, **kwargs)
+
+    @contextmanager
+    def counting_connect(operation: str = "database query"):
+        counts["connections"] += 1
+        with real_connect(operation) as conn:
+            yield CountingConnection(conn)
+
+    monkeypatch.setattr(goals, "connect", counting_connect)
+    return counts
+
+
+def _custom_deadline(hours: int) -> str:
+    return (START + timedelta(hours=hours)).isoformat()
+
+
+# --- Existing behavior ------------------------------------------------------
+
+
+def test_saves_daily_step_goal_and_records_milestones(user, clock):
+    goals.save_goal(user, goals.GOAL_DAILY_STEPS, 10_000, True)
+
+    result = goals.record_steps(user, 5_000, date(2026, 11, 4))
+
+    assert result["milestones"] == [25, 50]
+    assert goals.get_progress(user, date(2026, 11, 4))["steps"] == 5_000
+
+
+def test_low_incomplete_day_gets_motivational_prompt(user, clock):
+    goals.save_goal(user, goals.GOAL_DAILY_STEPS, 10_000, True)
+    goals.record_steps(user, 4_999, date(2026, 11, 4))
+
+    result = goals.complete_day(user, date(2026, 11, 4))
+
+    assert result["status"] == "incomplete"
+    assert result["prompt"]
+
+
+# --- Creating and listing goals ---------------------------------------------
+
+
+def test_daily_goal_ends_at_the_next_local_midnight(user, clock):
+    goal = goals.add_goal(user, goals.GOAL_DAILY_STEPS, 8_000, False)
+    assert goal["deadline_at"] == goals.next_local_midnight(START).isoformat()
+    assert goal["is_daily"] == 1
+
+
+def test_custom_goal_needs_a_future_deadline(user, clock):
+    goal = goals.add_goal(
+        user, goals.GOAL_DAILY_STEPS, 8_000, False, is_daily=False, deadline_at=_custom_deadline(48)
+    )
+    assert goal["is_daily"] == 0
+    with pytest.raises(ValueError, match="future"):
+        goals.add_goal(
+            user, goals.GOAL_DAILY_STEPS, 8_000, False, is_daily=False, deadline_at=_custom_deadline(-1)
         )
-        self.database.start()
-        self.addCleanup(self.database.stop)
-        self.addCleanup(lambda: Path(self._testMethodName + ".db").unlink(missing_ok=True))
 
-    def test_saves_daily_step_goal_and_records_milestones(self):
-        goals.save_goal("user", goals.GOAL_DAILY_STEPS, 10_000, True)
 
-        result = goals.record_steps("user", 5_000, date(2026, 11, 4))
+def test_invalid_goals_are_rejected(user, clock):
+    with pytest.raises(ValueError):
+        goals.add_goal(user, goals.GOAL_DAILY_STEPS, 0, False)
+    with pytest.raises(ValueError):
+        goals.add_goal(user, "marathons", 1, False)
+    assert goals.list_goals(user) == []
 
-        self.assertEqual(result["milestones"], [25, 50])
-        self.assertEqual(goals.get_progress("user", date(2026, 11, 4))["steps"], 5_000)
 
-    def test_low_incomplete_day_gets_motivational_prompt(self):
-        goals.save_goal("user", goals.GOAL_DAILY_STEPS, 10_000, True)
-        goals.record_steps("user", 4_999, date(2026, 11, 4))
+def test_new_goal_starts_with_empty_progress(user, clock):
+    goal = goals.add_goal(user, goals.GOAL_DAILY_STEPS, 8_000, True, reminder_50_enabled=False)
+    assert (goal["steps"], goal["status"], goal["prompt"]) == (0, "in_progress", "")
+    assert goal["milestones"] == [] and goal["reminders_sent"] == []
+    assert goal["reminder_25_enabled"] is True
+    assert goal["reminder_50_enabled"] is False
 
-        result = goals.complete_day("user", date(2026, 11, 4))
 
-        self.assertEqual(result["status"], "incomplete")
-        self.assertTrue(result["prompt"])
+def test_goals_are_listed_newest_first(user, clock):
+    first = goals.add_goal(user, goals.GOAL_DAILY_STEPS, 1_000, False)
+    clock.now = START + timedelta(minutes=5)
+    second = goals.add_goal(user, goals.GOAL_DAILY_STEPS, 2_000, False)
+    assert [g["id"] for g in goals.list_goals(user)] == [second["id"], first["id"]]
+
+
+def test_listing_goals_is_one_query_however_many_goals_exist(user, clock, count_queries):
+    # Daily goals add a row every day, and the Goals page reloads every second,
+    # so this must not grow with the number of goals.
+    for _ in range(5):
+        goals.add_goal(user, goals.GOAL_DAILY_STEPS, 1_000, False)
+    count_queries.update(connections=0, queries=0)
+
+    assert len(goals.list_goals(user)) == 5
+    assert count_queries == {"connections": 1, "queries": 1}
+
+
+def test_users_only_see_their_own_goals(user, clock):
+    auth_controller.register("other", "", "Testpass1!")
+    goals.add_goal("other", goals.GOAL_DAILY_STEPS, 1_000, False)
+    assert goals.list_goals(user) == []
+    assert goals.get_goal(user) is None
+
+
+def test_goals_need_an_existing_account(clock):
+    with pytest.raises(db.DatabaseError):
+        goals.add_goal("ghost", goals.GOAL_DAILY_STEPS, 1_000, False)
+
+
+# --- Recording steps --------------------------------------------------------
+
+
+def test_milestones_are_only_announced_once(user, clock):
+    goals.add_goal(user, goals.GOAL_DAILY_STEPS, 1_000, True)
+    assert goals.record_steps(user, 300)["milestones"] == [25]
+    assert goals.record_steps(user, 300)["milestones"] == [50]
+    result = goals.record_steps(user, 500)
+    assert result["milestones"] == [75, 100]
+    assert result["status"] == "complete"
+
+
+def test_disabled_milestones_are_skipped_but_not_announced_later(user, clock):
+    goals.add_goal(user, goals.GOAL_DAILY_STEPS, 1_000, False, reminder_25_enabled=False)
+    assert goals.record_steps(user, 300)["milestones"] == []
+    assert goals.record_steps(user, 300)["milestones"] == [50]
+
+
+def test_steps_go_to_the_chosen_goal(user, clock):
+    older = goals.add_goal(user, goals.GOAL_DAILY_STEPS, 1_000, False)
+    clock.now = START + timedelta(minutes=5)
+    goals.add_goal(user, goals.GOAL_DAILY_STEPS, 1_000, False)
+    goals.record_steps(user, 100, goal_id=older["id"])
+    by_id = {g["id"]: g["steps"] for g in goals.list_goals(user)}
+    assert by_id[older["id"]] == 100
+    assert sorted(by_id.values()) == [0, 100]
+
+
+def test_recording_steps_uses_one_connection(user, clock, count_queries):
+    goals.add_goal(user, goals.GOAL_DAILY_STEPS, 1_000, False)
+    count_queries.update(connections=0, queries=0)
+    goals.record_steps(user, 100)
+    assert count_queries["connections"] == 1
+
+
+def test_steps_without_any_goal_say_so(user, clock):
+    with pytest.raises(ValueError, match="goal"):
+        goals.record_steps(user, 100)
+
+
+def test_ended_goal_can_no_longer_be_updated(user, clock):
+    goals.add_goal(user, goals.GOAL_DAILY_STEPS, 1_000, False)
+    clock.now = START + timedelta(days=2)
+    with pytest.raises(ValueError, match="ended"):
+        goals.record_steps(user, 100)
+
+
+def test_negative_steps_are_rejected(user, clock):
+    goals.add_goal(user, goals.GOAL_DAILY_STEPS, 1_000, False)
+    with pytest.raises(ValueError):
+        goals.record_steps(user, -5)
+
+
+def test_someone_elses_goal_cant_be_updated(user, clock):
+    auth_controller.register("other", "", "Testpass1!")
+    theirs = goals.add_goal("other", goals.GOAL_DAILY_STEPS, 1_000, False)
+    with pytest.raises(ValueError, match="not found"):
+        goals.record_steps(user, 100, goal_id=theirs["id"])
+
+
+# --- Ending goals -----------------------------------------------------------
+
+
+def test_ending_a_reached_goal_is_complete_without_a_prompt(user, clock):
+    goals.add_goal(user, goals.GOAL_DAILY_STEPS, 1_000, False)
+    goals.record_steps(user, 1_000)
+    result = goals.end_goal(user)
+    assert (result["status"], result["prompt"]) == ("complete", "")
+
+
+def test_ending_a_daily_goal_starts_tomorrows(user, clock):
+    goal = goals.add_goal(user, goals.GOAL_DAILY_STEPS, 7_000, True)
+    result = goals.end_goal(user, goal_id=goal["id"])
+
+    assert result["rollover"] is not None
+    newest = goals.list_goals(user)[0]
+    assert newest["id"] == result["rollover"]["id"] != goal["id"]
+    assert (newest["target"], newest["steps"], newest["status"]) == (7_000, 0, "in_progress")
+    assert newest["reminders_enabled"] == 1
+
+
+def test_ending_a_custom_goal_does_not_start_another(user, clock):
+    goals.add_goal(
+        user, goals.GOAL_DAILY_STEPS, 7_000, False, is_daily=False, deadline_at=_custom_deadline(48)
+    )
+    assert goals.end_goal(user)["rollover"] is None
+    assert len(goals.list_goals(user)) == 1
+
+
+def test_deleting_a_goal_only_deletes_your_own(user, clock):
+    auth_controller.register("other", "", "Testpass1!")
+    mine = goals.add_goal(user, goals.GOAL_DAILY_STEPS, 1_000, False)
+    theirs = goals.add_goal("other", goals.GOAL_DAILY_STEPS, 1_000, False)
+    goals.delete_goal(user, theirs["id"])
+    goals.delete_goal(user, mine["id"])
+    assert goals.list_goals(user) == []
+    assert len(goals.list_goals("other")) == 1
+    with db.connect() as conn:
+        assert conn.execute(
+            "SELECT count(*) AS n FROM goal_progress WHERE goal_id = %s", (mine["id"],)
+        ).fetchone()["n"] == 0
+
+
+# --- Reminders and deadlines ------------------------------------------------
+
+
+def test_reminders_after_2_8_and_16_hours_without_steps(user, clock):
+    goals.add_goal(
+        user, goals.GOAL_DAILY_STEPS, 1_000, True, is_daily=False, deadline_at=_custom_deadline(48)
+    )
+    clock.now = START + timedelta(hours=1)
+    assert goals.refresh_reminders(user) == []
+    clock.now = START + timedelta(hours=9)
+    assert len(goals.refresh_reminders(user)) == 2  # the 2- and 8-hour reminders
+    assert goals.refresh_reminders(user) == []  # not repeated
+    clock.now = START + timedelta(hours=17)
+    assert len(goals.refresh_reminders(user)) == 1
+
+
+def test_no_reminders_once_steps_are_recorded_or_when_turned_off(user, clock):
+    goals.add_goal(
+        user, goals.GOAL_DAILY_STEPS, 1_000, True, is_daily=False, deadline_at=_custom_deadline(48)
+    )
+    goals.record_steps(user, 10)
+    auth_controller.register("quiet", "", "Testpass1!")
+    goals.add_goal(
+        "quiet", goals.GOAL_DAILY_STEPS, 1_000, False, is_daily=False, deadline_at=_custom_deadline(48)
+    )
+    clock.now = START + timedelta(hours=9)
+    assert goals.refresh_reminders(user) == []
+    assert goals.refresh_reminders("quiet") == []
+
+
+def test_passed_deadline_ends_the_goal_and_rolls_daily_goals_over(user, clock):
+    goal = goals.add_goal(user, goals.GOAL_DAILY_STEPS, 1_000, False)
+    goals.record_steps(user, 400)
+    clock.now = START + timedelta(days=1, hours=1)
+
+    [notice] = goals.refresh_reminders(user)
+
+    assert notice["title"] == "Goal deadline reached"
+    assert "400 of 1,000" in notice["message"]
+    by_id = {g["id"]: g for g in goals.list_goals(user)}
+    assert by_id[goal["id"]]["status"] == "incomplete"
+    assert by_id[goal["id"]]["prompt"] == goals.MOTIVATIONAL_PROMPT
+    assert len(by_id) == 2
+
+
+def test_scheduler_checks_every_user_not_a_demo_user(user, clock):
+    auth_controller.register("second", "", "Testpass1!")
+    for name in (user, "second"):
+        goals.add_goal(
+            name, goals.GOAL_DAILY_STEPS, 1_000, True, is_daily=False, deadline_at=_custom_deadline(48)
+        )
+    clock.now = START + timedelta(hours=3)
+
+    due = goals.refresh_all_reminders()
+
+    assert sorted(user_id for user_id, _ in due) == sorted([user, "second"])
+    assert all(n["title"] == "Goal progress reminder" for _, n in due)
+
+
+def test_goals_no_longer_use_sqlite():
+    assert not hasattr(goals, "DATABASE_PATH")
