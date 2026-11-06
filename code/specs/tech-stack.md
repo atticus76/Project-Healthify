@@ -27,7 +27,7 @@ Health alerts (US-04) use Reflex's built-in `rx.toast` for in-app messages and t
 
 ## Planned
 
-- **Docker:** a Dockerfile that installs Python 3.12 and the pinned Reflex version, with a PostgreSQL container for the database (e.g. via Docker Compose).
+- **Docker:** a Dockerfile that installs Python 3.12 and the pinned Reflex version, for packaging the app only. The database stays on Supabase; there is no PostgreSQL container, including for tests (S2-04).
 - **Password hashing:** switch from SHA-256 to bcrypt (`bcrypt` library) (S3-02, NFR-03).
 - **Token encryption:** encrypt OAuth tokens at rest with Fernet from the `cryptography` library (S3-02, NFR-03).
 - **Load testing:** Locust, to verify NFR-04 (10 concurrent users, <1 s response time).

@@ -76,7 +76,7 @@ We compared Supabase, Neon, Firestore, Turso, and Google Cloud SQL.
 **Pausing:** if the project has been paused, the app will get connection errors (see "Database is unreachable"). Restore it from the Supabase dashboard. Whoever runs a demo checks the dashboard first.
 
 ### Connecting
-- One shared module, `code/backend/db.py`, with a `connect()` context manager. It reads `DATABASE_URL` from `.env` (python-dotenv), opens a `psycopg` connection with `row_factory=dict_row`, commits on success, rolls back on error, and closes the connection. It replaces the five separate `DATABASE_PATH` / `_connect()` copies.
+- One shared module, `code/backend/db/__init__.py` (imported as `from backend.db import connect`), with a `connect()` context manager. It lives in the `db/` package next to `schema.sql` because Python can't have both a `db.py` module and a `db/` package in the same folder. It reads `DATABASE_URL` from `.env` (python-dotenv), opens a `psycopg` connection with `row_factory=dict_row`, commits on success, rolls back on error, and closes the connection. It replaces the five separate `DATABASE_PATH` / `_connect()` copies.
 - Use Supabase's **Session pooler** connection string (Project → Connect). The direct connection string is IPv6-only on the free plan and fails on many home and campus networks. Avoid the Transaction pooler (port 6543), because it doesn't support the prepared statements psycopg creates automatically.
 - New dependency: `psycopg[binary]` in `code/requirements.txt`. Add `DATABASE_URL=` to `.env.example`. The real value is shared privately inside the team and never committed.
 - A connection per call, same as today. Opening a remote connection is slower than opening a local SQLite file; if pages get close to the 1 s budget (NFR-01), switch to `psycopg_pool` in S3-01.
@@ -109,6 +109,9 @@ Every `user_id` column is `TEXT NOT NULL REFERENCES users(username) ON DELETE CA
 |---|---|
 | `?` placeholders | `%s` |
 | `INTEGER PRIMARY KEY AUTOINCREMENT` | `BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY` |
+| `REAL` (8-byte float in SQLite) | `DOUBLE PRECISION` (PostgreSQL's `REAL` is only 4 bytes) |
+| `INTEGER` epoch seconds (`token_store.py`) | `BIGINT` |
+| `DEFAULT CURRENT_TIMESTAMP` on a `TEXT` column | `DEFAULT to_char(now() AT TIME ZONE 'UTC', 'YYYY-MM-DD HH24:MI:SS')`, the same text format |
 | `INSERT OR IGNORE` | `INSERT ... ON CONFLICT DO NOTHING` |
 | `cursor.lastrowid` | `INSERT ... RETURNING id` |
 | `sqlite3.Row` (`row["x"]` or `row[0]`) | `dict_row` (`row["x"]` only; fix `row[0]` in `alerts.py`) |
@@ -119,13 +122,14 @@ Every `user_id` column is `TEXT NOT NULL REFERENCES users(username) ON DELETE CA
 Today `auth_controller._active_user` is a module-level global, so every browser using the same server shares one signed-in user. Per-session state is also what US-03 Scenario 2 ("Session Expired, please re-login") needs; session expiry itself stays with US-03. It moves into Reflex state: `AuthState.username` is the source of truth, and other state classes get it with `(await self.get_state(AuthState)).username` instead of `auth_controller.get_active_user()`. `set_active_user` / `get_active_user` / `clear_active_user` are deleted. Backend functions already take `user_id` as a parameter, so only the frontend state classes change.
 
 ### Errors & edge cases
-- Connection or query failures raise one app-level `DatabaseError` from `db.py`. State handlers catch it, show the message from the scenario, and log it (NFR-02). No silent fallback to SQLite or files, which would split a user's data between two places.
+- Connection or query failures raise one app-level `DatabaseError` from `backend.db`. State handlers catch it, show the message from the scenario, and log it (NFR-02). No silent fallback to SQLite or files, which would split a user's data between two places.
 - Email is optional at registration and stored as NULL when blank (an empty string would collide with the `UNIQUE` constraint).
 - Usernames can't be changed (there's no rename feature), which is what makes `username` safe as the primary key.
 - Usernames are case-sensitive ("Alice" and "alice" are different accounts), which matches PostgreSQL's default `TEXT` comparison. Emails are case-insensitive: the code lowercases them before saving or looking them up, so the `UNIQUE` constraint works. This matches `auth_controller.py` after #36. Accounts already in `users.txt` were saved in lowercase, so their usernames stay lowercase.
 
 ### Tests
-- Tests that touch the database use `TEST_DATABASE_URL`, pointing at a separate Supabase project (`healthify-test`), never the shared dev database. They create the schema, then truncate tables before each test. If `TEST_DATABASE_URL` isn't set, those tests are skipped with a message instead of failing.
+- Tests that touch the database use `TEST_DATABASE_URL`, pointing at a separate Supabase project (`healthify-test`), never the shared dev database. They create the schema, then truncate tables before each test. If `TEST_DATABASE_URL` isn't set, those tests are skipped with a message instead of failing. `TEST_DATABASE_URL` must differ from `DATABASE_URL`; the tests refuse to run otherwise.
+- **No Docker or local PostgreSQL (decided 2026-11-05).** Every database test runs against `healthify-test`, which keeps setup to one connection string per person. The known cost: if two people run tests at the same moment, one run can wipe the other's data and cause a failure. Rerun if that happens.
 - Existing tests that patch `DATABASE_PATH` to a temp SQLite file (e.g. `test_goal_email.py`) are updated to use the test database.
 - New tests: one per acceptance scenario. The two-users scenario is tested at the state level with two separate `AuthState` instances.
 
@@ -138,20 +142,19 @@ Found while reviewing the code on 2026-11-05.
 | C2 | The signed-in user is one global variable shared by every session. | See "Signed-in user is per browser session". | ✅ Yes |
 | C3 | Two account systems: the login page uses `auth_controller.py` → `users.txt`, while `/account` (US-02) uses `account_controller.py` → `data/accounts.json`. Accounts made on `/account` can't sign in. | Both move to the `users` table through one module. Decide with dilo427 whether `/account` is removed or reworked to call the same functions. | ✅ Yes |
 | C4 | Gender, age, and weight are stored twice: in `users.txt` (`profile`) and in `health_profiles`. | `health_profiles` is the only copy; `auth_controller.save_profile` and the `profile` key are removed. | ✅ Yes |
-| C5 | `code/backend/db/` and `code/backend/src/` are empty. | `db/` holds `schema.sql` and `init.py`; delete `src/`. | ✅ Yes |
+| C5 | `code/backend/db/` and `code/backend/src/` are empty. | `db/` holds `schema.sql` and `init.py`; delete `src/`. | ✅ Done (this PR) |
 | C6 | Board item #8 was closed as completed on 2026-11-05 but no cloud storage exists yet. | Reopen #8 and move it back to In progress. | ✅ Done (#8 reopened) |
 | C7 | Passwords use unsalted SHA-256. | Switch to bcrypt (`bcrypt` library, as planned in Milestone 1). Cap password length at 72 bytes, since bcrypt only uses the first 72. | ❌ S3-02 |
 | C8 | OAuth access and refresh tokens are stored in plain text, and will now sit in a hosted database. | Encrypt at rest with reversible encryption (Fernet from the `cryptography` library, key in `.env`). Hashing won't work here because the app needs the real token to call Google. | ❌ S3-02 |
 
 ## Tasks
-1. Create the Supabase project under a team-owned account and invite all four members. Create `healthify-test` too.
-2. Write `db/schema.sql`, `db/init.py`, and `db.py`; add `psycopg[binary]` and `DATABASE_URL` / `TEST_DATABASE_URL` to `requirements.txt` and `.env.example`.
-3. Write failing tests from the scenarios.
-4. Port `token_store`, `profile_controller`, `alerts`, `goals`, `reports` (one PR each is fine).
-5. Move accounts to the `users` table and merge the two account systems (C3, C4).
-6. Move the signed-in user into `AuthState` (C2).
-7. Persist telemetry snapshots.
-8. Cleanup C5. Update `tech-stack.md` (storage table, provider choice) and the README setup steps.
+1. ✅ Done 2026-11-05: Supabase organization "Healthify Team" (Free plan) with projects `healthify` (dev) and `healthify-test`, both in West US (Oregon), Data API off, automatic RLS on. All four members are organization owners, so the projects don't depend on one person staying in the class.
+2. Write `db/schema.sql`, `db/init.py`, and `db/__init__.py`; add `psycopg[binary]` and `DATABASE_URL` / `TEST_DATABASE_URL` to `requirements.txt` and `.env.example`. Tests for the database layer itself.
+3. Move accounts to the `users` table and merge the two account systems (C3, C4). **This comes before the other ports:** every table's `user_id` must match a row in `users`, so nothing else can be saved until accounts live there. This is also when the app starts checking for `DATABASE_URL` at startup (the "DATABASE_URL is missing" scenario).
+4. Port `token_store`, `profile_controller`, `alerts`, `goals`, `reports` (one PR each is fine). In each PR, first write that module's tests from the scenarios against `healthify-test`, see them fail, then port.
+5. Move the signed-in user into `AuthState` (C2).
+6. Persist telemetry snapshots.
+7. Update `tech-stack.md` (storage table, provider choice) and the README setup steps.
 
 ## Out of scope
 - Moving existing local data. Everything in `healthtrack.db` and `users.txt` is test data; teammates re-register.
@@ -160,6 +163,4 @@ Found while reviewing the code on 2026-11-05.
 
 ## Open questions
 - Convert `TEXT` timestamps to `TIMESTAMPTZ` and `INTEGER` flags to `BOOLEAN` now, or as a follow-up after the straight port works?
-- Is one shared test project enough when four people run tests at the same time, or should tests use a local PostgreSQL container instead (tech-stack.md already plans a Docker Compose setup)?
 - Should `username` stay the primary key, or should `users` get a numeric `id` that everything else references? (Simpler now vs. allowing username changes later.)
-- Who owns the Supabase account so it doesn't disappear when one person leaves the class?
