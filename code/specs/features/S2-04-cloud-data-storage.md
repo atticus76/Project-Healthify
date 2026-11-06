@@ -35,6 +35,14 @@ Feature: Cloud data storage and retrieval
     And she can sign in with her username or her email
     And registering "alice" again is rejected with "That username is already in use."
 
+  Scenario: Usernames are case-sensitive, emails are not
+    Given "alice" registered with the email "Alice@Example.com"
+    When she signs in as "Alice"
+    Then sign-in fails
+    When she signs in with "alice@example.com"
+    Then sign-in succeeds
+    And "Alice" can still register as a separate account
+
   Scenario: Database is unreachable
     Given the user is signed in
     When a page tries to read or save data and the database cannot be reached
@@ -80,7 +88,7 @@ All `CREATE TABLE` statements move into one file, `code/backend/db/schema.sql`, 
 
 | Table | Columns (changes from today in **bold**) |
 |---|---|
-| **`users`** (new; replaces `users.txt` and `data/accounts.json`) | `username TEXT PRIMARY KEY`, `email TEXT UNIQUE` (NULL when not given), `password_hash TEXT NOT NULL`, `app_state JSONB NOT NULL DEFAULT '{}'` (theme, telemetry_enabled, device_name), `created_at TEXT NOT NULL` |
+| **`users`** (new; replaces `users.txt` and `data/accounts.json`) | `username TEXT PRIMARY KEY` (case-sensitive, saved as typed after trimming spaces), `email TEXT UNIQUE` (lowercased before saving; NULL when not given), `password_hash TEXT NOT NULL`, `app_state JSONB NOT NULL DEFAULT '{}'` (theme, telemetry_enabled, device_name), `created_at TEXT NOT NULL` |
 | `health_profiles` | **`user_id`** (renamed from `profile_id`) `TEXT PRIMARY KEY`, gender, age, weight_lb, baseline_weight_lb, estimated_daily_calories, updated_at |
 | `health_goals` | `id` **`BIGINT GENERATED ALWAYS AS IDENTITY`** `PRIMARY KEY`, user_id, goal_type, target, is_daily, reminders_enabled, reminder_25/50/75_enabled, deadline_at, created_at |
 | `goal_progress` | goal_id `PRIMARY KEY` **`REFERENCES health_goals(id) ON DELETE CASCADE`**, steps, status, prompt, milestones_sent, reminders_sent |
@@ -114,6 +122,7 @@ Today `auth_controller._active_user` is a module-level global, so every browser 
 - Connection or query failures raise one app-level `DatabaseError` from `db.py`. State handlers catch it, show the message from the scenario, and log it (NFR-02). No silent fallback to SQLite or files, which would split a user's data between two places.
 - Email is optional at registration and stored as NULL when blank (an empty string would collide with the `UNIQUE` constraint).
 - Usernames can't be changed (there's no rename feature), which is what makes `username` safe as the primary key.
+- Usernames are case-sensitive ("Alice" and "alice" are different accounts), which matches PostgreSQL's default `TEXT` comparison. Emails are case-insensitive: the code lowercases them before saving or looking them up, so the `UNIQUE` constraint works. This matches `auth_controller.py` after #36. Accounts already in `users.txt` were saved in lowercase, so their usernames stay lowercase.
 
 ### Tests
 - Tests that touch the database use `TEST_DATABASE_URL`, pointing at a separate Supabase project (`healthify-test`), never the shared dev database. They create the schema, then truncate tables before each test. If `TEST_DATABASE_URL` isn't set, those tests are skipped with a message instead of failing.
@@ -125,12 +134,12 @@ Found while reviewing the code on 2026-11-05.
 
 | # | Problem | Fix | In this spec? |
 |---|---|---|---|
-| C1 | `code/backend/users.txt` (accounts and password hashes) is committed to the public repo; `.gitignore` covers `*.db` but not this file. | Add it to `.gitignore` and `git rm --cached` it. Tell the team not to reuse any real password they typed into a test account. Rewriting git history to remove it is optional. | ✅ Yes |
+| C1 | `code/backend/users.txt` (accounts and password hashes) is committed to the public repo; `.gitignore` covers `*.db` but not this file. | Add it to `.gitignore` and `git rm --cached` it. Tell the team not to reuse any real password they typed into a test account. Rewriting git history to remove it is optional. | ✅ Done (#34) |
 | C2 | The signed-in user is one global variable shared by every session. | See "Signed-in user is per browser session". | ✅ Yes |
 | C3 | Two account systems: the login page uses `auth_controller.py` → `users.txt`, while `/account` (US-02) uses `account_controller.py` → `data/accounts.json`. Accounts made on `/account` can't sign in. | Both move to the `users` table through one module. Decide with dilo427 whether `/account` is removed or reworked to call the same functions. | ✅ Yes |
 | C4 | Gender, age, and weight are stored twice: in `users.txt` (`profile`) and in `health_profiles`. | `health_profiles` is the only copy; `auth_controller.save_profile` and the `profile` key are removed. | ✅ Yes |
 | C5 | `code/backend/db/` and `code/backend/src/` are empty. | `db/` holds `schema.sql` and `init.py`; delete `src/`. | ✅ Yes |
-| C6 | Board item #8 was closed as completed on 2026-11-05 but no cloud storage exists yet. | Reopen #8 and move it back to In progress. | ✅ Yes (board) |
+| C6 | Board item #8 was closed as completed on 2026-11-05 but no cloud storage exists yet. | Reopen #8 and move it back to In progress. | ✅ Done (#8 reopened) |
 | C7 | Passwords use unsalted SHA-256. | Switch to bcrypt (`bcrypt` library, as planned in Milestone 1). Cap password length at 72 bytes, since bcrypt only uses the first 72. | ❌ S3-02 |
 | C8 | OAuth access and refresh tokens are stored in plain text, and will now sit in a hosted database. | Encrypt at rest with reversible encryption (Fernet from the `cryptography` library, key in `.env`). Hashing won't work here because the app needs the real token to call Google. | ❌ S3-02 |
 
@@ -142,7 +151,7 @@ Found while reviewing the code on 2026-11-05.
 5. Move accounts to the `users` table and merge the two account systems (C3, C4).
 6. Move the signed-in user into `AuthState` (C2).
 7. Persist telemetry snapshots.
-8. Cleanup C1, C5, C6. Update `tech-stack.md` (storage table, provider choice) and the README setup steps.
+8. Cleanup C5. Update `tech-stack.md` (storage table, provider choice) and the README setup steps.
 
 ## Out of scope
 - Moving existing local data. Everything in `healthtrack.db` and `users.txt` is test data; teammates re-register.
