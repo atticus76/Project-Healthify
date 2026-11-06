@@ -4,12 +4,11 @@ Spec: code/specs/features/S2-03-health-abnormality-alerts.md
 """
 
 from datetime import datetime, timedelta, timezone
-from pathlib import Path
-import tempfile
 import unittest
-from unittest import mock
 
-from backend import alerts
+import pytest
+
+from backend import alerts, auth_controller, db
 from backend.telemetry_emulator import generate_fitbit_data
 
 
@@ -87,13 +86,13 @@ class EmulatorScenarioTests(unittest.TestCase):
             generate_fitbit_data("Medium", NOW, scenario="meteor")
 
 
+@pytest.mark.usefixtures("test_db")
 class AlertStorageTests(unittest.TestCase):
+    """Alerts in the cloud health_alerts / alert_settings tables (S2-04)."""
+
     def setUp(self):
-        self.tmp = tempfile.TemporaryDirectory()
-        patcher = mock.patch.object(alerts, "DATABASE_PATH", Path(self.tmp.name) / "test.db")
-        patcher.start()
-        self.addCleanup(patcher.stop)
-        self.addCleanup(self.tmp.cleanup)
+        for user in ("user-1", "user-2"):
+            auth_controller.register(user, "", "Testpass1!")
         self.spike = generate_fitbit_data("Medium", NOW, scenario="heart-rate-spike")
 
     def test_new_alert_is_stored_and_returned(self):
@@ -124,6 +123,42 @@ class AlertStorageTests(unittest.TestCase):
         self.assertEqual(alerts.unacknowledged_count("user-1"), 1)
         alerts.acknowledge("user-1")
         self.assertEqual(alerts.unacknowledged_count("user-1"), 0)
+
+    def test_acknowledging_only_touches_your_own_alerts(self):
+        alerts.check_telemetry(self.spike, "user-1")
+        alerts.check_telemetry(self.spike, "user-2")
+        other = alerts.list_alerts("user-2")[0]
+
+        alerts.acknowledge("user-1", other["id"])  # not user-1's alert
+        alerts.acknowledge("user-1")
+        self.assertEqual(alerts.unacknowledged_count("user-2"), 1)
+
+    def test_same_event_for_two_users_is_two_alerts(self):
+        self.assertEqual(len(alerts.check_telemetry(self.spike, "user-1")), 1)
+        self.assertEqual(len(alerts.check_telemetry(self.spike, "user-2")), 1)
+
+    def test_returned_alerts_have_ids_and_saved_fields(self):
+        [new] = alerts.check_telemetry(self.spike, "user-1")
+        self.assertIsInstance(new["id"], int)
+        self.assertEqual(new["user_id"], "user-1")
+        self.assertEqual(new["acknowledged"], 0)
+        self.assertTrue(new["created_at"])
+        self.assertEqual(alerts.list_alerts("user-1")[0]["id"], new["id"])
+
+    def test_alert_email_setting(self):
+        self.assertIsNone(alerts.get_alert_email("user-1"))  # never set
+        alerts.set_alert_email("user-1", "  me@example.com ")
+        self.assertEqual(alerts.get_alert_email("user-1"), "me@example.com")
+        alerts.set_alert_email("user-1", "")  # turned off
+        self.assertEqual(alerts.get_alert_email("user-1"), "")
+        self.assertIsNone(alerts.get_alert_email("user-2"))
+
+    def test_alerts_need_an_existing_account(self):
+        with self.assertRaises(db.DatabaseError):
+            alerts.check_telemetry(self.spike, "ghost")
+
+    def test_alerts_no_longer_use_sqlite(self):
+        self.assertFalse(hasattr(alerts, "DATABASE_PATH"))
 
 
 if __name__ == "__main__":

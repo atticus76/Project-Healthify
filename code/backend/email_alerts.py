@@ -107,8 +107,11 @@ def _send_all(messages: list[EmailMessage]) -> None:
 
 def dispatch(user_id: str, new_alerts: list[dict[str, Any]]) -> threading.Thread | None:
     """Email new alerts in the background. Returns the thread, or None if skipped."""
+    # Cheap checks first: looking up the saved address is a database call.
+    if not new_alerts or not is_configured():
+        return None
     to = recipient(user_id)
-    if not new_alerts or not to or not is_configured():
+    if not to:
         return None
     messages = [build_message(alert, to) for alert in new_alerts]
     thread = threading.Thread(target=_send_all, args=(messages,), daemon=True)

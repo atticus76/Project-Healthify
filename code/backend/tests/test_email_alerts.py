@@ -3,13 +3,14 @@
 Spec: code/specs/features/S2-03-health-abnormality-alerts.md
 """
 
-from pathlib import Path
+import os
 import smtplib
-import tempfile
 import unittest
 from unittest import mock
 
-from backend import alerts, email_alerts
+import pytest
+
+from backend import alerts, auth_controller, email_alerts
 
 
 SMTP_ENV = {
@@ -26,16 +27,19 @@ URGENT = {
 GAP = {**URGENT, "title": "Wearable data gap", "severity": alerts.SEVERITY_INFO}
 
 
+USER = "user1"
+
+
+@pytest.mark.usefixtures("test_db")
 class EmailAlertTests(unittest.TestCase):
     def setUp(self):
-        self.tmp = tempfile.TemporaryDirectory()
-        self.addCleanup(self.tmp.cleanup)
-        for patcher in (
-            mock.patch.object(alerts, "DATABASE_PATH", Path(self.tmp.name) / "test.db"),
-            mock.patch.dict("os.environ", SMTP_ENV, clear=True),
-        ):
-            patcher.start()
-            self.addCleanup(patcher.stop)
+        auth_controller.register(USER, "", "Testpass1!")
+        # Clear everything except the test database's address.
+        patcher = mock.patch.dict(
+            "os.environ", {**SMTP_ENV, "DATABASE_URL": os.environ["DATABASE_URL"]}, clear=True
+        )
+        patcher.start()
+        self.addCleanup(patcher.stop)
 
     # --- the email itself ---
 
@@ -63,14 +67,14 @@ class EmailAlertTests(unittest.TestCase):
 
     def test_saved_address_wins_over_env_default(self):
         with mock.patch.dict("os.environ", {"ALERT_EMAIL_TO": "env@example.com"}):
-            self.assertEqual(email_alerts.recipient("u"), "env@example.com")
-            alerts.set_alert_email("u", "saved@example.com")
-            self.assertEqual(email_alerts.recipient("u"), "saved@example.com")
+            self.assertEqual(email_alerts.recipient(USER), "env@example.com")
+            alerts.set_alert_email(USER, "saved@example.com")
+            self.assertEqual(email_alerts.recipient(USER), "saved@example.com")
 
     def test_turning_email_off_overrides_env_default(self):
         with mock.patch.dict("os.environ", {"ALERT_EMAIL_TO": "env@example.com"}):
-            alerts.set_alert_email("u", "")
-            self.assertEqual(email_alerts.recipient("u"), "")
+            alerts.set_alert_email(USER, "")
+            self.assertEqual(email_alerts.recipient(USER), "")
 
     def test_address_validation(self):
         self.assertTrue(email_alerts.is_valid_address("name@example.com"))
@@ -96,35 +100,47 @@ class EmailAlertTests(unittest.TestCase):
                 email_alerts.send(email_alerts.build_message(URGENT, "user@example.com"))
 
     def test_dispatch_emails_every_new_alert(self):
-        alerts.set_alert_email("u", "user@example.com")
+        alerts.set_alert_email(USER, "user@example.com")
         with mock.patch("smtplib.SMTP") as smtp_class:
-            email_alerts.dispatch("u", [URGENT, GAP]).join(timeout=5)
+            email_alerts.dispatch(USER, [URGENT, GAP]).join(timeout=5)
 
         smtp = smtp_class.return_value.__enter__.return_value
         self.assertEqual(smtp.send_message.call_count, 2)
 
     def test_dispatch_skips_without_address_or_alerts(self):
         with mock.patch("smtplib.SMTP") as smtp_class:
-            self.assertIsNone(email_alerts.dispatch("u", [URGENT]))
-            alerts.set_alert_email("u", "user@example.com")
-            self.assertIsNone(email_alerts.dispatch("u", []))
+            self.assertIsNone(email_alerts.dispatch(USER, [URGENT]))
+            alerts.set_alert_email(USER, "user@example.com")
+            self.assertIsNone(email_alerts.dispatch(USER, []))
         smtp_class.assert_not_called()
 
     def test_dispatch_skips_when_smtp_not_configured(self):
-        alerts.set_alert_email("u", "user@example.com")
-        with mock.patch.dict("os.environ", {}, clear=True), mock.patch("smtplib.SMTP") as smtp_class:
-            self.assertIsNone(email_alerts.dispatch("u", [URGENT]))
+        alerts.set_alert_email(USER, "user@example.com")
+        for key in SMTP_ENV:
+            os.environ.pop(key)
+        with mock.patch("smtplib.SMTP") as smtp_class:
+            self.assertIsNone(email_alerts.dispatch(USER, [URGENT]))
         smtp_class.assert_not_called()
 
+    def test_dispatch_skips_the_database_when_there_is_nothing_to_send(self):
+        # Checking the saved address costs a database round trip; don't make
+        # one when email is off or there are no alerts.
+        with mock.patch.object(alerts, "get_alert_email") as lookup:
+            email_alerts.dispatch(USER, [])
+            for key in SMTP_ENV:
+                os.environ.pop(key)
+            email_alerts.dispatch(USER, [URGENT])
+        lookup.assert_not_called()
+
     def test_mail_server_failure_is_logged_not_raised(self):
-        alerts.set_alert_email("u", "user@example.com")
+        alerts.set_alert_email(USER, "user@example.com")
         with mock.patch("smtplib.SMTP", side_effect=smtplib.SMTPConnectError(421, "down")), \
                 self.assertLogs("backend.email_alerts", level="ERROR"):
-            email_alerts.dispatch("u", [URGENT]).join(timeout=5)
+            email_alerts.dispatch(USER, [URGENT]).join(timeout=5)
 
     def test_send_test_requires_an_address(self):
         with self.assertRaises(ValueError):
-            email_alerts.send_test("u")
+            email_alerts.send_test(USER)
 
 
 if __name__ == "__main__":
