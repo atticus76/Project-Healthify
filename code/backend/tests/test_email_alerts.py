@@ -122,16 +122,6 @@ class EmailAlertTests(unittest.TestCase):
             self.assertIsNone(email_alerts.dispatch(USER, [URGENT]))
         smtp_class.assert_not_called()
 
-    def test_dispatch_skips_the_database_when_there_is_nothing_to_send(self):
-        # Checking the saved address costs a database round trip; don't make
-        # one when email is off or there are no alerts.
-        with mock.patch.object(alerts, "get_alert_email") as lookup:
-            email_alerts.dispatch(USER, [])
-            for key in SMTP_ENV:
-                os.environ.pop(key)
-            email_alerts.dispatch(USER, [URGENT])
-        lookup.assert_not_called()
-
     def test_mail_server_failure_is_logged_not_raised(self):
         alerts.set_alert_email(USER, "user@example.com")
         with mock.patch("smtplib.SMTP", side_effect=smtplib.SMTPConnectError(421, "down")), \

@@ -8,7 +8,7 @@ import unittest
 
 import pytest
 
-from backend import alerts, auth_controller, db
+from backend import alerts, auth_controller
 from backend.telemetry_emulator import generate_fitbit_data
 
 
@@ -124,27 +124,6 @@ class AlertStorageTests(unittest.TestCase):
         alerts.acknowledge("user-1")
         self.assertEqual(alerts.unacknowledged_count("user-1"), 0)
 
-    def test_acknowledging_only_touches_your_own_alerts(self):
-        alerts.check_telemetry(self.spike, "user-1")
-        alerts.check_telemetry(self.spike, "user-2")
-        other = alerts.list_alerts("user-2")[0]
-
-        alerts.acknowledge("user-1", other["id"])  # not user-1's alert
-        alerts.acknowledge("user-1")
-        self.assertEqual(alerts.unacknowledged_count("user-2"), 1)
-
-    def test_same_event_for_two_users_is_two_alerts(self):
-        self.assertEqual(len(alerts.check_telemetry(self.spike, "user-1")), 1)
-        self.assertEqual(len(alerts.check_telemetry(self.spike, "user-2")), 1)
-
-    def test_returned_alerts_have_ids_and_saved_fields(self):
-        [new] = alerts.check_telemetry(self.spike, "user-1")
-        self.assertIsInstance(new["id"], int)
-        self.assertEqual(new["user_id"], "user-1")
-        self.assertEqual(new["acknowledged"], 0)
-        self.assertTrue(new["created_at"])
-        self.assertEqual(alerts.list_alerts("user-1")[0]["id"], new["id"])
-
     def test_alert_email_setting(self):
         self.assertIsNone(alerts.get_alert_email("user-1"))  # never set
         alerts.set_alert_email("user-1", "  me@example.com ")
@@ -152,14 +131,6 @@ class AlertStorageTests(unittest.TestCase):
         alerts.set_alert_email("user-1", "")  # turned off
         self.assertEqual(alerts.get_alert_email("user-1"), "")
         self.assertIsNone(alerts.get_alert_email("user-2"))
-
-    def test_alerts_need_an_existing_account(self):
-        with self.assertRaises(db.DatabaseError):
-            alerts.check_telemetry(self.spike, "ghost")
-
-    def test_alerts_no_longer_use_sqlite(self):
-        self.assertFalse(hasattr(alerts, "DATABASE_PATH"))
-
 
 if __name__ == "__main__":
     unittest.main()

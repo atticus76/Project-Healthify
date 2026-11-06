@@ -164,15 +164,6 @@ def get_goal(user_id: str) -> dict[str, Any] | None:
     return rows[0] if rows else None
 
 
-def get_progress(user_id: str, progress_date: Any = None) -> dict[str, Any]:
-    goal = get_goal(user_id)
-    return goal or {"steps": 0, "status": "not_set", "prompt": "", "milestones": []}
-
-
-def list_progress(user_id: str, progress_date: Any = None) -> list[dict[str, Any]]:
-    return list_goals(user_id)
-
-
 def _rollover_daily(conn, goal: dict[str, Any]) -> dict[str, Any] | None:
     """Start tomorrow's copy of a daily goal (same target and reminder setting)."""
     if not goal["is_daily"]:

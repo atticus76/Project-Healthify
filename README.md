@@ -24,9 +24,18 @@ pip install -r code\requirements.txt
 
 If PowerShell refuses to run `Activate.ps1`, run `Set-ExecutionPolicy -Scope CurrentUser RemoteSigned` once.
 
-### 3. (Optional) `.env` settings
+### 3. `.env` settings
 
-Copy `.env.example` to `.env`; everything in it is optional.
+Copy `.env.example` to `.env`.
+
+**Required: the database.** All app data (accounts, profiles, goals, alerts, reports, device connections and telemetry) lives in a shared PostgreSQL database on [Supabase](https://supabase.com). Ask atticus76 for the two connection strings (sent privately; never commit them) and paste them into `.env`:
+
+- `DATABASE_URL`: the team's `healthify` project. The app won't start without it.
+- `TEST_DATABASE_URL`: the separate `healthify-test` project. The tests wipe its tables, so it must never be the same as `DATABASE_URL`. Without it, the database tests are skipped.
+
+The tables already exist in both projects. To set up a brand-new Supabase project instead, run `python -m backend.db.init` from `code\` once; it's safe to re-run.
+
+**Optional:**
 
 - **Real wearable on `/devices`:** fill in `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET`. Without them, use the **Telemetry Emulator**.
 - **Email alerts:** fill in `SMTP_USERNAME` and `SMTP_PASSWORD`. For Gmail, `SMTP_PASSWORD` must be an [app password](https://myaccount.google.com/apppasswords), not your normal password, and the account needs 2-Step Verification. Then set the recipient on the Alerts page and click **Send test email**.
@@ -48,12 +57,14 @@ reflex run
 
 Open http://localhost:3000. The backend runs on port 8000. The first run takes a minute while Reflex installs its frontend packages. Stop the app with `Ctrl+C`.
 
-The demo opens on a sign-in page. New accounts may use a username and an
-optional email address; passwords must be at least eight characters and include
-an uppercase letter, number, and special character. Demo account records are
-stored in `code\backend\users.txt`, including profile defaults and basic
-application settings. This file-backed login is intentionally temporary and is
-not production authentication.
+The app opens on a sign-in page. New accounts need a username (case-sensitive) and may add an
+email address (not case-sensitive); passwords must be at least eight characters and include
+an uppercase letter, number, and special character. Accounts are stored in the shared
+Supabase database, so they work on every teammate's computer. Passwords are hashed with
+SHA-256 for now; bcrypt is planned for S3-02.
+
+Older versions kept data in `code\backend\users.txt` and `code\backend\healthtrack.db`.
+Nothing uses those files anymore and they aren't copied over; you can delete them.
 
 ### 5. Run the tests
 
@@ -63,8 +74,14 @@ From the repo root, with the venv active:
 pytest
 ```
 
+Database tests run against `healthify-test` (see step 3) and take about a minute, mostly network round trips. They're skipped if `TEST_DATABASE_URL` isn't set.
+
 ### Troubleshooting
 
+- **"DATABASE_URL is required"** when starting the app: add it to `.env` (step 3).
+- **"Couldn't reach the database. Try again in a moment."** in the app: the free Supabase project pauses after about a week without use. Open the project on supabase.com and click **Restore**. Check this before a demo.
+- **`tenant/user postgres.… not found`**: the host in your connection string is wrong. Copy it exactly from Supabase's **Connect** → **Session pooler**; the `aws-N` part differs between projects.
+- **`No module named 'psycopg'`** (every test fails): run `pip install -r code\requirements.txt` again.
 - **`No Python at 'C:\Program Files\Python39\python.exe'`** or similar: your `.venv` was built from a Python that's gone. Delete `.venv` and redo step 2.
 - **Port 3000 or 8000 already in use:** another `reflex run` is still open. Close it, or use `reflex run --frontend-port 3001 --backend-port 8001`.
 - **`code/frontend/reflex.lock/` shows as modified after running:** Reflex rewrites these files' line endings. Discard the change (`git checkout -- code/frontend/reflex.lock`) unless you changed dependencies.

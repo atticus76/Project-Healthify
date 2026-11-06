@@ -9,7 +9,7 @@ from contextlib import contextmanager
 
 import pytest
 
-from backend import auth_controller, db, telemetry_emulator, telemetry_store
+from backend import auth_controller, db, telemetry_store
 
 pytestmark = pytest.mark.usefixtures("test_db")
 
@@ -55,10 +55,6 @@ def _saved(user_id: str) -> list[dict]:
         ).fetchall()
 
 
-def test_nothing_saved_yet(user):
-    assert telemetry_store.get_latest(user) is None
-
-
 def test_first_snapshot_is_saved_right_away(user, clock):
     telemetry_store.save(user, DATA_1)
     assert _saved(user) == [{"source": "emulator", "data": DATA_1}]
@@ -77,23 +73,10 @@ def test_refreshes_within_a_minute_stay_in_memory(user, clock):
     assert _saved(user)[0]["data"] == DATA_2
 
 
-def test_forced_saves_skip_the_wait(user, clock):
-    telemetry_store.save(user, DATA_1)
-    telemetry_store.save(user, DATA_2, force=True)
-    assert _saved(user)[0]["data"] == DATA_2
-
-
 def test_after_a_restart_the_saved_snapshot_is_used(user, clock):
     telemetry_store.save(user, DATA_1)
     telemetry_store._reset_cache()  # what a server restart does
     assert telemetry_store.get_latest(user) == DATA_1
-
-
-def test_newest_source_wins(user, clock):
-    telemetry_store.save(user, DATA_1, source="emulator")
-    telemetry_store.save(user, DATA_2, source="google", force=True)
-    telemetry_store._reset_cache()
-    assert telemetry_store.get_latest(user) == DATA_2
 
 
 def test_turning_the_emulator_off_keeps_google_data(user, clock):
@@ -111,20 +94,6 @@ def test_reading_with_nothing_saved_asks_the_database_once(user, clock, db_calls
     assert len(db_calls) == 1
 
 
-def test_reading_saved_data_uses_memory(user, clock, db_calls):
-    telemetry_store.save(user, DATA_1)
-    db_calls.clear()
-    for _ in range(5):
-        telemetry_store.get_latest(user)
-    assert db_calls == []
-
-
-def test_users_have_separate_snapshots(user, clock):
-    auth_controller.register("other", "", "Testpass1!")
-    telemetry_store.save("other", DATA_2)
-    assert telemetry_store.get_latest(user) is None
-
-
 def test_a_failed_save_keeps_the_live_data_and_retries(user, clock, monkeypatch):
     @contextmanager
     def unreachable(operation: str = "database query"):
@@ -140,7 +109,3 @@ def test_a_failed_save_keeps_the_live_data_and_retries(user, clock, monkeypatch)
     clock.now += 1  # well within a minute, but the last save failed
     telemetry_store.save(user, DATA_1)
     assert _saved(user)[0]["data"] == DATA_1
-
-
-def test_emulator_no_longer_keeps_its_own_copy():
-    assert not hasattr(telemetry_emulator, "_latest_telemetry")

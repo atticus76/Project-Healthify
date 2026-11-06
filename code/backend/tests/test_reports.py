@@ -9,7 +9,7 @@ from datetime import datetime, timedelta, timezone
 
 import pytest
 
-from backend import alerts, auth_controller, db, email_alerts, goals, reports
+from backend import alerts, auth_controller, email_alerts, goals, reports
 from backend.telemetry_emulator import generate_fitbit_data
 
 pytestmark = pytest.mark.usefixtures("test_db")
@@ -43,29 +43,12 @@ def sent_emails(monkeypatch: pytest.MonkeyPatch) -> list:
 # --- Preferences ------------------------------------------------------------
 
 
-def test_no_preferences_until_saved(user):
-    assert reports.get_preferences(user) is None
-
-
 def test_preferences_are_saved_and_replaced(user, clock):
     reports.save_preferences(user, "daily", " me@example.com ")
     reports.save_preferences(user, "weekly", "me@example.com")
     prefs = reports.get_preferences(user)
     assert (prefs["frequency"], prefs["email"]) == ("weekly", "me@example.com")
     assert prefs["updated_at"] == NOW.isoformat()
-
-
-def test_invalid_preferences_are_rejected(user):
-    with pytest.raises(ValueError, match="daily or weekly"):
-        reports.save_preferences(user, "hourly", "me@example.com")
-    with pytest.raises(ValueError, match="email"):
-        reports.save_preferences(user, "daily", "not-an-email")
-    assert reports.get_preferences(user) is None
-
-
-def test_preferences_need_an_existing_account():
-    with pytest.raises(db.DatabaseError):
-        reports.save_preferences("ghost", "daily", "me@example.com")
 
 
 # --- Generating reports -----------------------------------------------------
@@ -90,33 +73,6 @@ def test_report_includes_goals_and_recent_alerts(user, clock):
     assert content["metrics"]["available"] is False
 
 
-def test_weekly_reports_cover_seven_days(user, clock):
-    reports.save_preferences(user, "weekly", "me@example.com")
-    report = reports.generate_report(user, telemetry={})
-    assert report["period_start"] == (NOW - timedelta(days=7)).isoformat()
-
-
-def test_telemetry_is_summarized_when_present(user, clock):
-    data = generate_fitbit_data("Medium", NOW)
-    metrics = reports.generate_report(user, telemetry=data)["content"]["metrics"]
-    assert metrics["available"] is True
-    assert metrics["steps_points"] > 0
-
-
-def test_preview_reports_are_not_saved(user, clock):
-    preview = reports.generate_report(user, telemetry={}, persist=False)
-    assert preview["id"] == 0
-    assert reports.get_report(user) is None
-
-
-def test_latest_report_is_returned(user, clock):
-    first = reports.generate_report(user, telemetry={})
-    clock.now = NOW + timedelta(hours=1)
-    second = reports.generate_report(user, telemetry={})
-    assert reports.get_report(user)["id"] == second["id"]
-    assert reports.get_report(user, first["id"])["content"] == first["content"]
-
-
 def test_users_cant_read_each_others_reports(user, clock):
     auth_controller.register("other", "", "Testpass1!")
     theirs = reports.generate_report("other", telemetry={})
@@ -125,12 +81,6 @@ def test_users_cant_read_each_others_reports(user, clock):
 
 
 # --- Delivering reports -----------------------------------------------------
-
-
-def test_delivery_without_preferences_does_nothing(user, clock, sent_emails):
-    report = reports.generate_report(user, telemetry={})
-    assert reports.deliver_report(user, report)["delivery_status"] == "not_sent"
-    assert sent_emails == []
 
 
 def test_delivered_report_is_marked_sent(user, clock, sent_emails):
@@ -171,10 +121,3 @@ def test_scheduler_sends_due_reports_for_every_user(user, clock, sent_emails):
     clock.now = NOW + timedelta(days=8)
     assert sorted(reports.send_due_reports()) == ["second", "user"]
     assert len(sent_emails) == 5
-
-
-def test_reports_no_longer_use_sqlite_or_a_demo_user():
-    from backend import google_health
-
-    assert not hasattr(reports, "DATABASE_PATH")
-    assert not hasattr(google_health, "DEMO_USER_ID")

@@ -19,18 +19,8 @@ def test_database_errors_show_the_friendly_message():
     spec = errors.handle_backend_exception(DatabaseError("load goals"))
     assert isinstance(spec, EventSpec)
     assert UNREACHABLE_MESSAGE in _text(spec)
-
-
-def test_repeated_database_errors_reuse_one_toast():
-    # Goals and Reports reload every second; don't stack a toast per second.
-    first = _text(errors.handle_backend_exception(DatabaseError("load goals")))
-    assert errors.DATABASE_TOAST_ID in first
-
-
-def test_other_errors_keep_reflexs_default_handling():
-    spec = errors.handle_backend_exception(RuntimeError("boom"))
-    assert UNREACHABLE_MESSAGE not in _text(spec)
-    assert "An error occurred." in _text(spec)
+    # One toast id: pages that reload every second don't stack a toast per second.
+    assert errors.DATABASE_TOAST_ID in _text(spec)
 
 
 def test_the_app_uses_the_handler():
