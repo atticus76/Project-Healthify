@@ -18,7 +18,8 @@ from . import google_oauth, token_store
 
 API_BASE = "https://health.googleapis.com/v4/users/me"
 
-# Until accounts exist (FR-05) everyone is the same user, matching the profile page.
+# Still used by the goals and reports schedulers in healthify.py until those
+# modules are ported (S2-04 task 4). The device flow always uses the signed-in user.
 DEMO_USER_ID = "new-user"
 
 # Refresh a little before the access token actually expires.
@@ -45,7 +46,7 @@ class ConnectionFailed(Exception):
 
 # --- public API ------------------------------------------------------------------
 
-def start_connection(user_id: str = DEMO_USER_ID) -> str:
+def start_connection(user_id: str) -> str:
     """Create a pending request and return the Google URL to send the browser to."""
     state = google_oauth.make_state()
     verifier, challenge = google_oauth.make_pkce_pair()
@@ -86,7 +87,7 @@ def complete_connection(params: dict[str, str]) -> str:
     return pending["user_id"]
 
 
-def get_status(user_id: str = DEMO_USER_ID) -> dict[str, Any] | None:
+def get_status(user_id: str) -> dict[str, Any] | None:
     """Connection info safe to show in the UI (no tokens)."""
     conn = token_store.get_connection(user_id)
     if conn is None:
@@ -100,7 +101,7 @@ def get_status(user_id: str = DEMO_USER_ID) -> dict[str, Any] | None:
     }
 
 
-def disconnect(user_id: str = DEMO_USER_ID) -> None:
+def disconnect(user_id: str) -> None:
     conn = token_store.get_connection(user_id)
     if conn is not None:
         # Revoking the refresh token revokes the whole grant.
@@ -108,7 +109,7 @@ def disconnect(user_id: str = DEMO_USER_ID) -> None:
     token_store.delete_connection(user_id)
 
 
-def sync(user_id: str = DEMO_USER_ID) -> dict[str, dict]:
+def sync(user_id: str) -> dict[str, dict]:
     """Fetch the latest data for each SYNC_DATA_TYPES entry. Returns {data_type: response_json}."""
     results: dict[str, dict] = {}
     for data_type, page_size in SYNC_DATA_TYPES.items():

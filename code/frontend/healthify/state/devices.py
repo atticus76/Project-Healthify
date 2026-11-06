@@ -10,6 +10,7 @@ import requests
 
 from backend import alerts, google_health, google_oauth
 from backend import auth_controller
+from backend.db import DatabaseError
 
 from .alerts import notify
 
@@ -29,9 +30,18 @@ class DeviceState(rx.State):
     busy: bool = False
     configured: bool = True
 
+    @staticmethod
+    def _user() -> str:
+        # Still the shared global until S2-04 task 5 moves it into AuthState.
+        return auth_controller.get_active_user()
+
     def _load_status(self):
         self.configured = google_oauth.is_configured()
-        info = google_health.get_status()
+        try:
+            info = google_health.get_status(self._user())
+        except DatabaseError as exc:
+            self.error = str(exc)
+            return
         if info is None:
             self.status, self.email, self.device_name, self.last_sync = "disconnected", "", "", "never"
             return
@@ -50,8 +60,13 @@ class DeviceState(rx.State):
         if not google_oauth.is_configured():
             self.error = "GOOGLE_CLIENT_ID / GOOGLE_CLIENT_SECRET are missing from .env."
             return
+        try:
+            url = google_health.start_connection(self._user())
+        except DatabaseError as exc:
+            self.error = str(exc)
+            return
         # Same-tab navigation to Google's consent screen.
-        return rx.redirect(google_health.start_connection())
+        return rx.redirect(url)
 
     def handle_callback(self):
         """on_load for /devices/callback: Google redirects here with ?code=&state=."""
@@ -65,6 +80,9 @@ class DeviceState(rx.State):
             return rx.redirect("/devices", replace=True)
         except requests.RequestException:
             self.error = "Couldn't reach Google to finish connecting. Check your internet and try again."
+            return rx.redirect("/devices", replace=True)
+        except DatabaseError as exc:
+            self.error = str(exc)
             return rx.redirect("/devices", replace=True)
 
         self.message = "Google account connected."
@@ -85,22 +103,26 @@ class DeviceState(rx.State):
         """Sync, then return the events that deliver any new alerts (US-04)."""
         events = []
         try:
-            results = google_health.sync()
+            results = google_health.sync(self._user())
             self.summaries = google_health.summarize(results)
-            events = notify(
-                alerts.check_telemetry(results, auth_controller.get_active_user())
-            )
+            events = notify(alerts.check_telemetry(results, self._user()))
         except google_health.ReconnectRequired as exc:
             self.error = str(exc)
         except requests.HTTPError as exc:
             self.error = f"Google Health API error ({exc.response.status_code}). Sync failed."
         except requests.RequestException:
             self.error = "Couldn't reach Google Health. Sync failed."
+        except DatabaseError as exc:
+            self.error = str(exc)
         self._load_status()
         return events
 
     def disconnect_account(self):
-        google_health.disconnect()
+        try:
+            google_health.disconnect(self._user())
+        except DatabaseError as exc:
+            self.error = str(exc)
+            return
         self.summaries = []
         self.error = ""
         self.message = "Disconnected and revoked Healthify's access to your Google account."
