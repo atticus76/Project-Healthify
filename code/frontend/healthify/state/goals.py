@@ -5,10 +5,10 @@ from datetime import datetime, timedelta, timezone
 import reflex as rx
 
 from backend import alerts, email_alerts, goals as goals_backend
-from backend import auth_controller
+from .session import SessionState
 
 
-class GoalsState(rx.State):
+class GoalsState(SessionState):
     goals: list[dict[str, str]] = []
     goal_type: str = goals_backend.GOAL_DAILY_STEPS
     target_input: str = "10000"
@@ -34,9 +34,8 @@ class GoalsState(rx.State):
     email_error: str = ""
     sending_test_email: bool = False
 
-    @staticmethod
-    def _user_id() -> str:
-        return auth_controller.get_active_user()
+    def _user_id(self) -> str:
+        return self.username
 
     def load_page(self):
         email_alerts.reload_config()

@@ -60,8 +60,8 @@ def login_page() -> rx.Component:
                     rx.vstack(
                         rx.input(
                             placeholder="Username",
-                            value=AuthState.username,
-                            on_change=AuthState.set_username,
+                            value=AuthState.signup_username,
+                            on_change=AuthState.set_signup_username,
                             width="100%",
                         ),
                         rx.input(

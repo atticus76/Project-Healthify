@@ -1,6 +1,6 @@
 import reflex as rx
 import json
-from backend import alerts, auth_controller, telemetry_store
+from backend import alerts, telemetry_store
 from backend.telemetry_emulator import (
     PROFILES,
     SCENARIOS,
@@ -10,8 +10,9 @@ from backend.telemetry_emulator import (
 from backend import goals as goals_backend
 from backend.auth_controller import get_user, update_user
 from .alerts import notify
+from .session import SessionState
 
-class TelemetryState(rx.State):
+class TelemetryState(SessionState):
     chart_window_seconds: int = 10
     level: str = "Medium"
     scenario: str = "normal"
@@ -32,7 +33,7 @@ class TelemetryState(rx.State):
     chart_cycle_position: int = 0
 
     def load_page(self):
-        user_id = auth_controller.get_active_user()
+        user_id = self.username
         user = get_user(user_id)
         if user:
             self.enabled = bool(user.get("app_state", {}).get("telemetry_enabled", False))
@@ -63,10 +64,10 @@ class TelemetryState(rx.State):
 
     def enable(self):
         self.enabled = True
-        user = get_user(auth_controller.get_active_user()) or {}
+        user = get_user(self.username) or {}
         app_state = dict(user.get("app_state", {}))
         app_state["telemetry_enabled"] = True
-        update_user(auth_controller.get_active_user(), app_state=app_state)
+        update_user(self.username, app_state=app_state)
         return self._generate_data()
 
     def refresh(self):
@@ -80,11 +81,11 @@ class TelemetryState(rx.State):
 
     def disable(self):
         self.enabled = False
-        user = get_user(auth_controller.get_active_user()) or {}
+        user = get_user(self.username) or {}
         app_state = dict(user.get("app_state", {}))
         app_state["telemetry_enabled"] = False
-        update_user(auth_controller.get_active_user(), app_state=app_state)
-        telemetry_store.clear(auth_controller.get_active_user(), "emulator")
+        update_user(self.username, app_state=app_state)
+        telemetry_store.clear(self.username, "emulator")
         self.show_payload = False
         self.summaries = []
         self.payload_json = ""
@@ -96,7 +97,7 @@ class TelemetryState(rx.State):
     def _generate_data(self):
         data = generate_fitbit_data(self.level, scenario=self.scenario)
         # In memory every refresh; saved to the cloud at most once a minute.
-        telemetry_store.save(auth_controller.get_active_user(), data, source="emulator")
+        telemetry_store.save(self.username, data, source="emulator")
         self.summaries = summarize_fitbit_data(data)
         self.payload_json = json.dumps(data, indent=2)
         if self.chart_cycle_position >= self.chart_window_seconds:
@@ -108,7 +109,7 @@ class TelemetryState(rx.State):
         step_value = self._latest_value("steps", data["steps"]["dataPoints"])
         if step_value is not None:
             try:
-                goals_backend.record_steps(auth_controller.get_active_user(), int(step_value))
+                goals_backend.record_steps(self.username, int(step_value))
             except (IndexError, ValueError):
                 pass
         series = {
@@ -156,7 +157,7 @@ class TelemetryState(rx.State):
         )
         self.distance_points = next_points.get("distance_points", self.distance_points)
         self.oxygen_points = next_points.get("oxygen_points", self.oxygen_points)
-        return notify(alerts.check_telemetry(data, auth_controller.get_active_user()))
+        return notify(alerts.check_telemetry(data, self.username), self.username)
 
     def _clear_chart_points(self):
         for field_name in (

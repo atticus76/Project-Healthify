@@ -1,7 +1,8 @@
 import reflex as rx
 from datetime import datetime
 
-from backend import auth_controller, email_alerts, reports as reports_backend
+from backend import email_alerts, reports as reports_backend
+from .session import SessionState
 
 
 def _readable_timestamp(value: str) -> str:
@@ -17,7 +18,7 @@ def _readable_period(start: str, end: str) -> str:
     return f"{_readable_timestamp(start)} through {_readable_timestamp(end)}"
 
 
-class ReportsState(rx.State):
+class ReportsState(SessionState):
     frequency: str = "weekly"
     email: str = ""
     preferences_saved: str = ""
@@ -31,9 +32,8 @@ class ReportsState(rx.State):
     telemetry_summary: list[str] = []
     report_text: str = ""
 
-    @staticmethod
-    def _user_id() -> str:
-        return auth_controller.get_active_user()
+    def _user_id(self) -> str:
+        return self.username
 
     def load_page(self):
         email_alerts.reload_config()

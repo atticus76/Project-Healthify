@@ -9,17 +9,17 @@ import reflex as rx
 import requests
 
 from backend import alerts, google_health, google_oauth
-from backend import auth_controller
 from backend.db import DatabaseError
 
 from .alerts import notify
+from .session import SessionState
 
 
 def _fmt(ts: int | None) -> str:
     return datetime.fromtimestamp(ts).strftime("%b %d, %I:%M %p") if ts else "never"
 
 
-class DeviceState(rx.State):
+class DeviceState(SessionState):
     status: str = "disconnected"  # disconnected | connected | reconnect_required
     email: str = ""
     device_name: str = ""
@@ -30,10 +30,8 @@ class DeviceState(rx.State):
     busy: bool = False
     configured: bool = True
 
-    @staticmethod
-    def _user() -> str:
-        # Still the shared global until S2-04 task 5 moves it into AuthState.
-        return auth_controller.get_active_user()
+    def _user(self) -> str:
+        return self.username
 
     def _load_status(self):
         self.configured = google_oauth.is_configured()
@@ -105,7 +103,7 @@ class DeviceState(rx.State):
         try:
             results = google_health.sync(self._user())
             self.summaries = google_health.summarize(results)
-            events = notify(alerts.check_telemetry(results, self._user()))
+            events = notify(alerts.check_telemetry(results, self._user()), self._user())
         except google_health.ReconnectRequired as exc:
             self.error = str(exc)
         except requests.HTTPError as exc:
