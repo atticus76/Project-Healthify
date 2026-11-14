@@ -58,7 +58,7 @@ Healthify is a web app that pulls telemetry from a user's wearable (heart rate, 
 
 | ID | Requirement | Notes |
 |---|---|---|
-| NFR-01 | The UI is fast and reliable, with response times under 1 second. | |
+| NFR-01 | The UI is fast and reliable, with response times under 1 second. | Measured as the p95 of each interaction's server-side handler time (20 warm runs) on a large seeded account; see [S3-01 spec](features/S3-01-response-time-check.md) |
 | NFR-02 | Third-party data failures and lost connections are handled gracefully: failed syncs are logged, retried with exponential backoff, and surfaced to the user, and the emulator (FR-08) can stand in for live data with a disclaimer. | Added after GenAI review |
 | NFR-03 | Personal health and account information is encrypted. | |
 | NFR-04 | The system supports at least 10 concurrent users on a single host while meeting NFR-01's <1 s response time. | Verify with a load test (e.g., Locust) |
@@ -219,6 +219,7 @@ Things the team still needs to agree on. Resolve these in a meeting or PR, then 
 | 2026-09-28 | NFR-04 set to 10 concurrent users on a single host | Make scalability testable |
 | 2026-10-30 | US-04 alerts delivered in-app plus via the browser Notifications API; heart-rate threshold set | Free, no third-party service; push notification from the scenario without Web Push complexity (S2-03) |
 | 2026-11-02 | US-04 alerts also emailed (SMTP, e.g. a free Gmail app password) to an address set on the Alerts page | Reaches the user when the app is closed; free, standard-library only (S2-03) |
+| 2026-11-14 | NFR-01 measurement defined: an interaction passes when the p95 of 20 warm runs of its server-side handlers is under 1 s, on a seeded account with 2,000 alerts, 25 goals and 52 reports (S3-01) | Make NFR-01 testable; checked by the standalone script `code/scripts/nfr01_response_times.py` |
 
 ---
 

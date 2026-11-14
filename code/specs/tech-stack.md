@@ -26,6 +26,10 @@ Dashboard charts use Reflex's built-in Recharts components (`rx.recharts`), so t
 
 Health alerts (US-04) use Reflex's built-in `rx.toast` for in-app messages and the browser's Notifications API (called through `rx.call_script`) for OS-level pop-ups. Neither needs a third-party service or API key. Alerts, goal reminders, and reports can also be emailed using Python's built-in `smtplib` (`email_alerts.py`) through any SMTP server. We use a Gmail account with an app password, which is free. SMTP settings live in `.env` (see `.env.example`). Web Push is a possible later upgrade.
 
+## Performance check
+
+NFR-01 (<1 s responses) is checked by the standalone script `code/scripts/nfr01_response_times.py` (S3-01). It isn't part of the web app. It seeds a large account in the **test** database (`TEST_DATABASE_URL` only), times each page's Reflex event handlers directly with `time.perf_counter`, and fails any interaction whose p95 is 1 s or more. It uses only the standard library, so there's no new dependency. Load testing with many users is separate (Locust, below). See [features/S3-01-response-time-check.md](features/S3-01-response-time-check.md).
+
 ## Planned
 
 - **Docker:** a Dockerfile that installs Python 3.12 and the pinned Reflex version, for packaging the app only. The database stays on Supabase; there is no PostgreSQL container, including for tests (S2-04).

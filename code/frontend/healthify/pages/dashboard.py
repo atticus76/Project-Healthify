@@ -23,7 +23,7 @@ FEATURES = [
 ]
 SORTED_FEATURES = sorted(FEATURES, key=lambda feature: feature[0].lower())
 
-@rx.page(route="/", on_load=[AuthState.require_login, AlertState.load, TelemetryState.load_page])
+@rx.page(route="/", on_load=[AuthState.require_login, AlertState.load_unread, TelemetryState.load_page])
 def dashboard() -> rx.Component:
     return rx.vstack(
         page_header(),

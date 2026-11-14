@@ -96,7 +96,7 @@ def generate_report(
     days = 1 if not preferences or preferences["frequency"] == "daily" else 7
     start = end - timedelta(days=days)
     user_goals = goals.list_goals(user_id)
-    user_alerts = alerts.list_alerts(user_id)
+    user_alerts = alerts.list_alerts_since(user_id, start.isoformat())  # S3-01: not the whole history
     content = {
         "metrics": _metric_summary(telemetry),
         "goals": [
@@ -111,7 +111,6 @@ def generate_report(
         "alerts": [
             {"title": item["title"], "severity": item["severity"], "message": item["message"]}
             for item in user_alerts
-            if item["started_at"] >= start.isoformat()
         ],
     }
     if not persist:

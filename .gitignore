@@ -1,8 +1,12 @@
 # See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 
-# local env files
+# local env files -- hold passwords (SMTP, Google, database), never commit.
+# Any .env variant (.env.local, .env.backup, ...) is ignored; only the
+# placeholder-only .env.example is tracked. .githooks/pre-commit also blocks them.
 .env*.local
 .env
+.env.*
+!.env.example
 
 
 *.py[cod]
