@@ -202,6 +202,25 @@ def update_user(username: str, **changes: Any) -> None:
         raise ValueError("User account was not found.")
 
 
+def change_password(username: str, current_password: str, new_password: str) -> tuple[bool, str]:
+    """Verify the current password and replace it with a validated password."""
+    validation_error = _valid_password(new_password)
+    if validation_error:
+        return False, validation_error
+    with connect("change password") as conn:
+        row = conn.execute(
+            "SELECT password_hash FROM users WHERE username = %s",
+            (_username_key(username),),
+        ).fetchone()
+        if row is None or row["password_hash"] != _hash_password(current_password):
+            return False, "The current password is incorrect."
+        conn.execute(
+            "UPDATE users SET password_hash = %s WHERE username = %s",
+            (_hash_password(new_password), _username_key(username)),
+        )
+    return True, "Password changed successfully."
+
+
 def set_theme(username: str, theme: str) -> None:
     if theme not in {"light", "dark"}:
         raise ValueError("Theme must be light or dark.")

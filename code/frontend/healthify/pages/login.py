@@ -1,6 +1,65 @@
 import reflex as rx
 
 from ..state.auth import AuthState
+from ..components.brand import brand_mark
+
+
+def _password_field(
+    value: rx.Var[str],
+    on_change,
+    visible: rx.Var[bool],
+    toggle,
+) -> rx.Component:
+    return rx.hstack(
+        rx.input(
+            placeholder="Password",
+            type=rx.cond(visible, "text", "password"),
+            value=value,
+            on_change=on_change,
+            width="100%",
+            padding_right="3.25em",
+        ),
+        rx.icon_button(
+            rx.icon(rx.cond(visible, "eye_off", "eye")),
+            on_click=toggle,
+            variant="ghost",
+            aria_label=rx.cond(visible, "Hide password", "Show password"),
+            position="absolute",
+            right="0.35em",
+            z_index="1",
+        ),
+        width="100%",
+        align="center",
+        position="relative",
+    )
+
+
+def _profile_picture_uploader() -> rx.Component:
+    return rx.vstack(
+        rx.upload.root(
+            rx.cond(
+                AuthState.profile_picture != "",
+                rx.image(
+                    src=AuthState.profile_picture,
+                    width="72px",
+                    height="72px",
+                    border_radius="50%",
+                    object_fit="cover",
+                ),
+                rx.avatar(fallback="?", size="6"),
+            ),
+            rx.text("Add profile picture (optional)", size="2"),
+            id="signup-profile-picture",
+            cursor="pointer",
+            align="center",
+            on_drop=AuthState.handle_profile_picture(
+                rx.upload_files(upload_id="signup-profile-picture")
+            ),
+        ),
+        rx.text(AuthState.profile_picture_error, color="red", size="2"),
+        align="center",
+        width="100%",
+    )
 
 
 @rx.page(route="/login", title="Sign in | Healthify", on_load=AuthState.load_login)
@@ -9,7 +68,12 @@ def login_page() -> rx.Component:
         rx.card(
             rx.vstack(
                 rx.hstack(
-                    rx.heading("Healthify", size="8", color="#2f855a"),
+                    rx.hstack(
+                        brand_mark("34px"),
+                        rx.heading("Healthify", size="8", color="#2f855a"),
+                        align="center",
+                        spacing="2",
+                    ),
                     rx.spacer(),
                     rx.button(
                         rx.cond(AuthState.theme == "light", "🌙", "☀️"),
@@ -47,17 +111,17 @@ def login_page() -> rx.Component:
                             on_change=AuthState.set_identifier,
                             width="100%",
                         ),
-                        rx.input(
-                            placeholder="Password",
-                            type="password",
-                            value=AuthState.password,
-                            on_change=AuthState.set_password,
-                            width="100%",
+                        _password_field(
+                            AuthState.password,
+                            AuthState.set_password,
+                            AuthState.password_visible,
+                            AuthState.toggle_password_visibility,
                         ),
                         spacing="3",
                         width="100%",
                     ),
                     rx.vstack(
+                        _profile_picture_uploader(),
                         rx.input(
                             placeholder="Username",
                             value=AuthState.signup_username,
@@ -71,12 +135,11 @@ def login_page() -> rx.Component:
                             on_change=AuthState.set_email,
                             width="100%",
                         ),
-                        rx.input(
-                            placeholder="Password",
-                            type="password",
-                            value=AuthState.password,
-                            on_change=AuthState.set_password,
-                            width="100%",
+                        _password_field(
+                            AuthState.password,
+                            AuthState.set_password,
+                            AuthState.signup_password_visible,
+                            AuthState.toggle_signup_password_visibility,
                         ),
                         spacing="3",
                         width="100%",
