@@ -52,8 +52,8 @@ def device_card() -> rx.Component:
                     rx.button(
                         "View Telemetry",
                         on_click=rx.redirect("/emulator"),
-                        size="4",
-                        width="240px",
+                        size="2",
+                        width="160px",
                         background_color=rx.color_mode_cond(
                             "#2f855a", "#276749"
                         ),
@@ -102,8 +102,8 @@ def device_card() -> rx.Component:
                     rx.button(
                         "Connect a Device",
                         on_click=rx.redirect("/devices"),
-                        size="4",
-                        width="240px",
+                        size="2",
+                        width="160px",
                         background_color=rx.color_mode_cond(
                             "#2f855a", "#276749"
                         ),
