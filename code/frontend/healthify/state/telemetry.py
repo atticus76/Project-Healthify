@@ -1,6 +1,7 @@
 import reflex as rx
 import json
-from backend import alerts, telemetry_store
+import time
+from backend import alerts, calories, telemetry_store
 from backend.telemetry_emulator import (
     PROFILES,
     SCENARIOS,
@@ -8,7 +9,7 @@ from backend.telemetry_emulator import (
     summarize_fitbit_data,
 )
 from backend import goals as goals_backend
-from backend.auth_controller import get_user, update_user
+from backend.auth_controller import get_user
 from .alerts import notify
 from .session import SessionState
 
@@ -32,11 +33,56 @@ class TelemetryState(SessionState):
     oxygen_points: list[dict[str, int | float | None]] = []
     chart_cycle_position: int = 0
 
+    calorie_target: str = "\u2014"
+    incomplete_profile: bool = False
+    burned_kcal: int = 0
+    consumed_kcal: int = 0
+    _last_calorie_refresh: float = 0
+
+    def load_calories(self):
+        if not self.username:
+            return
+        values = calories.summary(self.username)
+        self.calorie_target = str(values["target"] or "\u2014")
+        self.incomplete_profile = values["incomplete"]
+        self.burned_kcal = int(values["burned"])
+        self.consumed_kcal = values["consumed"]
+        self._last_calorie_refresh = time.monotonic()
+
+    def dashboard_refresh(self):
+        if not self.username:
+            return
+        if time.monotonic() - self._last_calorie_refresh >= 15:
+            self.load_calories()
+        return self.auto_refresh()
+
+    def reset_calories(self):
+        if self.username:
+            calories.reset(self.username)
+            self.load_calories()
+
+    def log_food(self, form: dict):
+        try:
+            kcal = int(form.get("kcal", ""))
+        except (TypeError, ValueError):
+            kcal = 0
+        if not 1 <= kcal <= 10000:
+            return rx.toast("Enter 1 to 10,000 kcal.")
+        if self.username:
+            calories.add_food(self.username, kcal)
+            self.load_calories()
+            from .nutrition import NutritionState
+            return NutritionState.refresh_suggestions
+
     def load_page(self):
         user_id = self.username
+        if not user_id:
+            return rx.redirect("/login")
         user = get_user(user_id)
         if user:
             self.enabled = bool(user.get("app_state", {}).get("telemetry_enabled", False))
+        if self.enabled:
+            self._start_calorie_session()
         if not self.enabled:
             telemetry_store.clear(user_id, "emulator")
         return rx.call_script(
@@ -53,6 +99,7 @@ class TelemetryState(SessionState):
             raise ValueError(f"Unknown simulation level: {value}")
         self.level = value
         if self.enabled:
+            self._start_calorie_session(change=True)
             return self._generate_data()
 
     def set_scenario(self, value: str):
@@ -62,12 +109,14 @@ class TelemetryState(SessionState):
         if self.enabled:
             return self._generate_data()
 
+    def _start_calorie_session(self, change=False, enabled=None):
+        data = generate_fitbit_data(self.level, scenario=self.scenario)
+        rate = self._latest_value("total-calories", data["total-calories"]["dataPoints"])
+        calories.emulator_rate(self.username, rate, change=change, enabled=enabled)
+
     def enable(self):
+        self._start_calorie_session(enabled=True)
         self.enabled = True
-        user = get_user(self.username) or {}
-        app_state = dict(user.get("app_state", {}))
-        app_state["telemetry_enabled"] = True
-        update_user(self.username, app_state=app_state)
         return self._generate_data()
 
     def refresh(self):
@@ -80,11 +129,8 @@ class TelemetryState(SessionState):
             return self._generate_data()
 
     def disable(self):
+        calories.emulator_rate(self.username, None, enabled=False)
         self.enabled = False
-        user = get_user(self.username) or {}
-        app_state = dict(user.get("app_state", {}))
-        app_state["telemetry_enabled"] = False
-        update_user(self.username, app_state=app_state)
         telemetry_store.clear(self.username, "emulator")
         self.show_payload = False
         self.summaries = []

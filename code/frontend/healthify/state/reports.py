@@ -1,3 +1,4 @@
+import json
 import reflex as rx
 from datetime import datetime
 
@@ -30,6 +31,7 @@ class ReportsState(SessionState):
     goal_summary: list[dict[str, str]] = []
     alert_summary: list[dict[str, str]] = []
     telemetry_summary: list[str] = []
+    calorie_lines: list[str] = []
     report_text: str = ""
 
     def _user_id(self) -> str:
@@ -47,7 +49,7 @@ class ReportsState(SessionState):
         if reports_backend.get_report(user_id) is None:
             self._generate_report()
         else:
-            self._load_report()
+            self.refresh_report()
         return rx.call_script(
             "if (window.healthifyReportRefresh) clearInterval(window.healthifyReportRefresh);"
             "window.healthifyReportRefresh = setInterval(() => {"
@@ -82,20 +84,26 @@ class ReportsState(SessionState):
             return
         self._set_report(report)
 
-    def _load_report(self):
-        report = reports_backend.get_report(self._user_id())
-        if report:
-            self._set_report(report)
-
     def refresh_report(self):
         try:
             self._set_report(reports_backend.generate_report(self._user_id(), persist=False))
         except (ValueError, OSError) as exc:
             self.error = str(exc)
 
+    def print_report(self):
+        self._set_report(reports_backend.generate_report(self._user_id(), persist=False))
+        return rx.call_script(
+            "const frame = document.createElement('iframe');"
+            "frame.style.cssText='position:fixed;width:0;height:0;border:0';"
+            "document.body.appendChild(frame);"
+            "const doc=frame.contentDocument; doc.title='Healthify Health Report';"
+            "const text=doc.createElement('pre');text.style.whiteSpace='pre-wrap';"
+            "text.textContent=" + json.dumps(self.report_text) + ";doc.body.appendChild(text);"
+            "frame.contentWindow.onafterprint=()=>frame.remove();frame.contentWindow.print();"
+        )
+
     def export_report(self):
-        if not self.report_text:
-            return
+        self._set_report(reports_backend.generate_report(self._user_id(), persist=False))
         escaped_text = (
             self.report_text.replace("\\", "\\\\")
             .replace("`", "\\`")
@@ -120,12 +128,18 @@ class ReportsState(SessionState):
             "delivery": report["delivery_status"],
             "delivery_error": report["delivery_error"],
         }
+        snapshot = content.get("calories", {})
+        self.calorie_lines = [
+            f"{name.title()}: {snapshot[name]} kcal" if snapshot.get(name) is not None
+            else f"{name.title()}: unavailable"
+            for name in ("target", "burned", "consumed")
+        ]
         self.report_text = self._format_report(report)
         self.metrics_available = content["metrics"]["available"]
         self.metrics_message = content["metrics"]["message"]
         self.telemetry_summary = content["metrics"].get("summaries", [])
         self.goal_summary = [
-            {key: str(value) for key, value in item.items()}
+            {**{key: str(value) for key, value in item.items()}, "unit": item.get("label", "steps")}
             for item in content["goals"]
         ]
         self.alert_summary = [
@@ -141,6 +155,9 @@ class ReportsState(SessionState):
             f"Last updated: {_readable_timestamp(report['generated_at'])}",
             f"Delivery: {report['delivery_status']}",
             "",
+            "Calories",
+            *self.calorie_lines,
+            "",
             "Telemetry",
             content["metrics"]["message"],
             "",
@@ -155,7 +172,7 @@ class ReportsState(SessionState):
         lines.append("")
         lines.append("Fitness goal progress")
         lines.extend(
-            f"- {item['steps']} / {item['target']} steps ({item['percent']}%) - {item['status']}"
+            f"- {item['steps']} / {item['target']} {item.get('label', 'steps')} ({item['percent']}%) - {item['status']}"
             for item in content["goals"]
         )
         if not content["goals"]:

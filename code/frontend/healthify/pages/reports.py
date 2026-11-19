@@ -20,6 +20,8 @@ def _report_content() -> rx.Component:
                     rx.callout(ReportsState.metrics_message, icon="triangle_alert", color_scheme="orange"),
                     rx.callout(ReportsState.metrics_message, icon="activity", color_scheme="green"),
                 ),
+                rx.heading("Calories", size="4"),
+                rx.foreach(ReportsState.calorie_lines, lambda line: rx.text(line)),
                 rx.heading("Live telemetry", size="4"),
                 rx.cond(
                     ReportsState.telemetry_summary.length() > 0,
@@ -38,7 +40,7 @@ def _report_content() -> rx.Component:
                     rx.foreach(
                         ReportsState.goal_summary,
                         lambda goal: rx.text(
-                            goal["steps"], " / ", goal["target"], " steps (",
+                            goal["steps"], " / ", goal["target"], " ", goal["unit"], " (",
                             goal["percent"], "%) — ", goal["status"],
                         ),
                     ),
@@ -61,8 +63,10 @@ def _report_content() -> rx.Component:
         rx.hstack(
             rx.spacer(),
             rx.button(
-                "Print",
-                on_click=ReportsState.export_report,
+                "Print", on_click=ReportsState.print_report, size="1", variant="outline",
+            ),
+            rx.button(
+                "Download", on_click=ReportsState.export_report,
                 size="1",
                 variant="outline",
             ),

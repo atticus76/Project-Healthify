@@ -145,3 +145,41 @@ ALTER TABLE health_reports      ENABLE ROW LEVEL SECURITY;
 ALTER TABLE oauth_pending       ENABLE ROW LEVEL SECURITY;
 ALTER TABLE google_connections  ENABLE ROW LEVEL SECURITY;
 ALTER TABLE telemetry_snapshots ENABLE ROW LEVEL SECURITY;
+
+ALTER TABLE health_profiles ADD COLUMN IF NOT EXISTS height_cm DOUBLE PRECISION;
+ALTER TABLE health_profiles ADD COLUMN IF NOT EXISTS activity_level TEXT;
+ALTER TABLE health_profiles ADD COLUMN IF NOT EXISTS calorie_target INTEGER;
+
+CREATE TABLE IF NOT EXISTS calorie_counters (
+    user_id TEXT PRIMARY KEY REFERENCES users(username) ON DELETE CASCADE,
+    reset_at TIMESTAMPTZ NOT NULL DEFAULT '-infinity',
+    consumed INTEGER NOT NULL DEFAULT 0
+);
+CREATE TABLE IF NOT EXISTS calorie_emulator_sessions (
+    user_id TEXT NOT NULL REFERENCES users(username) ON DELETE CASCADE,
+    started TIMESTAMPTZ NOT NULL,
+    stopped TIMESTAMPTZ,
+    kcal_per_min DOUBLE PRECISION NOT NULL,
+    PRIMARY KEY (user_id, started)
+);
+CREATE UNIQUE INDEX IF NOT EXISTS calorie_emulator_active
+    ON calorie_emulator_sessions(user_id) WHERE stopped IS NULL;
+CREATE TABLE IF NOT EXISTS calorie_device_samples (
+    user_id TEXT NOT NULL REFERENCES users(username) ON DELETE CASCADE,
+    started TIMESTAMPTZ NOT NULL,
+    stopped TIMESTAMPTZ NOT NULL CHECK (stopped > started),
+    kcal DOUBLE PRECISION NOT NULL,
+    PRIMARY KEY (user_id, started, stopped)
+);
+ALTER TABLE calorie_counters ENABLE ROW LEVEL SECURITY;
+ALTER TABLE calorie_emulator_sessions ENABLE ROW LEVEL SECURITY;
+ALTER TABLE calorie_device_samples ENABLE ROW LEVEL SECURITY;
+
+CREATE TABLE IF NOT EXISTS meal_entries (
+    id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    user_id TEXT NOT NULL REFERENCES users(username) ON DELETE CASCADE,
+    logged_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    kcal INTEGER NOT NULL CHECK (kcal >= 0)
+);
+CREATE INDEX IF NOT EXISTS meal_entries_user_time ON meal_entries(user_id, logged_at);
+ALTER TABLE meal_entries ENABLE ROW LEVEL SECURITY;

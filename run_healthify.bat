@@ -41,6 +41,12 @@ if errorlevel 1 (
     exit /b 1
 )
 
+cd /d "%CODE_DIR%"
+"%PYTHON%" -m backend.db.init
+if errorlevel 1 (
+    echo Could not update the database schema. Calorie tracking requires a database connection.
+)
+
 :run
 echo.
 echo Starting Healthify...

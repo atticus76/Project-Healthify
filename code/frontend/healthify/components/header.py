@@ -25,6 +25,8 @@ def page_header() -> rx.Component:
             title="Return to Dashboard",
         ),
         rx.text("Welcome, ", SessionState.username, "!", size="4"),
+        rx.button("Check meal alerts", id="meal-alert-check", display="none",
+                  on_click=AlertState.check_meal_alerts),
         rx.spacer(),
         rx.hstack(
             rx.color_mode.button(),
@@ -79,6 +81,11 @@ def page_header() -> rx.Component:
         padding="1em 2em",
         background_color=rx.color_mode_cond("#2f855a", "#22543d"),
         color="white",
+        on_unmount=rx.call_script("clearInterval(window.healthifyMealAlerts)"),
+        on_mount=rx.call_script("clearInterval(window.healthifyMealAlerts);"
+                                "window.healthifyMealAlerts=setInterval(()=>document.getElementById('meal-alert-check')?.click(),60000);"
+                                "Intl.DateTimeFormat().resolvedOptions().timeZone",
+                                callback=SessionState.set_meal_timezone),
         border_bottom=rx.color_mode_cond(
             "4px solid #276749", "4px solid #1c4532"
         ),
