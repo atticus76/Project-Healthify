@@ -1,7 +1,9 @@
 """Account settings and editable health profile."""
 
 import reflex as rx
+from backend.profile_controller import ACTIVITY_LEVELS
 
+from ..components.measurements import measurement_fields
 from ..components import page_header
 from ..state.auth import AuthState
 
@@ -85,12 +87,12 @@ def account_page() -> rx.Component:
                         min="13",
                         width="100%",
                     ),
-                    rx.text("Weight (lb)", weight="bold"),
-                    rx.input(
-                        value=AuthState.weight_lb,
-                        on_change=AuthState.set_weight_lb,
-                        width="100%",
-                    ),
+                    measurement_fields(),
+                    rx.text("Activity level", weight="bold"),
+                    rx.select(list(ACTIVITY_LEVELS), placeholder="Select activity level",
+                              value=AuthState.activity_level, on_change=AuthState.set_activity_level,
+                              width="100%"),
+                    rx.text("Your saved measurements are used by MyPlate.food for your daily calorie target.", size="1"),
                     rx.text(AuthState.profile_error, color="red"),
                     rx.button("Save changes", type="submit", width="100%"),
                     rx.text(AuthState.profile_saved, color="green"),

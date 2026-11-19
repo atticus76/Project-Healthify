@@ -25,7 +25,7 @@ def _fmt(iso: str) -> str:
 def _browser_notification(alert: dict) -> str:
     # tag stops the OS stacking duplicates; urgent alerts stay until dismissed.
     options = {
-        "body": f"{alert['message']}\n{alerts.DISCLAIMER}",
+        "body": alert["message"] if alert.get("kind", "").startswith("missing_") else f"{alert['message']}\n{alerts.DISCLAIMER}",
         "tag": f"healthify-alert-{alert['id']}",
         "requireInteraction": alert["severity"] == alerts.SEVERITY_URGENT,
     }
@@ -60,6 +60,25 @@ class AlertState(SessionState):
     email_message: str = ""
     email_error: str = ""
     sending_test: bool = False
+
+    _meal_alert_id: int = 0
+    _meal_alert_user: str = ""
+
+    def check_meal_alerts(self):
+        if not self.username:
+            return
+        if self._meal_alert_user != self.username:
+            self._meal_alert_id = 0
+            self._meal_alert_user = self.username
+        rows = alerts.recent_meal_alerts(self.username, self._meal_alert_id)
+        if rows:
+            self._meal_alert_id = max(row["id"] for row in rows)
+            self.load()
+            events = []
+            for row in rows:
+                events.extend([rx.toast.info(row["message"], title=row["title"]),
+                               rx.call_script(_browser_notification(row))])
+            return events
 
     def load(self):
         user_id = self.username

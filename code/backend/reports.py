@@ -16,7 +16,7 @@ from typing import Any
 
 from backend.db import connect
 
-from . import alerts, email_alerts, goals, telemetry_emulator, telemetry_store
+from . import alerts, calories, email_alerts, goals, telemetry_emulator, telemetry_store
 
 log = logging.getLogger(__name__)
 
@@ -97,12 +97,15 @@ def generate_report(
     start = end - timedelta(days=days)
     user_goals = goals.list_goals(user_id)
     user_alerts = alerts.list_alerts(user_id)
+    totals = calories.summary(user_id)
     content = {
+        "calories": {"target": totals["target"], "burned": int(totals["burned"]), "consumed": totals["consumed"]},
         "metrics": _metric_summary(telemetry),
         "goals": [
             {
                 "target": item["target"],
                 "steps": item["steps"],
+                **({"label": goals.LABELS[item["goal_type"]]} if item["goal_type"] != goals.GOAL_DAILY_STEPS else {}),
                 "status": item["status"],
                 "percent": min(100, int(item["steps"] * 100 / item["target"])),
             }

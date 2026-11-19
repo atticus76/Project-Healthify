@@ -12,10 +12,14 @@ from datetime import datetime, timedelta, timezone
 from typing import Any
 
 from backend.db import connect
+from backend import calories
 
 log = logging.getLogger(__name__)
 
 GOAL_DAILY_STEPS = "daily_steps"
+BURN = "calories_burned"
+LIMIT = "consumed_below"
+LABELS = {GOAL_DAILY_STEPS: "Step Count", BURN: "Calories burned", LIMIT: "Calories consumed below limit"}
 MILESTONES = (25, 50, 75, 100)
 REMINDER_HOURS = (2, 8, 16)
 MOTIVATIONAL_PROMPT = (
@@ -42,7 +46,7 @@ def next_local_midnight(now: datetime | None = None) -> datetime:
 
 def _validate_target(target: int) -> int:
     if not isinstance(target, int) or not 1 <= target <= 1_000_000:
-        raise ValueError("Step target must be a whole number between 1 and 1,000,000.")
+        raise ValueError("Target must be a whole number between 1 and 1,000,000.")
     return target
 
 
@@ -56,7 +60,7 @@ _SELECT_GOALS = """
         COALESCE(p.milestones_sent, '') AS milestones_sent,
         COALESCE(p.reminders_sent, '') AS reminders_sent
     FROM health_goals g
-    LEFT JOIN goal_progress p ON p.goal_id = g.id
+    JOIN goal_progress p ON p.goal_id = g.id
 """
 _NEWEST_FIRST = " ORDER BY g.created_at DESC, g.id DESC"
 
@@ -99,13 +103,13 @@ def _goal_row(conn, user_id: str, goal_id: int | None) -> dict[str, Any]:
     """The user's goal with this id, or their newest goal if goal_id is None."""
     if goal_id is None:
         row = conn.execute(
-            _SELECT_GOALS + " WHERE g.user_id = %s" + _NEWEST_FIRST + " LIMIT 1", (user_id,)
+            _SELECT_GOALS + " WHERE g.user_id = %s AND g.goal_type = %s" + _NEWEST_FIRST + " LIMIT 1", (user_id, GOAL_DAILY_STEPS)
         ).fetchone()
         if not row:
             raise ValueError("Set a step goal first.")
         return row
     row = conn.execute(
-        _SELECT_GOALS + " WHERE g.id = %s AND g.user_id = %s", (goal_id, user_id)
+        _SELECT_GOALS + " WHERE g.id = %s AND g.user_id = %s FOR UPDATE OF g,p", (goal_id, user_id)
     ).fetchone()
     if not row:
         raise ValueError("Goal was not found.")
@@ -134,7 +138,7 @@ def add_goal(
     reminder_50_enabled: bool = True,
     reminder_75_enabled: bool = True,
 ) -> dict[str, Any]:
-    if goal_type != GOAL_DAILY_STEPS:
+    if goal_type not in LABELS:
         raise ValueError("Unsupported goal type.")
     target = _validate_target(target)
     created = _now()
@@ -171,15 +175,17 @@ def _rollover_daily(conn, goal: dict[str, Any]) -> dict[str, Any] | None:
     created = _now()
     row = _insert_goal(
         conn, goal["user_id"], goal["goal_type"], goal["target"], True,
-        goal["reminders_enabled"], True, True, True, next_local_midnight(created), created,
+        goal["reminders_enabled"], goal["reminder_25_enabled"], goal["reminder_50_enabled"], goal["reminder_75_enabled"], next_local_midnight(created), created,
     )
     return {"id": row["id"], "created_at": row["created_at"]}
 
 
 def _finish(conn, goal: dict[str, Any]) -> tuple[str, str, dict[str, Any] | None]:
     """Mark a goal complete/incomplete and roll daily goals over."""
-    status = "complete" if goal["steps"] >= goal["target"] else "incomplete"
-    prompt = MOTIVATIONAL_PROMPT if status == "incomplete" else ""
+    reached = goal["steps"] >= goal["target"]
+    successful = not reached if goal["goal_type"] == LIMIT else reached
+    status = "complete" if successful else "incomplete"
+    prompt = MOTIVATIONAL_PROMPT if status == "incomplete" and goal["goal_type"] == GOAL_DAILY_STEPS else ""
     conn.execute(
         "UPDATE goal_progress SET status = %s, prompt = %s WHERE goal_id = %s",
         (status, prompt, goal["id"]),
@@ -197,6 +203,8 @@ def record_steps(
         raise ValueError("Enter a whole number of steps to add.")
     with connect("record steps") as conn:
         goal = _goal_row(conn, user_id, goal_id)
+        if goal["goal_type"] != GOAL_DAILY_STEPS:
+            raise ValueError("Calories are tracked automatically.")
         if goal["status"] != "in_progress" or _parse_time(goal["deadline_at"]) <= _now():
             raise ValueError("This goal has ended and can no longer be updated.")
         new_steps = goal["steps"] + steps
@@ -227,9 +235,33 @@ def record_steps(
     return {"steps": new_steps, "target": goal["target"], "milestones": reached, "status": status, "prompt": ""}
 
 
+def _sync_calorie_goal(conn, goal, now):
+    end = min(now, _parse_time(goal["deadline_at"]))
+    values = calories.period_summary(conn, goal["user_id"], _parse_time(goal["created_at"]), end)
+    field = "burned" if goal["goal_type"] == BURN else "consumed"
+    amount = int(values[field])
+    sent = _milestones(goal["milestones_sent"])
+    reached = [n for n in MILESTONES if amount * 100 >= goal["target"] * n and n not in sent]
+    if amount != goal["steps"] or reached:
+        conn.execute("UPDATE goal_progress SET steps=%s, milestones_sent=%s WHERE goal_id=%s",
+                     (amount, ",".join(map(str, sorted(sent + reached))), goal["id"]))
+    if goal["goal_type"] == BURN and not goal["is_daily"] and amount >= goal["target"]:
+        conn.execute("UPDATE goal_progress SET status='complete' WHERE goal_id=%s", (goal["id"],))
+    goal["steps"] = amount
+    notices = []
+    for n in reached:
+        enabled = goal["reminders_enabled"] if n == 100 else goal[f"reminder_{n}_enabled"]
+        if enabled:
+            notices.append((goal["user_id"], {"title": LABELS[goal["goal_type"]],
+                            "message": f"You have {field} {amount:,} kcal ({n}% milestone of {goal['target']:,} kcal)."}))
+    return notices
+
+
 def end_goal(user_id: str, progress_date: Any = None, goal_id: int | None = None) -> dict[str, Any]:
     with connect("end goal") as conn:
         goal = _goal_row(conn, user_id, goal_id)
+        if goal["goal_type"] != GOAL_DAILY_STEPS and goal["status"] == "in_progress":
+            _sync_calorie_goal(conn, goal, _now())
         status, prompt, rollover = _finish(conn, goal)
     return {"steps": goal["steps"], "target": goal["target"], "status": status, "prompt": prompt, "rollover": rollover}
 
@@ -249,11 +281,14 @@ def _refresh(conn, goals_in_progress: list[dict[str, Any]]) -> list[tuple[str, d
     now = _now()
     due = []
     for goal in goals_in_progress:
+        unit = "steps" if goal["goal_type"] == GOAL_DAILY_STEPS else "kcal"
+        if unit == "kcal":
+            due.extend(_sync_calorie_goal(conn, goal, now))
         if now >= _parse_time(goal["deadline_at"]):
             _finish(conn, goal)
             due.append((goal["user_id"], {
                 "title": "Goal deadline reached",
-                "message": f"Your goal ended with {goal['steps']:,} of {goal['target']:,} steps.",
+                "message": f"Your goal ended with {goal['steps']:,} of {goal['target']:,} {unit}.",
             }))
             continue
         if not goal["reminders_enabled"] or goal["steps"] != 0:
@@ -266,7 +301,7 @@ def _refresh(conn, goals_in_progress: list[dict[str, Any]]) -> list[tuple[str, d
         for hour in new_hours:
             due.append((goal["user_id"], {
                 "title": "Goal progress reminder",
-                "message": f"No progress has been recorded after {hour} hours. Every step counts.",
+                "message": f"No progress has been recorded after {hour} hours.",
             }))
         conn.execute(
             "UPDATE goal_progress SET reminders_sent = %s WHERE goal_id = %s",
@@ -278,7 +313,7 @@ def _refresh(conn, goals_in_progress: list[dict[str, Any]]) -> list[tuple[str, d
 def refresh_reminders(user_id: str) -> list[dict[str, Any]]:
     with connect("check goal reminders") as conn:
         rows = conn.execute(
-            _SELECT_GOALS + " WHERE g.user_id = %s AND p.status = 'in_progress'", (user_id,)
+            _SELECT_GOALS + " WHERE g.user_id = %s AND p.status = 'in_progress' FOR UPDATE OF g,p", (user_id,)
         ).fetchall()
         return [notification for _, notification in _refresh(conn, rows)]
 
@@ -286,11 +321,11 @@ def refresh_reminders(user_id: str) -> list[dict[str, Any]]:
 def refresh_all_reminders() -> list[tuple[str, dict[str, Any]]]:
     """Check every user's goals in progress. Returns (user_id, notification) pairs."""
     with connect("check all goal reminders") as conn:
-        rows = conn.execute(_SELECT_GOALS + " WHERE p.status = 'in_progress'").fetchall()
+        rows = conn.execute(_SELECT_GOALS + " WHERE p.status = 'in_progress' FOR UPDATE OF g,p").fetchall()
         return _refresh(conn, rows)
 
 
-def start_scheduler(interval_seconds: int = 300) -> None:
+def start_scheduler(interval_seconds: int = 60) -> None:
     """Every few minutes, end overdue goals and email due reminders, for every user."""
     global _scheduler_started
     if _scheduler_started:
@@ -298,11 +333,13 @@ def start_scheduler(interval_seconds: int = 300) -> None:
     _scheduler_started = True
     import threading
     import time
-    from . import email_alerts
+    from . import alerts, email_alerts
 
     def run() -> None:
         while True:
             try:
+                for user_id, notification in alerts.missing_meal_alerts():
+                    email_alerts.dispatch(user_id, [notification])
                 for user_id, notification in refresh_all_reminders():
                     email_alerts.dispatch(user_id, [{
                         "title": notification["title"],

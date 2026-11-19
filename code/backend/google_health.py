@@ -11,12 +11,13 @@ from __future__ import annotations
 import logging
 import threading
 import time
-from datetime import datetime
+from datetime import UTC, datetime
 from typing import Any
 
 import requests
 
-from backend.db import DatabaseError
+from backend.db import DatabaseError, connect
+from backend.calories import record_device_samples
 
 from . import alerts, email_alerts, google_oauth, telemetry_store, token_store
 
@@ -129,10 +130,43 @@ def sync(user_id: str) -> dict[str, dict]:
     results: dict[str, dict] = {}
     for data_type, page_size in SYNC_DATA_TYPES.items():
         results[data_type] = _api_get(user_id, f"/dataTypes/{data_type}/dataPoints", {"pageSize": page_size})
+    _sync_calories(user_id)
     token_store.record_sync(user_id, _device_name(results), int(_now() + SYNC_EVERY_S))
     # Saved right away so reports (and other computers) see real device data.
     telemetry_store.save(user_id, results, source="google", force=True)
     return results
+
+
+def _sync_calories(user_id: str) -> None:
+    connection = token_store.get_connection(user_id)
+    if not connection:
+        raise ReconnectRequired("Reconnect the device to sync calories.")
+    # Re-read the past day to include late or corrected device readings.
+    since = max(connection["connected_at"], (connection["last_sync_at"] or 0) - 86400)
+    start = since - since % 60
+    end = int(_now()) // 60 * 60
+    while start < end:
+        stop = min(start + 86400, end)
+        body = {
+            "range": {"startTime": datetime.fromtimestamp(start, UTC).isoformat(),
+                      "endTime": datetime.fromtimestamp(stop, UTC).isoformat()},
+            "windowSize": "60s",
+        }
+        for attempt in range(2):
+            token = _access_token(user_id, force_refresh=attempt > 0)
+            response = requests.post(
+                f"{API_BASE}/dataTypes/total-calories/dataPoints:rollUp",
+                json=body, headers={"Authorization": f"Bearer {token}"},
+                timeout=google_oauth.REQUEST_TIMEOUT_S,
+            )
+            if response.status_code != 401 or attempt:
+                response.raise_for_status()
+                break
+        points = response.json().get("rollupDataPoints", [])
+        if points:
+            with connect("sync Fitbit calories") as conn:
+                record_device_samples(conn, user_id, points, connection["connected_at"])
+        start = stop
 
 
 def _failure_message(exc: Exception) -> tuple[str, int]:

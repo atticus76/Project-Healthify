@@ -57,7 +57,12 @@ class GoalsState(SessionState):
         return events
 
     def refresh_goals(self):
+        notices = []
+        if any(goal["unit"] == "kcal" for goal in self.goals):
+            notices = goals_backend.refresh_reminders(self._user_id())
         self._load_goals()
+        if notices:
+            return self._deliver_notifications(notices)
 
     def _load_goals(self):
         self.goals = []
@@ -67,7 +72,8 @@ class GoalsState(SessionState):
             self.goals.append(
                 {
                     "id": str(item["id"]),
-                    "label": "Step Count" + (" (daily)" if item["is_daily"] else ""),
+                    "unit": "steps" if item["goal_type"] == goals_backend.GOAL_DAILY_STEPS else "kcal",
+                    "label": goals_backend.LABELS[item["goal_type"]] + (" (daily)" if item["is_daily"] else ""),
                     "target": str(target),
                     "steps": str(steps),
                     "percent": str(min(100, int(steps * 100 / target))),
@@ -98,6 +104,7 @@ class GoalsState(SessionState):
 
     def set_goal_type(self, value: str):
         self.goal_type = value
+        self.target_input = "10000" if value == goals_backend.GOAL_DAILY_STEPS else ""
 
     def set_target_input(self, value: str):
         self.target_input = value

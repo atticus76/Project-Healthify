@@ -68,6 +68,10 @@ TABLES = (
     "oauth_pending",
     "google_connections",
     "telemetry_snapshots",
+    "meal_entries",
+    "calorie_counters",
+    "calorie_device_samples",
+    "calorie_emulator_sessions",
 )
 
 
