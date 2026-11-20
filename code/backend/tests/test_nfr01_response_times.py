@@ -15,7 +15,7 @@ from pathlib import Path
 
 import pytest
 
-from backend import alerts, auth_controller, reports
+from backend import alerts, auth_controller, profile_controller, reports
 from backend.db import connect
 from scripts import nfr01_response_times as check
 
@@ -43,7 +43,9 @@ def _users_in_test_database(monkeypatch: pytest.MonkeyPatch) -> list[str]:
 # Scenario: Every interaction meets the budget with a large account
 # Scenario: Cold loads are reported separately
 # Scenario: The seed is checked before timing
-def test_every_interaction_meets_the_budget_with_a_large_account(live_url_elsewhere):
+def test_every_interaction_meets_the_budget_with_a_large_account(live_url_elsewhere, monkeypatch):
+    # Measure Healthify's handler and database work independently of MyPlate latency.
+    monkeypatch.setattr(profile_controller, "myplate_target", lambda *args: 2400)
     report = check.run(runs=3, budget_ms=1000, sizes=SMALL)
 
     assert report.seeded == {

@@ -437,7 +437,10 @@ def build_interactions(context: Context) -> list[Interaction]:
     deletable: list[str] = []
 
     def fill_profile():
-        auth.gender, auth.age, auth.weight_lb = "Male", "29", "175"
+        auth.gender, auth.age = "Male", "29"
+        auth.weight_input, auth.weight_unit = "175", "lb"
+        auth.height_input, auth.height_unit = "178", "cm"
+        auth.activity_level = "Moderately active"
 
     def save_profile():
         Auth.save_profile.fn(auth)
