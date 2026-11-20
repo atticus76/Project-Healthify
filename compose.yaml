@@ -1,0 +1,21 @@
+# Usage:  docker compose up --build      (then open http://localhost:3000)
+#         docker compose run --rm app pytest
+services:
+  app:
+    build: .
+    ports:
+      - "3000:3000"   # frontend; also the Google OAuth redirect (localhost:3000/devices/callback)
+      - "8000:8000"   # backend; the browser talks to it directly at localhost:8000
+    env_file: .env    # DATABASE_URL, Google + SMTP settings; copy .env.example if you don't have one
+    volumes:
+      # Mount the repo so edits on your laptop show up immediately and Reflex hot-reloads.
+      - .:/app
+      # Keep Reflex's generated frontend inside Docker, not in your repo folder,
+      # so it doesn't clash with a .web built on your host OS.
+      - web:/app/code/frontend/.web
+      # Cache the bun download so only the very first start is slow.
+      - reflex-cache:/root/.local/share/reflex
+
+volumes:
+  web:
+  reflex-cache:

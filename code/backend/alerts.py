@@ -264,3 +264,44 @@ def set_alert_email(user_id: str, email: str) -> None:
             """,
             (user_id, email.strip()),
         )
+
+
+def recent_meal_alerts(user, after_id):
+    with connect("load new meal alerts") as conn:
+        return conn.execute("""SELECT * FROM health_alerts WHERE user_id=%s AND id>%s
+                            AND kind IN ('missing_breakfast','missing_lunch','missing_dinner')
+                            AND acknowledged=0 AND created_at::timestamp AT TIME ZONE 'UTC'
+                            >= now() - interval '2 minutes' ORDER BY id""", (user,after_id)).fetchall()
+
+
+def missing_meal_alerts(now=None):
+    """Create each missing-meal notification once at the account's local cutoff."""
+    from zoneinfo import ZoneInfo
+
+    instant = now or datetime.now(timezone.utc)
+    due = []
+    with connect("check missing meals") as conn:
+        zones = conn.execute("SELECT DISTINCT app_state->>'meal_timezone' AS zone FROM users").fetchall()
+        for row in zones:
+            zone = row["zone"]
+            local = instant.astimezone(ZoneInfo(zone)) if zone else instant.astimezone()
+            start = local.replace(hour=0, minute=0, second=0, microsecond=0)
+            for meal, hour, minute in (("breakfast", 10, 0), ("lunch", 14, 30), ("dinner", 20, 0)):
+                cutoff = local.replace(hour=hour, minute=minute, second=0, microsecond=0)
+                if local < cutoff:
+                    break
+                title = f"No {meal} entry"
+                message = f"Did you forget to log {meal}? Add it in the Calories card."
+                stamp = cutoff.astimezone(timezone.utc).isoformat()
+                rows = conn.execute("""
+                    INSERT INTO health_alerts(user_id,kind,severity,title,message,started_at,ended_at)
+                    SELECT username,%s,'info',%s,%s,%s,%s FROM users u
+                    WHERE (app_state->>'meal_timezone') IS NOT DISTINCT FROM %s::text
+                    AND u.created_at::timestamp AT TIME ZONE 'UTC' <= %s
+                    AND NOT EXISTS (SELECT 1 FROM meal_entries WHERE user_id=u.username
+                                    AND logged_at >= %s AND logged_at <= %s)
+                    ON CONFLICT(user_id,kind,started_at) DO NOTHING RETURNING user_id
+                """, ("missing_"+meal, title, message, stamp, stamp, zone, cutoff, start, cutoff)).fetchall()
+                due.extend((r["user_id"], {"title":title,"message":message,"severity":"info"}) for r in rows)
+                start = cutoff + timedelta(microseconds=1)
+    return due

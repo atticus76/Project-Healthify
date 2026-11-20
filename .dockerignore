@@ -1,0 +1,20 @@
+# Keep the image small and secrets out of it. Secrets reach the container via
+# env_file / the bind mount at runtime, never baked into the image.
+.git
+.venv
+.claude
+.pytest_cache
+**/__pycache__
+*.py[cod]
+**/.web
+**/.states
+*.db
+docs
+tech-stack.bundle
+
+.env
+.env*.local
+client_secret*.json
+.token.json
+data/accounts.json
+code/backend/users.txt

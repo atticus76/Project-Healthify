@@ -51,6 +51,7 @@ class DeviceConnectionFlowTest(unittest.TestCase):
     def setUp(self):
         auth_controller.register(USER, "", "Testpass1!")
         self.patches = [
+            mock.patch("backend.google_health.requests.post", return_value=FakeResponse(200, {"rollupDataPoints": []})),
             mock.patch.dict("os.environ", {"GOOGLE_CLIENT_ID": "cid", "GOOGLE_CLIENT_SECRET": "secret"}),
         ]
         for p in self.patches:

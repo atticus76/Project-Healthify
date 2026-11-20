@@ -4,13 +4,28 @@ from backend import goals as goals_backend
 from backend import google_health
 from backend import reports as reports_backend
 from .errors import handle_backend_exception
-from .pages import dashboard, profile, emulator, devices, alerts, goals, reports, login
-from .pages.placeholders import cloud_data, disclaimer
+from .pages import (
+    account,
+    alerts,
+    dashboard,
+    devices,
+    emulator,
+    goals,
+    login,
+    profile,
+    reports,
+)
+from .pages.placeholders import disclaimer
 
 # Stop with a clear message instead of failing on the first sign-in (S2-04).
 db.require_database_url()
 
-app = rx.App(backend_exception_handler=handle_backend_exception)
+app = rx.App(
+    backend_exception_handler=handle_backend_exception,
+    head_components=[
+        rx.el.link(rel="icon", href="/leaf.svg", type="image/svg+xml")
+    ],
+)
 goals_backend.start_scheduler()
 reports_backend.start_scheduler()
 google_health.start_scheduler()

@@ -10,11 +10,29 @@ substate to redefine a parent's var.
 """
 
 import reflex as rx
+from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
+from backend.db import connect
 
 
 class SessionState(rx.State):
     # Set only by a successful sign-in or sign-up; never by typing in a form.
     username: str = ""
+
+    meal_timezone: str = ""
+    _timezone_user: str = ""
+
+    def set_meal_timezone(self, name: str):
+        if not self.username or (name == self.meal_timezone and self._timezone_user == self.username):
+            return
+        try:
+            ZoneInfo(name)
+        except (ZoneInfoNotFoundError, ValueError, TypeError):
+            return
+        with connect("save meal time zone") as conn:
+            conn.execute("UPDATE users SET app_state=jsonb_set(app_state,'{meal_timezone}',to_jsonb(%s::text)) "
+                         "WHERE username=%s", (name, self.username))
+        self.meal_timezone = name
+        self._timezone_user = self.username
 
     def require_login(self):
         if not self.username:

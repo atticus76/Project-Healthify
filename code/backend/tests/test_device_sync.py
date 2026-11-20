@@ -47,6 +47,7 @@ def clock(monkeypatch: pytest.MonkeyPatch):
         now = NOW
 
     monkeypatch.setattr(google_health, "_now", lambda: Clock.now)
+    monkeypatch.setattr(google_health, "_sync_calories", lambda user_id: None)
     return Clock
 
 

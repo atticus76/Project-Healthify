@@ -24,7 +24,7 @@ def _goal_row(goal: dict[str, str]) -> rx.Component:
             style={"width": "24%", "vertical_align": "top"},
         ),
         rx.table.cell(
-            rx.text(goal["steps"], " / ", goal["target"], " steps"),
+            rx.text(goal["steps"], " / ", goal["target"], " ", goal["unit"]),
             style={"width": "14%", "vertical_align": "top"},
         ),
         rx.table.cell(
@@ -38,15 +38,15 @@ def _goal_row(goal: dict[str, str]) -> rx.Component:
         ),
         rx.table.cell(
             rx.hstack(
-                rx.input(
+                rx.cond(goal["unit"] == "steps", rx.hstack(rx.input(
                     type="number",
                     min="0",
-                    placeholder=                    "Add steps",
+                    placeholder="Add steps",
                     on_change=GoalsState.set_today_steps_input,
                     width="130px",
                 ),
                 rx.button("Update", on_click=GoalsState.record_steps(goal["id"]), size="2",
-                          disabled=goal["status"] != "In Progress"),
+                          disabled=goal["status"] != "In Progress"))),
                 rx.button("End day", on_click=GoalsState.end_goal(goal["id"]), size="2",
                           variant="outline", disabled=goal["status"] != "In Progress"),
                 rx.button("Delete", on_click=GoalsState.delete_goal(goal["id"]), size="2",
@@ -80,22 +80,27 @@ def _goal_dialog() -> rx.Component:
                     rx.select.trigger(width="100%"),
                     rx.select.content(
                         rx.select.item("Step Count", value="daily_steps"),
+                        rx.select.item("Calories burned", value="calories_burned"),
+                        rx.select.item("Calories consumed below limit", value="consumed_below"),
                     ),
                     value=GoalsState.goal_type,
                     on_change=GoalsState.set_goal_type,
                 ),
-                rx.text("Target", weight="bold"),
+                rx.text(rx.match(GoalsState.goal_type, ("calories_burned", "How many kcal do you want to burn?"),
+                                 ("consumed_below", "Stay below how many consumed kcal?"), "Step target"), weight="bold"),
                 rx.input(
                     type="number",
                     min="1",
                     max="1000000",
                     value=GoalsState.target_input,
                     on_change=GoalsState.set_target_input,
-                    placeholder="e.g. 10000",
+                    placeholder="Enter a whole number",
                     width="100%",
                 ),
                 rx.checkbox(
-                    "Enable completion reminder (100%)",
+                    rx.cond(GoalsState.goal_type == "consumed_below",
+                            "Notify when the intake limit is reached (100%)",
+                            "Enable completion reminder (100%)"),
                     checked=GoalsState.reminders_enabled,
                     on_change=GoalsState.set_reminders_enabled,
                 ),
@@ -291,7 +296,7 @@ def goals_page() -> rx.Component:
                         rx.table.header(
                             rx.table.row(
                                 rx.table.column_header_cell("Goal"),
-                                rx.table.column_header_cell("Steps"),
+                                rx.table.column_header_cell("Amount"),
                                 rx.table.column_header_cell("Progress"),
                                 rx.table.column_header_cell("Update"),
                             ),

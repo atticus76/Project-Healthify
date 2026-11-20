@@ -1,0 +1,45 @@
+name: Tests
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+jobs:
+  pytest:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: healthify_test
+        ports:
+          - 5432:5432
+        # Wait until Postgres is accepting connections before running steps
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    env:
+      TEST_DATABASE_URL: postgresql://postgres:postgres@localhost:5432/healthify_test
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12" # matches your Dockerfile
+          cache: pip
+          cache-dependency-path: code/requirements.txt
+
+      - name: Install dependencies
+        run: pip install -r code/requirements.txt
+
+      - name: Run tests
+        run: pytest -rs # -rs prints the reason for every skipped test
