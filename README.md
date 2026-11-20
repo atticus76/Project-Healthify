@@ -1,5 +1,15 @@
 # Healthify
 
+## Publish and deploy
+
+The workflow in `.github/workflows/tests.yaml` runs pytest with PostgreSQL on pull requests to `main`. After a merge or push to `main`, it tests the merged commit, builds the root Dockerfile, and pushes the image to Docker Hub with both the full commit SHA and `latest` tags.
+
+1. Create a Docker Hub repository. In GitHub under **Settings → Secrets and variables → Actions**, add the repository variable `DOCKERHUB_IMAGE` (for example, `yourteam/healthify`). Add repository secrets `DOCKERHUB_USERNAME` and `DOCKERHUB_TOKEN` for an account with push access. Use a Docker Hub access token with write permission.
+2. Merge the workflow into `main` to publish the first image. On Render, create a Web Service from the existing image `docker.io/yourteam/healthify:latest`, substituting the exact repository from step 1. Supply registry credentials if the image is private.
+3. In Render, set the **Docker Command** to `sh /app/code/scripts/start-render.sh` and the environment variable `DATABASE_URL` to the app's PostgreSQL connection string. The command initializes the schema and serves the frontend and backend together on Render's port. Set any optional credentials needed for the features your team uses.
+4. Copy the service's deploy hook into the GitHub repository secret `RENDER_DEPLOY_HOOK`, then set the repository variable `DEPLOY_TO_RENDER` to `true`. Subsequent successful pushes to `main` request deployment of the exact commit tag. Check deployment completion in Render.
+5. For submission, capture the successful Actions steps, matching Docker Hub tag, and Render settings with secret values hidden. Open the public URL in a private window, sign in with a test account, create a goal, and confirm it persists after refresh. Record what you observed and capture the running app with its URL visible.
+
 ## Getting Started
 
 You need **Python 3.12** (see [tech-stack.md](code/specs/tech-stack.md)) and Windows PowerShell. Reflex downloads its own JavaScript tooling the first time it runs, so you don't need Node.
