@@ -3,8 +3,8 @@
 Spec: code/specs/features/S2-03-health-abnormality-alerts.md
 
 Sends each new alert to the address saved on the Alerts page (or ALERT_EMAIL_TO
-from .env if none is saved) over SMTP with Python's built-in smtplib. With a
-Gmail account and an app password this is free. See .env.example for setup.
+from .env if none is saved) via the configured HTTPS or SMTP provider.
+See .env.example for sender settings.
 
 Sending happens on a background thread so a slow mail server never freezes the
 page. Failures are logged; the in-app and browser alerts still go out.
@@ -21,6 +21,7 @@ from email.message import EmailMessage
 from pathlib import Path
 from typing import Any
 
+import requests
 from dotenv import load_dotenv
 
 from . import alerts
@@ -35,7 +36,7 @@ EMAIL_PATTERN = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
 
 
 class EmailNotConfigured(Exception):
-    """SMTP credentials are missing from .env."""
+    """The selected email provider is missing required settings."""
 
 
 def reload_config() -> None:
@@ -48,6 +49,8 @@ def is_valid_address(address: str) -> bool:
 
 
 def is_configured() -> bool:
+    if os.environ.get("RESEND_API_KEY"):
+        return bool(os.environ.get("SMTP_FROM"))
     return bool(os.environ.get("SMTP_USERNAME") and os.environ.get("SMTP_PASSWORD"))
 
 
@@ -87,8 +90,27 @@ def send(message: EmailMessage) -> None:
     """Send one message. Raises EmailNotConfigured or smtplib/OSError errors."""
     if not is_configured():
         raise EmailNotConfigured(
-            "Email isn't set up: add SMTP_USERNAME and SMTP_PASSWORD to .env."
+            "Configure RESEND_API_KEY and SMTP_FROM for HTTPS email, or SMTP credentials for SMTP."
         )
+    if api_key := os.environ.get("RESEND_API_KEY"):
+        payload = {
+            "from": str(message["From"]), "to": [str(message["To"])],
+            "subject": str(message["Subject"]), "text": message.get_content(),
+        }
+        headers = {key: str(message[key]) for key in ("X-Priority", "Importance") if key in message}
+        if headers:
+            payload["headers"] = headers
+        try:
+            response = requests.post(
+                "https://api.resend.com/emails", json=payload,
+                headers={"Authorization": f"Bearer {api_key}"},
+                timeout=SMTP_TIMEOUT_S, allow_redirects=False,
+            )
+        except requests.RequestException as exc:
+            raise OSError("Could not reach the Resend email service.") from exc
+        if not 200 <= response.status_code < 300:
+            raise OSError(f"Resend rejected delivery (HTTP {response.status_code}). Check the sender domain and API key.")
+        return
     host = os.environ.get("SMTP_HOST", "smtp.gmail.com")
     port = int(os.environ.get("SMTP_PORT", "587"))
     with smtplib.SMTP(host, port, timeout=SMTP_TIMEOUT_S) as smtp:

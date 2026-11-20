@@ -28,6 +28,10 @@ MOTIVATIONAL_PROMPT = (
 _scheduler_started = False
 
 
+class EmulatorDisabled(ValueError):
+    """An emulator tick arrived after the account disabled the emulator."""
+
+
 def _now() -> datetime:
     return datetime.now(timezone.utc)
 
@@ -198,10 +202,19 @@ def record_steps(
     steps: int,
     progress_date: Any = None,
     goal_id: int | None = None,
+    *,
+    from_emulator: bool = False,
 ) -> dict[str, Any]:
     if not isinstance(steps, int) or steps < 0:
         raise ValueError("Enter a whole number of steps to add.")
     with connect("record steps") as conn:
+        if from_emulator:
+            account = conn.execute(
+                "SELECT app_state->'telemetry_enabled' AS enabled FROM users WHERE username=%s FOR UPDATE",
+                (user_id,),
+            ).fetchone()
+            if not account or account["enabled"] is not True:
+                raise EmulatorDisabled("The telemetry emulator is disabled.")
         goal = _goal_row(conn, user_id, goal_id)
         if goal["goal_type"] != GOAL_DAILY_STEPS:
             raise ValueError("Calories are tracked automatically.")

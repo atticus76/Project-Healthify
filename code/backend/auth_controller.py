@@ -221,12 +221,21 @@ def change_password(username: str, current_password: str, new_password: str) -> 
     return True, "Password changed successfully."
 
 
+def set_app_preference(username: str, key: str, value: str | None) -> None:
+    """Change a single preference without overwriting a concurrent emulator toggle."""
+    with connect("update account preference") as conn:
+        row = conn.execute(
+            """UPDATE users SET app_state = CASE WHEN %(value)s::text IS NULL
+               THEN app_state - %(key)s::text
+               ELSE jsonb_set(app_state, ARRAY[%(key)s::text], to_jsonb(%(value)s::text)) END
+               WHERE username=%(username)s RETURNING username""",
+            {"key": key, "value": value, "username": _username_key(username)},
+        ).fetchone()
+    if row is None:
+        raise ValueError("User account was not found.")
+
+
 def set_theme(username: str, theme: str) -> None:
     if theme not in {"light", "dark"}:
         raise ValueError("Theme must be light or dark.")
-    user = get_user(username)
-    if user is None:
-        raise ValueError("User account was not found.")
-    app_state = dict(user.get("app_state") or {})
-    app_state["theme"] = theme
-    update_user(username, app_state=app_state)
+    set_app_preference(username, "theme", theme)

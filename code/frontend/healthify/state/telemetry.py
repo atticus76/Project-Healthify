@@ -79,8 +79,7 @@ class TelemetryState(SessionState):
         if not user_id:
             return rx.redirect("/login")
         user = get_user(user_id)
-        if user:
-            self.enabled = bool(user.get("app_state", {}).get("telemetry_enabled", False))
+        self.enabled = (user or {}).get("app_state", {}).get("telemetry_enabled") is True
         if self.enabled:
             self._start_calorie_session()
         if not self.enabled:
@@ -141,7 +140,22 @@ class TelemetryState(SessionState):
         self.show_payload = not self.show_payload
 
     def _generate_data(self):
+        if not self.username:
+            self.enabled = False
+            return
         data = generate_fitbit_data(self.level, scenario=self.scenario)
+        step_value = self._latest_value("steps", data["steps"]["dataPoints"])
+        if step_value is not None:
+            try:
+                goals_backend.record_steps(self.username, int(step_value), from_emulator=True)
+            except goals_backend.EmulatorDisabled:
+                self.enabled = False
+                self.summaries = []
+                self.payload_json = ""
+                self._clear_chart_points()
+                return
+            except (IndexError, ValueError):
+                pass  # An enabled emulator can run without an active step goal.
         # In memory every refresh; saved to the cloud at most once a minute.
         telemetry_store.save(self.username, data, source="emulator")
         self.summaries = summarize_fitbit_data(data)
@@ -152,12 +166,6 @@ class TelemetryState(SessionState):
         else:
             self.chart_cycle_position += 1
         timestamp = self.chart_cycle_position
-        step_value = self._latest_value("steps", data["steps"]["dataPoints"])
-        if step_value is not None:
-            try:
-                goals_backend.record_steps(self.username, int(step_value))
-            except (IndexError, ValueError):
-                pass
         series = {
             "steps": "steps_points",
             "heart-rate": "heart_rate_points",

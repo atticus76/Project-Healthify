@@ -164,6 +164,10 @@ CREATE TABLE IF NOT EXISTS calorie_emulator_sessions (
 );
 CREATE UNIQUE INDEX IF NOT EXISTS calorie_emulator_active
     ON calorie_emulator_sessions(user_id) WHERE stopped IS NULL;
+-- Stop legacy sessions whose account already has the emulator switched off.
+UPDATE calorie_emulator_sessions s SET stopped = statement_timestamp()
+FROM users u WHERE s.user_id = u.username AND s.stopped IS NULL
+AND (u.app_state->'telemetry_enabled') IS DISTINCT FROM 'true'::jsonb;
 CREATE TABLE IF NOT EXISTS calorie_device_samples (
     user_id TEXT NOT NULL REFERENCES users(username) ON DELETE CASCADE,
     started TIMESTAMPTZ NOT NULL,

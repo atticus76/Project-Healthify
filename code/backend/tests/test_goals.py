@@ -74,6 +74,18 @@ def test_low_incomplete_day_gets_motivational_prompt(user, clock):
     assert result["prompt"]
 
 
+def test_disabled_emulator_cannot_advance_goal_from_another_tab(user, clock):
+    goals.add_goal(user, goals.GOAL_DAILY_STEPS, 1000, False)
+    goals.calories.emulator_rate(user, 2, enabled=True)
+    goals.record_steps(user, 20, from_emulator=True)
+    goals.calories.emulator_rate(user, None, enabled=False)
+    auth_controller.set_theme(user, "dark")
+    with pytest.raises(goals.EmulatorDisabled):
+        goals.record_steps(user, 20, from_emulator=True)
+    assert goals.list_goals(user)[0]["steps"] == 20
+    assert goals.record_steps(user, 5)["steps"] == 25
+
+
 # --- Creating and listing goals ---------------------------------------------
 
 

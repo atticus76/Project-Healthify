@@ -95,8 +95,7 @@ def _email_settings() -> rx.Component:
             rx.cond(
                 ~AlertState.email_configured,
                 rx.callout(
-                    "Email sending isn't set up yet. Add SMTP_USERNAME and SMTP_PASSWORD "
-                    "to .env (see .env.example), then restart the app.",
+                    "Email delivery is unavailable. Ask the project administrator to configure email.",
                     icon="triangle_alert",
                     color_scheme="orange",
                     size="1",
