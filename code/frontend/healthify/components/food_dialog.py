@@ -98,6 +98,17 @@ def _recipe_tile(item, carousel=False):
     )
 
 
+def _dish_tile(item):
+    return rx.button(
+        item["name"], on_click=State.select_item(item["id"]),
+        width="100%", height="auto", min_width="0", aspect_ratio="1",
+        padding="0.75em", white_space="normal", text_align="center",
+        overflow_wrap="anywhere", align_items="center", justify_content="center",
+        background_color=rx.color_mode_cond("#2f855a", "#276749"), color="white",
+        _hover={"background_color": rx.color_mode_cond("#276749", "#22543d")},
+    )
+
+
 def _search_results(mode):
     # Keep scroll detection in the browser. Send a single event when a page ends.
     register_scroll = """
@@ -113,7 +124,7 @@ def _search_results(mode):
     """
     grid_id = f"{mode}-results"
     return rx.box(
-        rx.grid(rx.foreach(State.results, lambda item: _recipe_tile(item)),
+        rx.grid(rx.foreach(State.results, _dish_tile if mode == "dish" else lambda item: _recipe_tile(item)),
                 columns="2", gap="2", width="100%"),
         rx.cond(State.search_offset >= 0,
                 rx.button("Load more recipes" if mode == "recipes" else "Load more dishes", variant="ghost", width="100%",
