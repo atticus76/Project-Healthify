@@ -10,6 +10,20 @@ The workflow in `.github/workflows/tests.yaml` runs pytest with PostgreSQL on pu
 4. Copy the service's deploy hook into the GitHub repository secret `RENDER_DEPLOY_HOOK`, then set the repository variable `DEPLOY_TO_RENDER` to `true`. Subsequent successful pushes to `main` request deployment of the exact commit tag. Check deployment completion in Render.
 5. For submission, capture the successful Actions steps, matching Docker Hub tag, and Render settings with secret values hidden. Open the public URL in a private window, sign in with a test account, create a goal, and confirm it persists after refresh. Record what you observed and capture the running app with its URL visible.
 
+## Send email from the project Gmail mailbox on Render
+
+1. In [Google Cloud Console](https://console.cloud.google.com/), enable the Gmail API. Configure the OAuth consent screen and add the scope `https://www.googleapis.com/auth/gmail.send`. For an external app in Testing, add the project Gmail address as a test user.
+2. Under **Google Auth Platform → Clients**, create a **Desktop app** OAuth client and download its JSON to your Downloads folder. The existing Google device integration uses its own client.
+3. From the repository root on Windows, run the following with the downloaded filename. In the browser, choose the project Gmail mailbox and grant permission to send mail.
+
+   ```powershell
+   .\.venv\Scripts\python.exe code/scripts/authorize_gmail.py "$env:USERPROFILE\Downloads\YOUR_CLIENT_FILE.json"
+   ```
+
+4. The helper prints the path to a private `gmail-mailbox.json` in your user profile. In the Render web service's **Environment → Secret Files**, create `gmail-mailbox.json` and paste that generated file's contents. Keep both JSON files private.
+5. Set `GMAIL_CREDENTIALS_FILE=/etc/secrets/gmail-mailbox.json` and `GMAIL_SENDER` to the Gmail address you authorized. Deploy the updated image and save the settings. This selects Gmail even if SMTP or Resend is also configured.
+6. In Healthify's Alerts page, save a recipient address and send a test. Only the sender authorizes Google. For an external OAuth app in Testing, Google expires this refresh token after seven days. For ongoing use, switch to production according to Google's OAuth requirements, authorize the mailbox again, and replace the Render secret file.
+
 ## Getting Started
 
 You need **Python 3.12** (see [tech-stack.md](code/specs/tech-stack.md)) and Windows PowerShell. Reflex downloads its own JavaScript tooling the first time it runs, so you don't need Node.

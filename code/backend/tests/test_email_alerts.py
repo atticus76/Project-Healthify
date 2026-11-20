@@ -3,7 +3,11 @@
 Spec: code/specs/features/S2-03-health-abnormality-alerts.md
 """
 
+import base64
+import json
 import os
+from email import policy
+from email.parser import BytesParser
 import smtplib
 import unittest
 from unittest import mock
@@ -28,6 +32,34 @@ GAP = {**URGENT, "title": "Wearable data gap", "severity": alerts.SEVERITY_INFO}
 
 
 USER = "user1"
+
+
+def test_gmail_api_uses_project_mailbox_and_saved_recipient(monkeypatch, tmp_path):
+    token = tmp_path / "gmail-mailbox.json"
+    token.write_text(json.dumps({"client_id": "client", "client_secret": "secret", "refresh_token": "offline"}))
+    monkeypatch.setenv("GMAIL_CREDENTIALS_FILE", str(token))
+    monkeypatch.setenv("GMAIL_SENDER", "healthify@example.org")
+    monkeypatch.setenv("RESEND_API_KEY", "other-provider")
+    with mock.patch.object(email_alerts, "AuthorizedSession") as authorized, mock.patch("smtplib.SMTP") as smtp:
+        session = authorized.return_value.__enter__.return_value
+        session.post.return_value.status_code = 200
+        message = email_alerts.build_message(URGENT, "recipient@example.net")
+        email_alerts.send(message)
+        assert authorized.call_args.args[0].refresh_token == "offline"
+        assert session.post.call_args.args[0].endswith("/users/me/messages/send")
+        raw = session.post.call_args.kwargs["json"]["raw"]
+        decoded = BytesParser(policy=policy.default).parsebytes(base64.urlsafe_b64decode(raw))
+        assert decoded["From"].addresses[0].addr_spec == "healthify@example.org"
+        assert decoded["To"].addresses[0].addr_spec == "recipient@example.net"
+        assert decoded["X-Priority"] == "1"
+        assert URGENT["message"] in decoded.get_content()
+        session.post.return_value.status_code = 403
+        with pytest.raises(OSError, match="Gmail rejected delivery"):
+            email_alerts.send(message)
+        token.unlink()
+        with pytest.raises(email_alerts.EmailNotConfigured):
+            email_alerts.send(message)
+        smtp.assert_not_called()
 
 
 def test_https_mail_delivers_to_saved_recipient_without_smtp(monkeypatch):
