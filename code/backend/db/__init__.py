@@ -47,11 +47,12 @@ MISSING_URL_MESSAGE = (
 )
 CONNECT_TIMEOUT_SECONDS = 10
 
-# Pool settings. Supabase's free-plan pooler allows only a limited number of
-# connections per project, and up to four teammates may run the app against
-# the same project, so each app keeps at most a few.
+# Pool settings. Supabase's session-mode pooler (port 5432) allows 15 clients
+# per project on the free plan by default, and up to four teammates may run
+# the app against the same project, so each app keeps at most a few. A single
+# deployed server can use more: set DB_POOL_MAX_SIZE (see S3-03, NFR-04).
 POOL_MIN_SIZE = 1
-POOL_MAX_SIZE = 4
+POOL_MAX_SIZE = int(os.getenv("DB_POOL_MAX_SIZE", "4"))
 POOL_WAIT_SECONDS = 10  # how long a request waits for a connection before failing
 POOL_MAX_IDLE_SECONDS = 300  # close extra connections idle this long
 

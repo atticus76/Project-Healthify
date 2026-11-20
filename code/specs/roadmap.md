@@ -141,7 +141,7 @@ Spec: [features/S2-04-cloud-data-storage.md](features/S2-04-cloud-data-storage.m
 |----|---------|--------------|------------|--------|-------|:--------:|:----:|:-----:|
 | S3-01 | Fast & reliable UI | NFR-01, NFR-02 | NFR-01: Fast, reliable user interface (<1 s UI response times) | To Do | Unassigned | — | ☐ | ☐ |
 | S3-02 | Encryption of personal & account data | NFR-03, FR-05 | NFR-03: Personal health and account information is encrypted | To Do | Unassigned | — | ☐ | ☐ |
-| S3-03 | Multi-user scalability | NFR-04 | NFR-04: Scalability; handle multiple users simultaneously | To Do | Unassigned | — | ☐ | ☐ |
+| S3-03 | Multi-user scalability | NFR-04 | NFR-04: Scalability; handle multiple users simultaneously | In progress | atticus76 | — | ☑ | ☑ |
 | S3-04 | Telemetry caching for day-to-day change | NFR-05 | NFR-05: Cache user data to measure day-to-day changes in telemetry | To Do | Unassigned | — | ☐ | ☐ |
 
 ### S3-01: Fast & reliable UI
@@ -155,6 +155,7 @@ Spec: [features/S2-04-cloud-data-storage.md](features/S2-04-cloud-data-storage.m
 - **Spec must define:** what "encrypted" means for each data class (open decision in the requirements doc), algorithms, key management, and how existing plaintext data is migrated.
 
 ### S3-03: Multi-user scalability
+Spec: [features/S3-03-multi-user-scalability.md](features/S3-03-multi-user-scalability.md)
 - At least 10 concurrent users on a single host while keeping response times under 1 s (NFR-04).
 - No data leaks between users.
 - **Spec must define:** load test scenarios (e.g. Locust), target throughput, pass/fail thresholds, and per-user isolation checks.
