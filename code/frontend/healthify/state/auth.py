@@ -41,7 +41,6 @@ class AuthState(SessionState):
     profile_saved: str = ""
     baseline_weight_lb: str = ""
     estimated_daily_calories: str = ""
-    theme: str = "light"
     profile_picture: str = ""
     profile_picture_error: str = ""
     changing_password: bool = False
@@ -72,27 +71,6 @@ class AuthState(SessionState):
 
     def toggle_signup_password_visibility(self):
         self.signup_password_visible = not self.signup_password_visible
-
-    def set_theme(self, value: str):
-        if value in {"light", "dark"}:
-            self.theme = value
-
-    def toggle_theme(self):
-        self.theme = "dark" if self.theme == "light" else "light"
-        return rx.call_script(
-            "localStorage.setItem('color-mode', '"
-            + self.theme
-            + "'); document.cookie = 'color-mode="
-            + self.theme
-            + "; path=/';"
-        )
-
-    def load_login(self):
-        self.theme = "light"
-        return rx.call_script(
-            "localStorage.setItem('color-mode', 'light');"
-            "document.cookie = 'color-mode=light; path=/';"
-        )
 
     def toggle_mode(self):
         self.mode = "signup" if self.mode == "login" else "login"
@@ -210,8 +188,7 @@ class AuthState(SessionState):
             self.profile_error = str(error)
 
 
-    def submit(self):
-        selected_theme = self.theme
+    def submit(self, selected_theme: str = "light"):
         # sign_up / sign_in each use one database connection (~200 ms each).
         try:
             if self.mode == "signup":
@@ -245,21 +222,12 @@ class AuthState(SessionState):
         self.profile_picture = uploaded_picture or (account.get("app_state") or {}).get(
             "profile_picture", ""
         )
-        self.theme = selected_theme
         self.password = ""
         self.password_visible = False
         self.signup_password_visible = False
         self.error = ""
         self.message = message
-        theme_script = (
-            "localStorage.setItem('color-mode', '"
-            + self.theme
-            + "'); document.cookie = 'color-mode="
-            + self.theme
-            + "; path=/';"
-        )
         return [
-            rx.call_script(theme_script),
             rx.redirect("/" if profile_complete else "/profile"),
         ]
 
@@ -372,5 +340,4 @@ class AuthState(SessionState):
         self.repeated_password = ""
         self.password_visible = False
         self.signup_password_visible = False
-        self.theme = "light"
         return rx.redirect("/login")

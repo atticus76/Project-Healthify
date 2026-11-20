@@ -22,15 +22,14 @@ RIGHT_FEATURES = [
     ("Legal Disclaimer", "/disclaimer"),
 ]
 
-def _side_card(title: str | rx.Component, *content: rx.Component, white=False, grow=False) -> rx.Component:
+def _side_card(title: str | rx.Component, *content: rx.Component, panel=False, grow=False) -> rx.Component:
     return rx.vstack(
         rx.heading(title, size="5") if isinstance(title, str) else title,
         *content,
         spacing="3",
         width="100%",
         flex_grow=1 if grow else 0,
-        background_color="white" if white else "transparent",
-        color="#1a202c" if white else "inherit",
+        background_color=rx.color_mode_cond("white", "#2d3748") if panel else "transparent",
         padding="1.25em",
         border_radius="12px",
         border=rx.color_mode_cond("1px solid #e2e8f0", "1px solid #4a5568"),
@@ -55,7 +54,8 @@ def _calories_card() -> rx.Component:
                         rx.text("kcal", size="1"), spacing="1", align="center")
               for label, value in displays],
             columns="3", gap="2", width="100%", padding="0.55em 0.15em",
-            background_color="#f0fff4", border="1px solid #c6e8ce", border_radius="8px",
+            background_color=rx.color_mode_cond("#f0fff4", "#203b32"),
+            border=rx.color_mode_cond("1px solid #c6e8ce", "1px solid #38634e"), border_radius="8px",
         ),
         rx.hstack(rx.button("Health Profile", on_click=rx.redirect("/profile"), size="2",
                             color_scheme="green", flex_grow=1),
@@ -66,7 +66,7 @@ def _calories_card() -> rx.Component:
                           rx.button("Add Calories", type="submit", size="1", color_scheme="green",
                                     flex_shrink=0), width="100%"),
                 on_submit=TelemetryState.log_food, reset_on_submit=True, width="100%"),
-        white=True,
+        panel=True,
     )
 
 
@@ -107,7 +107,7 @@ def dashboard() -> rx.Component:
                 ),
             ),
             rx.vstack(
-                _side_card("Review", feature_grid(RIGHT_FEATURES), white=True),
+                _side_card("Review", feature_grid(RIGHT_FEATURES), panel=True),
                 _side_card("Recipes", food_dialog(recipes=True), suggested_meals(), grow=True),
                 gap="1.5em",
                 width="100%",

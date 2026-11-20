@@ -36,7 +36,7 @@ def dish_search(form, offset=0):
     for item in page["foods"]:
         brand = item.get("brandOwner") or item.get("brandName")
         name = " - ".join(filter(None, [item["description"], brand]))
-        cards.append({"id": str(item["fdcId"]), "name": name, "image": item.get("imageUrl") or ""})
+        cards.append({"id": str(item["fdcId"]), "name": name})
     more = params["pageNumber"] * SEARCH_PAGE_SIZE < page["totalHits"]
     return cards, offset + SEARCH_PAGE_SIZE if cards and more else None
 
