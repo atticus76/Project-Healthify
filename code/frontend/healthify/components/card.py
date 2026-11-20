@@ -1,5 +1,6 @@
 import reflex as rx
 from ..state.telemetry import TelemetryState
+from ..state.devices import DeviceState
 from backend.telemetry_emulator import DATA_TYPES
 
 
@@ -30,6 +31,52 @@ def _telemetry_chart(title: str, points) -> rx.Component:
         align="stretch",
         align_self="stretch",
         spacing="1",
+    )
+
+
+_GOOGLE_BADGES = {
+    "connected": ("Device Connected", "green"),
+    "sync_failed": ("Sync failed", "red"),
+    "reconnect_required": ("Reconnect required", "orange"),
+}
+
+
+def _google_status_badge() -> rx.Component:
+    return rx.match(
+        DeviceState.status,
+        *[(key, rx.badge(label, color_scheme=color)) for key, (label, color) in _GOOGLE_BADGES.items()],
+        rx.badge("Unknown", color_scheme="gray"),
+    )
+
+
+def _google_device_view() -> rx.Component:
+    return rx.vstack(
+        rx.hstack(rx.text("Google Health", weight="bold"), _google_status_badge(), spacing="2", align="center"),
+        rx.text("Account: ", rx.text.strong(DeviceState.email)),
+        rx.cond(
+            DeviceState.device_name != "",
+            rx.text("Device: ", rx.text.strong(DeviceState.device_name)),
+        ),
+        rx.text("Last sync: ", DeviceState.last_sync, size="2", color="gray"),
+        rx.cond(
+            DeviceState.summaries.length() > 0,
+            rx.vstack(
+                rx.foreach(DeviceState.summaries, lambda line: rx.text(line, size="2")),
+                spacing="1",
+                align="start",
+            ),
+            rx.text("No readings synced yet.", size="2", color="gray"),
+        ),
+        rx.button(
+            "Manage Device",
+            on_click=rx.redirect("/devices"),
+            size="2",
+            width="160px",
+            background_color=rx.color_mode_cond("#2f855a", "#276749"),
+            color="white",
+        ),
+        align="center",
+        spacing="3",
     )
 
 
@@ -100,6 +147,9 @@ def device_card() -> rx.Component:
                     align="stretch",
                     spacing="3",
                 ),
+                rx.cond(
+                DeviceState.status != "disconnected",
+                _google_device_view(),
                 rx.vstack(
                     rx.text("Connect a device or enable simulated Fitbit telemetry."),
                     rx.button(
@@ -119,6 +169,7 @@ def device_card() -> rx.Component:
                     ),
                     align="center",
                     spacing="3",
+                ),
                 ),
             ),
             align="center",

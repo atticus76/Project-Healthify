@@ -8,7 +8,7 @@ from datetime import datetime
 import reflex as rx
 import requests
 
-from backend import alerts, google_health, google_oauth
+from backend import alerts, google_health, google_oauth, telemetry_store
 from backend.db import DatabaseError
 
 from .alerts import notify
@@ -55,6 +55,19 @@ class DeviceState(SessionState):
     def load(self):
         """on_load for /devices."""
         self._load_status()
+
+    def load_dashboard(self):
+        """on_load for the dashboard: connection status plus the last synced readings."""
+        self._load_status()
+        if self.status == "disconnected":
+            self.summaries = []
+            return
+        try:
+            data = telemetry_store.get_snapshot(self._user(), "google")
+        except DatabaseError as exc:
+            self.error = str(exc)
+            return
+        self.summaries = google_health.summarize(data) if data else []
 
     def start_connect(self):
         self.error = ""
