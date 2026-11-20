@@ -62,7 +62,7 @@ def _profile_picture_uploader() -> rx.Component:
     )
 
 
-@rx.page(route="/login", title="Sign in | Healthify", on_load=AuthState.load_login)
+@rx.page(route="/login", title="Sign in | Healthify")
 def login_page() -> rx.Component:
     return rx.center(
         rx.card(
@@ -70,24 +70,12 @@ def login_page() -> rx.Component:
                 rx.hstack(
                     rx.hstack(
                         brand_mark("34px"),
-                        rx.heading("Healthify", size="8", color="#2f855a"),
+                        rx.heading("Healthify", size="8", color=rx.color_mode_cond("#2f855a", "#68d391")),
                         align="center",
                         spacing="2",
                     ),
                     rx.spacer(),
-                    rx.button(
-                        rx.cond(AuthState.theme == "light", "🌙", "☀️"),
-                        on_click=AuthState.toggle_theme,
-                        size="2",
-                        variant="outline",
-                        aria_label="Toggle light and dark mode",
-                        background_color=rx.cond(
-                            AuthState.theme == "light", "#edf2f7", "#2d3748"
-                        ),
-                        color=rx.cond(
-                            AuthState.theme == "light", "#1a202c", "#f7fafc"
-                        ),
-                    ),
+                    rx.color_mode.button(),
                     width="100%",
                     align="center",
                 ),
@@ -147,11 +135,11 @@ def login_page() -> rx.Component:
                 ),
                 rx.button(
                     rx.cond(AuthState.mode == "login", "Sign in", "Create account"),
-                    on_click=AuthState.submit,
+                    on_click=AuthState.submit(rx.color_mode_cond("light", "dark")),
                     width="100%",
-                    background_color="#2f855a",
+                    background_color=rx.color_mode_cond("#2f855a", "#276749"),
                     color="white",
-                    _hover={"background_color": "#276749"},
+                    _hover={"background_color": rx.color_mode_cond("#276749", "#22543d")},
                 ),
                 rx.button(
                     rx.cond(
@@ -168,17 +156,14 @@ def login_page() -> rx.Component:
             width="100%",
             max_width="440px",
             border_top="6px solid #2f855a",
-            background_color=rx.cond(
-                AuthState.theme == "light", "white", "#2d3748"
+            background_color=rx.color_mode_cond( "white", "#2d3748"
             ),
-            color=rx.cond(
-                AuthState.theme == "light", "#1a202c", "#f7fafc"
+            color=rx.color_mode_cond( "#1a202c", "#f7fafc"
             ),
         ),
         min_height="100vh",
         width="100%",
         padding="2em",
-        background_color=rx.cond(
-            AuthState.theme == "light", "#f7fafc", "#1a202c"
+        background_color=rx.color_mode_cond( "#f7fafc", "#1a202c"
         ),
     )
