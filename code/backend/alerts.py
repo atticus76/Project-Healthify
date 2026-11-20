@@ -208,6 +208,20 @@ def list_alerts(user_id: str) -> list[dict[str, Any]]:
         ).fetchall()
 
 
+def list_alerts_since(user_id: str, since: str) -> list[dict[str, Any]]:
+    """The user's alerts that started at or after `since` (an ISO timestamp), newest first.
+
+    Filters in SQL so a report doesn't read the whole alert history (S3-01).
+    COLLATE "C" compares byte by byte, like the Python string comparison it replaced.
+    """
+    with connect("load recent alerts") as conn:
+        return conn.execute(
+            "SELECT * FROM health_alerts WHERE user_id = %s AND started_at COLLATE \"C\" >= %s"
+            " ORDER BY started_at DESC, id DESC",
+            (user_id, since),
+        ).fetchall()
+
+
 def unacknowledged_count(user_id: str) -> int:
     with connect("count unread alerts") as conn:
         row = conn.execute(

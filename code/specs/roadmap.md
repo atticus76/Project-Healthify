@@ -139,12 +139,13 @@ Spec: [features/S2-04-cloud-data-storage.md](features/S2-04-cloud-data-storage.m
 
 | ID | Feature | Requirements | Board item | Status | Owner | Priority | Spec | Tests |
 |----|---------|--------------|------------|--------|-------|:--------:|:----:|:-----:|
-| S3-01 | Fast & reliable UI | NFR-01, NFR-02 | NFR-01: Fast, reliable user interface (<1 s UI response times) | To Do | Unassigned | — | ☐ | ☐ |
+| S3-01 | Fast & reliable UI | NFR-01, NFR-02 | NFR-01: Fast, reliable user interface (<1 s UI response times) | In progress | Gem811 | — | ☐ | ☑ |
 | S3-02 | Encryption of personal & account data | NFR-03, FR-05 | NFR-03: Personal health and account information is encrypted | To Do | Unassigned | — | ☐ | ☐ |
 | S3-03 | Multi-user scalability | NFR-04 | NFR-04: Scalability; handle multiple users simultaneously | In progress | atticus76 | — | ☑ | ☑ |
 | S3-04 | Telemetry caching for day-to-day change | NFR-05 | NFR-05: Cache user data to measure day-to-day changes in telemetry | To Do | Unassigned | — | ☐ | ☐ |
 
 ### S3-01: Fast & reliable UI
+Spec (NFR-01 response-time check): [features/S3-01-response-time-check.md](features/S3-01-response-time-check.md) (draft; implemented before approval). Run `python code/scripts/nfr01_response_times.py` against the test database. NFR-02 is already covered for Google syncs by S1-03.
 - Page interactions respond in under 1 second (NFR-01).
 - Third-party failures are handled gracefully: logged, retried with exponential backoff, and shown to the user (NFR-02).
 - **Spec must define:** measured interactions, performance budget per page, how response time is measured, and the error/retry UX.

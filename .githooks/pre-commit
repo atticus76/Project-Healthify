@@ -1,0 +1,43 @@
+#!/bin/sh
+# Blocks commits that would publish secrets: the email (SMTP) password, the
+# Google OAuth secret, or a database URL with its password.
+#
+# Turn it on once per clone, from the repo root:
+#     git config core.hooksPath .githooks
+#
+# If it blocks something that really isn't a secret, fix the line (use a
+# <placeholder> such as <password>) rather than skipping the hook.
+
+status=0
+
+# 1. Files that only ever hold secrets. .env.example is the one allowed .env file.
+blocked_files=$(git diff --cached --name-only --diff-filter=ACMR | grep -E '(^|/)(\.env(\..+)?|\.token\.json|client_secret[^/]*\.json)$' | grep -v -E '(^|/)\.env\.example$')
+if [ -n "$blocked_files" ]; then
+    echo "pre-commit: refusing to commit secret files:" >&2
+    echo "$blocked_files" | sed 's/^/    /' >&2
+    echo "    Unstage them with: git restore --staged <file>" >&2
+    status=1
+fi
+
+# 2. Secret values in the lines being added to any other file.
+added=$(git diff --cached -U0 --no-color --diff-filter=ACMR | grep -E '^\+' | grep -v -E '^\+\+\+ ')
+
+# KEY=value for a secret key, where value isn't empty or a <placeholder>.
+key_lines=$(printf '%s\n' "$added" | grep -E '^\+[[:space:]]*(export[[:space:]]+)?(SMTP_PASSWORD|GOOGLE_CLIENT_SECRET|DATABASE_URL|TEST_DATABASE_URL)[[:space:]]*=[[:space:]]*[^[:space:]<#]')
+# A postgres URL with a password, unless the password is a <placeholder> or the host is local.
+url_lines=$(printf '%s\n' "$added" | grep -E 'postgres(ql)?://[^:/[:space:]"'"'"']+:[^<@[:space:]"'"'"'][^@[:space:]"'"'"']*@' | grep -v -E '@(localhost|127\.0\.0\.1)[:/]')
+# Google OAuth client secrets start with GOCSPX-.
+google_lines=$(printf '%s\n' "$added" | grep -E 'GOCSPX-[A-Za-z0-9_-]{10,}')
+
+found=$(printf '%s\n%s\n%s\n' "$key_lines" "$url_lines" "$google_lines" | grep -v '^$' | sort -u)
+if [ -n "$found" ]; then
+    echo "pre-commit: refusing to commit what looks like a password or secret:" >&2
+    # Mask the values so the warning itself never prints a secret.
+    printf '%s\n' "$found" \
+        | sed -E 's#(postgres(ql)?://[^:/]+:)[^@]+@#\1****@#g; s/GOCSPX-[A-Za-z0-9_-]+/GOCSPX-****/g; s/^(\+[[:space:]]*(export[[:space:]]+)?[A-Z_]+[[:space:]]*=).*/\1****/' \
+        | cut -c1-100 | sed 's/^/    /' >&2
+    echo "    Secrets belong in .env (git-ignored). Use a <placeholder> in examples." >&2
+    status=1
+fi
+
+exit $status

@@ -96,6 +96,11 @@ class AlertState(SessionState):
         ]
         self.unread = sum(1 for row in rows if not row["acknowledged"])
 
+    def load_unread(self):
+        """on_load for the dashboard: only the header badge's count, not the
+        whole alert list (S3-01). The Alerts page still loads the list."""
+        self.unread = alerts.unacknowledged_count(self.username)
+
     def load_page(self):
         """on_load for /alerts: read the list, email settings, and browser permission."""
         email_alerts.reload_config()

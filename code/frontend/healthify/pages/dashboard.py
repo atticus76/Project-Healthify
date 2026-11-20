@@ -71,7 +71,7 @@ def _calories_card() -> rx.Component:
     )
 
 
-@rx.page(route="/", on_load=[AuthState.require_login, AlertState.load, TelemetryState.load_page, DeviceState.load_dashboard, TelemetryState.load_calories, NutritionState.cycle_suggestions])
+@rx.page(route="/", on_load=[AuthState.require_login, AlertState.load_unread, TelemetryState.load_page, DeviceState.load_dashboard, TelemetryState.load_calories, NutritionState.cycle_suggestions])
 def dashboard() -> rx.Component:
     return rx.vstack(
         page_header(),

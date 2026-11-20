@@ -3,6 +3,9 @@
 ```text
 Healthify/
 ├── README.md
+├── CLAUDE.md                        # Claude Code rules: loads the constitution, spec-driven workflow
+├── .claude/
+│   └── skills/                      # /constitution, /specify, /plan-tasks, /implement, /verify
 ├── .env.example
 ├── .gitignore
 ├── pytest.ini
@@ -28,10 +31,11 @@ Healthify/
 │   │   └── reflex.lock/
 │   ├── scripts/
 │   └── specs/
-│       ├── features/
-│       ├── 01_Requirements.md
-│       ├── roadmap.md
-│       └── tech-stack.md
+│       ├── features/                # one spec per feature (not part of the constitution)
+│       ├── 01_Requirements.md       # ┐
+│       ├── mission.md               # │ the constitution
+│       ├── roadmap.md               # │
+│       └── tech-stack.md            # ┘
 ├── data/                            # Local/sample data
 ├── docs/
 │   └── Reports/
