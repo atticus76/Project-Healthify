@@ -30,6 +30,23 @@ GAP = {**URGENT, "title": "Wearable data gap", "severity": alerts.SEVERITY_INFO}
 USER = "user1"
 
 
+def test_https_mail_delivers_to_saved_recipient_without_smtp(monkeypatch):
+    monkeypatch.setenv("RESEND_API_KEY", "test-key")
+    monkeypatch.setenv("SMTP_FROM", "alerts@example.org")
+    message = email_alerts.build_message(URGENT, "recipient@example.org")
+    with mock.patch("requests.post") as post, mock.patch("smtplib.SMTP") as smtp:
+        post.return_value.status_code = 200
+        email_alerts.send(message)
+        payload = post.call_args.kwargs["json"]
+        assert payload["to"] == ["recipient@example.org"]
+        assert "alerts@example.org" in payload["from"]
+        assert payload["headers"]["X-Priority"] == "1"
+        post.return_value.status_code = 403
+        with pytest.raises(OSError, match="403"):
+            email_alerts.send(message)
+        smtp.assert_not_called()
+
+
 @pytest.mark.usefixtures("test_db")
 class EmailAlertTests(unittest.TestCase):
     def setUp(self):

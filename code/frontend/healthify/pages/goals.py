@@ -210,8 +210,7 @@ def _email_settings() -> rx.Component:
             rx.cond(
                 ~GoalsState.email_configured,
                 rx.callout(
-                    "Email sending requires SMTP_USERNAME and SMTP_PASSWORD in .env. "
-                    "Restart the app after changing .env.",
+                    "Email delivery is unavailable. Ask the project administrator to configure email.",
                     icon="triangle_alert",
                     color_scheme="orange",
                     size="1",

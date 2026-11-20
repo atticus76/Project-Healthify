@@ -14,7 +14,7 @@ def emulator_rate(user, rate, *, change=False, enabled=None):
                                (user,)).fetchone()
         if not account:
             return
-        if enabled is None and not (account["app_state"] or {}).get("telemetry_enabled"):
+        if enabled is None and (account["app_state"] or {}).get("telemetry_enabled") is not True:
             return
         if enabled is not None:
             conn.execute("""UPDATE users SET app_state=jsonb_set(app_state,'{telemetry_enabled}',

@@ -97,10 +97,7 @@ class AuthState(SessionState):
         self.profile_picture_error = ""
         if self.username:
             try:
-                user = auth_controller.get_user(self.username) or {}
-                app_state = dict(user.get("app_state") or {})
-                app_state["profile_picture"] = self.profile_picture
-                auth_controller.update_user(self.username, app_state=app_state)
+                auth_controller.set_app_preference(self.username, "profile_picture", self.profile_picture)
             except DatabaseError as error:
                 self.profile_picture_error = str(error)
 
@@ -109,10 +106,7 @@ class AuthState(SessionState):
             self.profile_picture_error = "You must be signed in to remove a profile picture."
             return
         try:
-            user = auth_controller.get_user(self.username) or {}
-            app_state = dict(user.get("app_state") or {})
-            app_state.pop("profile_picture", None)
-            auth_controller.update_user(self.username, app_state=app_state)
+            auth_controller.set_app_preference(self.username, "profile_picture", None)
         except DatabaseError as error:
             self.profile_picture_error = str(error)
             return
@@ -210,10 +204,8 @@ class AuthState(SessionState):
         self.username = username  # this browser is now signed in
         uploaded_picture = self.profile_picture
         if uploaded_picture:
-            app_state = dict(account.get("app_state") or {})
-            app_state["profile_picture"] = uploaded_picture
             try:
-                auth_controller.update_user(username, app_state=app_state)
+                auth_controller.set_app_preference(username, "profile_picture", uploaded_picture)
             except DatabaseError as error:
                 self.error = str(error)
                 return
@@ -299,12 +291,7 @@ class AuthState(SessionState):
                 self.username, self.gender, int(self.age), float(weight_lb),
                 float(height_cm), self.activity_level
             )
-            account = auth_controller.get_user(self.username) or {}
-            auth_controller.update_user(
-                self.username,
-                email=self.email,
-                app_state=account.get("app_state") or {},
-            )
+            auth_controller.update_user(self.username, email=self.email)
         except DatabaseError as error:
             self.profile_error = str(error)
             self.profile_saved = ""
