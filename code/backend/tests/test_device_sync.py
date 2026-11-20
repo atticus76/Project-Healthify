@@ -48,6 +48,10 @@ def clock(monkeypatch: pytest.MonkeyPatch):
 
     monkeypatch.setattr(google_health, "_now", lambda: Clock.now)
     monkeypatch.setattr(google_health, "_sync_calories", lambda user_id: None)
+    # Token refreshes read these before calling Google (which is mocked). CI has
+    # no .env, so set dummies instead of relying on someone's local secrets.
+    monkeypatch.setenv("GOOGLE_CLIENT_ID", "test-client-id")
+    monkeypatch.setenv("GOOGLE_CLIENT_SECRET", "test-client-secret")
     return Clock
 
 
