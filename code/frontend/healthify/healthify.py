@@ -1,3 +1,5 @@
+import os
+
 import reflex as rx
 from backend import db
 from backend import goals as goals_backend
@@ -18,7 +20,9 @@ from .pages import (
 from .pages.placeholders import disclaimer
 
 # Stop with a clear message instead of failing on the first sign-in (S2-04).
-db.require_database_url()
+building_frontend = os.getenv("HEALTHIFY_FRONTEND_BUILD") == "1"
+if not building_frontend:
+    db.require_database_url()
 
 app = rx.App(
     backend_exception_handler=handle_backend_exception,
@@ -26,6 +30,7 @@ app = rx.App(
         rx.el.link(rel="icon", href="/leaf.svg", type="image/svg+xml")
     ],
 )
-goals_backend.start_scheduler()
-reports_backend.start_scheduler()
-google_health.start_scheduler()
+if not building_frontend:
+    goals_backend.start_scheduler()
+    reports_backend.start_scheduler()
+    google_health.start_scheduler()
