@@ -126,7 +126,7 @@ Alerts and reports are bulk-inserted with plain SQL. The check verifies the coun
 
 ### Database safety
 - The check refuses to run (exit 2) unless `TEST_DATABASE_URL` is set and differs from `DATABASE_URL`, the same rule `code/backend/tests/conftest.py` uses. It then points `DATABASE_URL` at the test database for the whole run.
-- `email_alerts.reload_config()` reloads `.env` with `override=True`, which would put the real `DATABASE_URL` back in the middle of a run. The check wraps it so it still runs, and its cost is still timed, and then restores the test URL. After every call the check confirms the database is still the test one, and aborts if it isn't.
+- `email_alerts.reload_config()` reloads `.env` with `override=True`, which would put the real `DATABASE_URL` (and the `.env` value of `TEST_DATABASE_URL`) back in the middle of a run. The check wraps it so it still runs, and its cost is still timed, and then restores both variables. (Restoring `TEST_DATABASE_URL` too was added 2026-11-19, after a test run picked up the `.env` value.) After every call the check confirms the database is still the test one, and aborts if it isn't.
 - Email sending (`email_alerts.dispatch` and `send`) is replaced with a no-op, so a seeded alert never emails anyone.
 - The perf user is deleted in a `finally` block. `ON DELETE CASCADE` removes all of its rows.
 
@@ -167,6 +167,17 @@ Times are in ms.
 | everything else | | ≤ 11 | ≤ 3 | ≤ 4 | ≤ 4 |
 
 The slowest interactions are the ones that read the whole alert history: the Alerts page, and the two acknowledge actions, which reload it. If the Supabase run shows a miss, start with paging the alert history (a conditional optimisation above).
+
+### 2026-11-19, local PostgreSQL 18 again (Supabase projects unreachable)
+This was a re-run after the `TEST_DATABASE_URL` restore fix, with the same seed and 20 timed runs. All 22 interactions passed, it exited 0, and no perf user was left behind. `pytest` with the same database gave 142 passed.
+
+The slowest by p95 were:
+- Acknowledge all alerts: 70 ms (max 130)
+- Acknowledge one alert: 26 ms
+- Alerts page load: 18 ms
+- The emulator actions: 16–17 ms
+
+Everything else was 5 ms or less.
 
 ### Supabase test project
 *To do (task 5): run `python code/scripts/nfr01_response_times.py --json results.json` with `TEST_DATABASE_URL` set to the healthify-test project, and record the table here with its date.*

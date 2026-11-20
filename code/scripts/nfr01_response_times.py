@@ -249,8 +249,15 @@ def _test_database(url: str) -> Iterator[Callable[[], None]]:
     reload_config = email_alerts.reload_config
 
     def reload_config_keeping_test_db() -> None:
-        reload_config()  # still runs, so its cost is still timed
+        # reload_config() reloads .env with override=True, which resets both
+        # database variables; put them back. It still runs, so its cost is timed.
+        test_url_before = os.environ.get("TEST_DATABASE_URL")
+        reload_config()
         os.environ["DATABASE_URL"] = url
+        if test_url_before is None:
+            os.environ.pop("TEST_DATABASE_URL", None)
+        else:
+            os.environ["TEST_DATABASE_URL"] = test_url_before
 
     def still_test_database() -> None:
         if os.environ.get("DATABASE_URL") != url:
