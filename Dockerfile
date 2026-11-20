@@ -1,6 +1,8 @@
 # Dev image for Healthify: same steps as run_healthify.bat, but identical on
 # every laptop. Python is pinned to 3.12 to match code/specs/tech-stack.md.
-FROM python:3.12-slim
+FROM node:22-bookworm-slim AS node
+FROM python:3.12-slim-bookworm
+COPY --from=node /usr/local/bin/node /usr/local/bin/node
 
 # Reflex downloads its own JS runtime (bun) on first run and needs curl + unzip for that.
 RUN apt-get update \
@@ -17,6 +19,11 @@ RUN pip install --no-cache-dir -r code/requirements.txt
 # The real code. In development compose.yaml mounts the repo over /app anyway,
 # so this copy only matters if someone runs the image without compose.
 COPY . .
+
+# Build the static site on the CI runner before Render starts its port scan.
+RUN cd /app/code/frontend \
+    && HEALTHIFY_FRONTEND_BUILD=1 reflex export --frontend-only --no-zip \
+    && test -s .web/build/client/index.html
 
 # 3000 = frontend, 8000 = backend (Reflex defaults)
 EXPOSE 3000 8000
