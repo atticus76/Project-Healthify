@@ -4,6 +4,7 @@ import reflex as rx
 from ..state.alerts import AlertState
 from ..state.telemetry import TelemetryState
 from ..state.auth import AuthState
+from ..state.devices import DeviceState
 
 #components
 from ..components.food_dialog import food_dialog, suggested_meals
@@ -70,7 +71,7 @@ def _calories_card() -> rx.Component:
     )
 
 
-@rx.page(route="/", on_load=[AuthState.require_login, AlertState.load, TelemetryState.load_page, TelemetryState.load_calories, NutritionState.cycle_suggestions])
+@rx.page(route="/", on_load=[AuthState.require_login, AlertState.load, TelemetryState.load_page, DeviceState.load_dashboard, TelemetryState.load_calories, NutritionState.cycle_suggestions])
 def dashboard() -> rx.Component:
     return rx.vstack(
         page_header(),

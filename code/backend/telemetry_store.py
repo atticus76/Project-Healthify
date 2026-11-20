@@ -102,6 +102,16 @@ def get_latest(user_id: str) -> dict[str, Any] | None:
         return _latest[user_id]
 
 
+def get_snapshot(user_id: str, source: str) -> dict[str, Any] | None:
+    """The user's saved telemetry from one source (e.g. "google"), or None."""
+    with connect("load telemetry snapshot") as conn:
+        row = conn.execute(
+            "SELECT data FROM telemetry_snapshots WHERE user_id = %s AND source = %s",
+            (user_id, source),
+        ).fetchone()
+    return row["data"] if row else None
+
+
 def clear(user_id: str, source: str = "emulator") -> None:
     """Delete one source's snapshot (e.g. when the emulator is turned off)."""
     with connect("delete telemetry snapshot") as conn:
