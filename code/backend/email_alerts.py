@@ -12,17 +12,22 @@ page. Failures are logged; the in-app and browser alerts still go out.
 
 from __future__ import annotations
 
+import base64
 import logging
 import os
 import re
 import smtplib
 import threading
 from email.message import EmailMessage
+from email.policy import SMTP
 from pathlib import Path
 from typing import Any
 
 import requests
 from dotenv import load_dotenv
+from google.auth.exceptions import GoogleAuthError
+from google.auth.transport.requests import AuthorizedSession
+from google.oauth2.credentials import Credentials
 
 from . import alerts
 
@@ -49,6 +54,8 @@ def is_valid_address(address: str) -> bool:
 
 
 def is_configured() -> bool:
+    if os.environ.get("GMAIL_CREDENTIALS_FILE"):
+        return is_valid_address(os.getenv("GMAIL_SENDER", ""))
     if os.environ.get("RESEND_API_KEY"):
         return bool(os.environ.get("SMTP_FROM"))
     return bool(os.environ.get("SMTP_USERNAME") and os.environ.get("SMTP_PASSWORD"))
@@ -68,6 +75,8 @@ def recipient(user_id: str) -> str:
 def build_message(alert: dict[str, Any], to: str) -> EmailMessage:
     urgent = alert["severity"] == alerts.SEVERITY_URGENT
     sender = os.environ.get("SMTP_FROM") or os.environ.get("SMTP_USERNAME", "")
+    if os.environ.get("GMAIL_CREDENTIALS_FILE"):
+        sender = os.getenv("GMAIL_SENDER", "").strip()
     app_url = os.environ.get("HEALTHIFY_URL", "http://localhost:3000").rstrip("/")
 
     message = EmailMessage()
@@ -90,8 +99,27 @@ def send(message: EmailMessage) -> None:
     """Send one message. Raises EmailNotConfigured or smtplib/OSError errors."""
     if not is_configured():
         raise EmailNotConfigured(
-            "Configure RESEND_API_KEY and SMTP_FROM for HTTPS email, or SMTP credentials for SMTP."
+            "Check the server's email settings. Gmail API delivery requires GMAIL_SENDER and GMAIL_CREDENTIALS_FILE."
         )
+    if credentials_file := os.environ.get("GMAIL_CREDENTIALS_FILE"):
+        try:
+            credentials = Credentials.from_authorized_user_file(credentials_file)
+        except (OSError, ValueError, KeyError) as exc:
+            raise EmailNotConfigured("Check the Gmail authorization file on the server.") from exc
+        try:
+            with AuthorizedSession(credentials) as session:
+                response = session.post(
+                    "https://gmail.googleapis.com/gmail/v1/users/me/messages/send",
+                    json={"raw": base64.urlsafe_b64encode(message.as_bytes(policy=SMTP)).decode("ascii")},
+                    timeout=SMTP_TIMEOUT_S, allow_redirects=False,
+                )
+        except GoogleAuthError as exc:
+            raise OSError("Gmail authorization failed. Reauthorize the project mailbox.") from exc
+        except requests.RequestException as exc:
+            raise OSError("Could not reach the Gmail API.") from exc
+        if not 200 <= response.status_code < 300:
+            raise OSError(f"Gmail rejected delivery (HTTP {response.status_code}). Check the Gmail API, sending permission, and mailbox quota.")
+        return
     if api_key := os.environ.get("RESEND_API_KEY"):
         payload = {
             "from": str(message["From"]), "to": [str(message["To"])],
